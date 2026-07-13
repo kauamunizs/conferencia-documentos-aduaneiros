@@ -9,40 +9,7 @@ import {
   Upload,
   XCircle,
 } from "lucide-react";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-
-interface BoundingBox {
-  page: number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-interface FieldComparison {
-  key: string;
-  label: string;
-  referenceValue: string | null;
-  producedValue: string | null;
-  match: boolean;
-  referenceBoundingBox: BoundingBox | null;
-  producedBoundingBox: BoundingBox | null;
-}
-
-interface PageImage {
-  page: number;
-  dataUrl: string;
-  width: number;
-  height: number;
-}
-
-interface CompareResponse {
-  overallMatch: boolean;
-  fields: FieldComparison[];
-  referencePages: PageImage[];
-  producedPages: PageImage[];
-}
+import type { BoundingBox, CompareResponse, FieldComparison, PageImage } from "@/lib/types";
 
 type ProcessingStatus = "idle" | "processing" | "done" | "error";
 type ActiveDoc = "reference" | "produced";
@@ -96,14 +63,15 @@ export default function Home() {
       referenceFiles.forEach((file) => formData.append("reference_files", file));
       formData.append("produced_file", producedFile);
 
-      const response = await fetch(`${API_BASE_URL}/compare`, {
+      const response = await fetch("/api/compare", {
         method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
-        const detail = await response.text();
-        throw new Error(detail || `Erro ${response.status} ao processar documentos.`);
+        const body = await response.json().catch(() => null);
+        const detail = body && typeof body.detail === "string" ? body.detail : null;
+        throw new Error(detail ?? `Erro ${response.status} ao processar documentos.`);
       }
 
       const data = (await response.json()) as CompareResponse;
