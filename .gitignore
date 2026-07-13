@@ -1,0 +1,12 @@
+.claude/settings.local.json
+
+backend/venv/
+backend/.env
+backend/__pycache__/
+backend/**/__pycache__/
+backend/tessdata/
+
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+frontend/tsconfig.tsbuildinfo

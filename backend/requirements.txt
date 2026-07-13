@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pdf2image
+pillow
+pytesseract
+anthropic
+pydantic>=2
+python-dotenv
