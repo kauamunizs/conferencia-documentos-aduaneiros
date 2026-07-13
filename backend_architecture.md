@@ -1,5 +1,22 @@
 # Arquitetura do Backend — Conferência de Documentos Aduaneiros
 
+## 0. Modo mock (nenhuma chamada de API)
+
+Por padrão (`MOCK_MODE=true` no `.env`), o backend **nunca chama a API da
+Anthropic** — nenhum custo é gerado, mesmo clicando em "Processar
+documentos". `extract_entities()` devolve valores fixos (alternando entre
+dois conjuntos, para mostrar tanto campos que batem quanto campos que não
+batem no relatório) em vez de ler as imagens de verdade. Todo o resto do
+pipeline — rasterização, OCR local, normalização, comparação, localização de
+bounding box e a interface — roda normalmente com dados reais.
+
+Para ligar a extração de verdade (paga), edite `backend/.env`:
+
+```
+MOCK_MODE=false
+ANTHROPIC_API_KEY=sk-ant-sua-chave-real
+```
+
 ## 1. Visão geral do pipeline
 
 ```

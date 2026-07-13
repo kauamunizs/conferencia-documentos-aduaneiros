@@ -46,7 +46,7 @@ FIELDS = [
     ("valorTotal", "Valor Total"),
 ]
 
-anthropic_client = anthropic.Anthropic()
+anthropic_client = None if MOCK_MODE else anthropic.Anthropic()
 
 app = FastAPI(title="Conferência de Documentos Aduaneiros")
 
@@ -162,7 +162,38 @@ def run_ocr(image: Image.Image) -> List[OcrWord]:
 # Claude Vision extraction (literal transcription only — no normalization)
 # ---------------------------------------------------------------------------
 
+# Canned values used only when MOCK_MODE=true, so the app can be clicked
+# through end-to-end without ever calling the Anthropic API. They alternate
+# per call so the report shows a realistic mix of matches/mismatches — they
+# do NOT reflect what's actually written on the uploaded documents.
+_MOCK_ENTITIES = [
+    {
+        "cnpj": "12.345.678/0001-90",
+        "razaoSocial": "EMPRESA EXEMPLO LTDA",
+        "endereco": "Rua Exemplo, 100 - Sao Paulo - SP",
+        "pesoBruto": "1.000,000 KG",
+        "pesoLiquido": "950,000 KG",
+        "valorTotal": "R$ 10.000,00",
+    },
+    {
+        "cnpj": "12.345.678/0001-90",
+        "razaoSocial": "Empresa Exemplo Ltda.",
+        "endereco": "Rua Exemplo, 100 - Sao Paulo/SP",
+        "pesoBruto": "1000.0 KG",
+        "pesoLiquido": "900,000 KG",
+        "valorTotal": "USD 10000.00",
+    },
+]
+_mock_call_count = 0
+
+
 def extract_entities(image: Image.Image) -> dict:
+    if MOCK_MODE:
+        global _mock_call_count
+        entities = _MOCK_ENTITIES[_mock_call_count % len(_MOCK_ENTITIES)]
+        _mock_call_count += 1
+        return dict(entities)
+
     response = anthropic_client.messages.create(
         model=MODEL,
         max_tokens=1024,
