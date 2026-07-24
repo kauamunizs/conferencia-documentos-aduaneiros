@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dashboard COMEX — Rotina Operacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+  if (typeof tailwind !== 'undefined') {
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+        },
+      },
+    };
+  }
+</script>
+<style>
+  html { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+  ::-webkit-scrollbar { height: 8px; width: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+  .toast { animation: toast-in .25s ease-out; }
+  @keyframes toast-in { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+  .fade-out { transition: opacity .3s ease, transform .3s ease; opacity: 0 !important; transform: translateY(-4px); }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4 flex-wrap">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m-1 4h1m4-4h1m-1 4h1M9 21v-4h6v4"/></svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold leading-tight">Dashboard COMEX</h1>
+          <p class="text-xs text-slate-400 leading-tight">Rotina de Comércio Exterior</p>
+        </div>
+      </div>
+      <div class="text-right">
+        <p id="clockDate" class="text-sm font-medium capitalize"></p>
+        <p class="text-xs text-slate-400">Dados salvos localmente neste navegador</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+
+    <!-- 1. Indicadores diários -->
+    <section>
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-3">Indicadores de hoje</h2>
+      <div id="dailyCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Formulário de entrada -->
+      <section class="lg:col-span-1 bg-white rounded-xl border border-slate-200 shadow-sm p-5 h-fit">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-4 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          Novo registro
+        </h2>
+        <form id="entryForm" class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Categoria</label>
+            <select id="fCategoria" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required></select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Número do processo</label>
+            <input id="fProcesso" type="text" placeholder="Ex: 2026/00123-4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Data</label>
+              <input id="fData" type="date" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Status</label>
+              <select id="fStatus" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="Pendente">Pendente</option>
+                <option value="Concluído">Concluído</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Observações</label>
+            <textarea id="fObs" rows="3" placeholder="Detalhes adicionais (opcional)" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
+          </div>
+          <div class="flex items-center gap-2 pt-1">
+            <button id="submitBtn" type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors">Adicionar registro</button>
+            <button id="cancelEditBtn" type="button" class="hidden text-sm font-medium text-slate-500 hover:text-slate-700 px-3 py-2.5">Cancelar</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Coluna direita: Rendimento + Relatório semanal -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- 4. Módulo de rendimento comparado -->
+        <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-1">
+            <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>
+              Rendimento comparado (semana atual x anterior)
+            </h2>
+            <span id="yieldBadge"></span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 my-4">
+            <div class="rounded-lg bg-slate-50 border border-slate-200 p-3 text-center">
+              <p class="text-xs text-slate-500">Concluídos — semana anterior</p>
+              <p id="totalPrev" class="text-2xl font-bold text-slate-700">0</p>
+            </div>
+            <div class="rounded-lg bg-blue-50 border border-blue-200 p-3 text-center">
+              <p class="text-xs text-blue-600">Concluídos — semana atual</p>
+              <p id="totalCur" class="text-2xl font-bold text-blue-700">0</p>
+            </div>
+          </div>
+          <div class="h-56">
+            <canvas id="yieldChart"></canvas>
+          </div>
+          <div id="yieldCatList" class="mt-3"></div>
+        </section>
+
+        <!-- 3. Relatório semanal -->
+        <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+            <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+              Relatório semanal
+            </h2>
+            <select id="weekSelect" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+          </div>
+          <p id="periodLabel" class="text-xs text-slate-500 mb-3"></p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-left text-xs text-slate-400 uppercase border-b border-slate-200">
+                  <th class="py-2 pr-3 font-medium">Categoria</th>
+                  <th class="py-2 px-3 font-medium text-center">Concluídos</th>
+                  <th class="py-2 px-3 font-medium text-center">Pendentes</th>
+                  <th class="py-2 pl-3 font-medium text-center">Total</th>
+                </tr>
+              </thead>
+              <tbody id="weeklyReportBody"></tbody>
+            </table>
+          </div>
+          <div class="flex flex-wrap gap-2 mt-4">
+            <button id="exportCsvBtn" type="button" class="inline-flex items-center gap-1.5 text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-2 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+              Exportar CSV
+            </button>
+            <button id="copyEmailBtn" type="button" class="inline-flex items-center gap-1.5 text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-2 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+              Copiar como texto (e-mail)
+            </button>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- 2. Histórico -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Histórico de processos
+        </h2>
+        <span id="historyCount" class="text-xs text-slate-400"></span>
+      </div>
+
+      <div class="flex flex-wrap gap-2 mb-4">
+        <select id="filterCategoria" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="all">Todas as categorias</option>
+        </select>
+        <select id="filterStatus" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="all">Todos os status</option>
+          <option value="Pendente">Pendente</option>
+          <option value="Concluído">Concluído</option>
+        </select>
+        <input id="filterDe" type="date" title="De" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <input id="filterAte" type="date" title="Até" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <input id="filterBusca" type="text" placeholder="Buscar processo ou observação..." class="flex-1 min-w-[180px] rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <button id="clearFiltersBtn" type="button" class="text-sm font-medium text-slate-500 hover:text-slate-700 px-3 py-1.5">Limpar filtros</button>
+      </div>
+
+      <div class="overflow-x-auto -mx-1">
+        <table class="w-full text-sm min-w-[720px]">
+          <thead>
+            <tr class="text-left text-xs text-slate-400 uppercase border-b border-slate-200">
+              <th class="py-2 px-3 font-medium">Categoria</th>
+              <th class="py-2 px-3 font-medium">Processo</th>
+              <th class="py-2 px-3 font-medium">Data</th>
+              <th class="py-2 px-3 font-medium">Status</th>
+              <th class="py-2 px-3 font-medium">Observações</th>
+              <th class="py-2 px-3 font-medium text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------------------------------------------------------------------
+  // Constantes
+  // ---------------------------------------------------------------------
+  var STORAGE_KEY = 'comex_dashboard_tasks_v1';
+
+  var CATEGORIES = [
+    { id: 'granel',     label: 'Abertura de processos granel',      short: 'Granel',     color: 'blue' },
+    { id: 'mexico',     label: 'Envio México no e-mail',             short: 'México',     color: 'amber' },
+    { id: 'fcomex',     label: 'Faturamento de processos no FComex', short: 'FComex',     color: 'emerald' },
+    { id: 'averbados',  label: 'Docs averbados',                     short: 'Averbados',  color: 'violet' },
+  ];
+
+  var COLOR_CLASSES = {
+    blue:    { text: 'text-blue-700',    dot: 'bg-blue-500',    badge: 'bg-blue-100 text-blue-800' },
+    amber:   { text: 'text-amber-700',   dot: 'bg-amber-500',   badge: 'bg-amber-100 text-amber-800' },
+    emerald: { text: 'text-emerald-700', dot: 'bg-emerald-500', badge: 'bg-emerald-100 text-emerald-800' },
+    violet:  { text: 'text-violet-700',  dot: 'bg-violet-500',  badge: 'bg-violet-100 text-violet-800' },
+  };
+
+  var WEEK_OPTIONS_COUNT = 12;
+
+  // ---------------------------------------------------------------------
+  // Estado
+  // ---------------------------------------------------------------------
+  var tasks = loadData();
+  var editingId = null;
+  var filters = { categoria: 'all', status: 'all', busca: '', de: '', ate: '' };
+  var currentReportEntries = [];
+  var currentReportRows = [];
+  var currentReportRange = null;
+  var chartInstance = null;
+
+  // ---------------------------------------------------------------------
+  // Persistência
+  // ---------------------------------------------------------------------
+  function loadData() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveData() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  }
+
+  function generateId() {
+    return 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+  }
+
+  // ---------------------------------------------------------------------
+  // Datas
+  // ---------------------------------------------------------------------
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function toISO(d) {
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+
+  function todayISO() { return toISO(new Date()); }
+
+  function parseISO(iso) {
+    var parts = iso.split('-').map(Number);
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+  }
+
+  function formatBR(iso) {
+    if (!iso) return '';
+    var p = iso.split('-');
+    return p[2] + '/' + p[1] + '/' + p[0];
+  }
+
+  function startOfWeek(date) {
+    var d = new Date(date);
+    var day = d.getDay();
+    var diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  function endOfWeek(date) {
+    var s = startOfWeek(date);
+    var e = new Date(s);
+    e.setDate(s.getDate() + 6);
+    e.setHours(23, 59, 59, 999);
+    return e;
+  }
+
+  function addDays(date, n) {
+    var d = new Date(date);
+    d.setDate(d.getDate() + n);
+    return d;
+  }
+
+  function weekRangeForOffset(offset) {
+    var curStart = startOfWeek(new Date());
+    var start = addDays(curStart, -7 * offset);
+    var end = endOfWeek(start);
+    return { start: start, end: end };
+  }
+
+  function inRange(iso, start, end) {
+    var d = parseISO(iso);
+    return d >= start && d <= end;
+  }
+
+  function weekLabel(offset, start, end) {
+    var opts = { day: '2-digit', month: '2-digit' };
+    var startStr = start.toLocaleDateString('pt-BR', opts);
+    var endStr = end.toLocaleDateString('pt-BR', opts);
+    var prefix = offset === 0 ? 'Semana atual' : offset === 1 ? 'Semana passada' : offset + ' semanas atrás';
+    return prefix + ' (' + startStr + ' – ' + endStr + ')';
+  }
+
+  // ---------------------------------------------------------------------
+  // Utilidades
+  // ---------------------------------------------------------------------
+  function escapeHtml(str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+    });
+  }
+
+  function csvEscape(v) {
+    v = String(v == null ? '' : v);
+    if (/[;"\n]/.test(v)) v = '"' + v.replace(/"/g, '""') + '"';
+    return v;
+  }
+
+  function categoryById(id) {
+    for (var i = 0; i < CATEGORIES.length; i++) if (CATEGORIES[i].id === id) return CATEGORIES[i];
+    return null;
+  }
+
+  function toast(msg, isError) {
+    var el = document.createElement('div');
+    el.className = 'toast text-sm font-medium text-white px-4 py-2.5 rounded-lg shadow-lg ' + (isError ? 'bg-red-600' : 'bg-slate-800');
+    el.textContent = msg;
+    document.getElementById('toastContainer').appendChild(el);
+    setTimeout(function () {
+      el.classList.add('fade-out');
+      setTimeout(function () { el.remove(); }, 300);
+    }, 2600);
+  }
+
+  // ---------------------------------------------------------------------
+  // Elementos
+  // ---------------------------------------------------------------------
+  var el = {
+    clockDate: document.getElementById('clockDate'),
+    dailyCards: document.getElementById('dailyCards'),
+    entryForm: document.getElementById('entryForm'),
+    fCategoria: document.getElementById('fCategoria'),
+    fProcesso: document.getElementById('fProcesso'),
+    fData: document.getElementById('fData'),
+    fStatus: document.getElementById('fStatus'),
+    fObs: document.getElementById('fObs'),
+    submitBtn: document.getElementById('submitBtn'),
+    cancelEditBtn: document.getElementById('cancelEditBtn'),
+    yieldBadge: document.getElementById('yieldBadge'),
+    totalPrev: document.getElementById('totalPrev'),
+    totalCur: document.getElementById('totalCur'),
+    yieldCatList: document.getElementById('yieldCatList'),
+    weekSelect: document.getElementById('weekSelect'),
+    periodLabel: document.getElementById('periodLabel'),
+    weeklyReportBody: document.getElementById('weeklyReportBody'),
+    exportCsvBtn: document.getElementById('exportCsvBtn'),
+    copyEmailBtn: document.getElementById('copyEmailBtn'),
+    historyCount: document.getElementById('historyCount'),
+    historyBody: document.getElementById('historyBody'),
+    filterCategoria: document.getElementById('filterCategoria'),
+    filterStatus: document.getElementById('filterStatus'),
+    filterDe: document.getElementById('filterDe'),
+    filterAte: document.getElementById('filterAte'),
+    filterBusca: document.getElementById('filterBusca'),
+    clearFiltersBtn: document.getElementById('clearFiltersBtn'),
+  };
+
+  // ---------------------------------------------------------------------
+  // Inicialização de selects estáticos
+  // ---------------------------------------------------------------------
+  function initSelects() {
+    var categoryOptions = CATEGORIES.map(function (c) {
+      return '<option value="' + c.id + '">' + escapeHtml(c.label) + '</option>';
+    }).join('');
+    el.fCategoria.innerHTML = categoryOptions;
+    el.filterCategoria.innerHTML = '<option value="all">Todas as categorias</option>' + categoryOptions;
+
+    var weekOptions = [];
+    for (var i = 0; i < WEEK_OPTIONS_COUNT; i++) {
+      var range = weekRangeForOffset(i);
+      weekOptions.push('<option value="' + i + '">' + escapeHtml(weekLabel(i, range.start, range.end)) + '</option>');
+    }
+    el.weekSelect.innerHTML = weekOptions.join('');
+  }
+
+  function updateClock() {
+    var now = new Date();
+    el.clockDate.textContent = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  // ---------------------------------------------------------------------
+  // 5. Indicadores diários
+  // ---------------------------------------------------------------------
+  function renderDailyCards() {
+    var today = todayISO();
+    el.dailyCards.innerHTML = CATEGORIES.map(function (cat) {
+      var entriesToday = tasks.filter(function (t) { return t.categoria === cat.id && t.data === today; });
+      var concl = entriesToday.filter(function (t) { return t.status === 'Concluído'; }).length;
+      var pend = entriesToday.filter(function (t) { return t.status === 'Pendente'; }).length;
+      var c = COLOR_CLASSES[cat.color];
+      return (
+        '<div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">' +
+          '<div class="flex items-center justify-between mb-2">' +
+            '<span class="text-xs font-semibold uppercase tracking-wide ' + c.text + '">' + escapeHtml(cat.label) + '</span>' +
+            '<span class="w-2.5 h-2.5 rounded-full ' + c.dot + ' shrink-0"></span>' +
+          '</div>' +
+          '<div class="text-3xl font-bold text-slate-800">' + concl + '</div>' +
+          '<div class="text-xs text-slate-500 mt-1">concluído(s) hoje' + (pend > 0 ? ' · ' + pend + ' pendente(s)' : '') + '</div>' +
+        '</div>'
+      );
+    }).join('');
+  }
+
+  // ---------------------------------------------------------------------
+  // 4. Rendimento comparado
+  // ---------------------------------------------------------------------
+  function getWeekEntries(offset) {
+    var range = weekRangeForOffset(offset);
+    return tasks.filter(function (t) { return inRange(t.data, range.start, range.end); });
+  }
+
+  function renderYieldModule() {
+    var curEntries = getWeekEntries(0).filter(function (t) { return t.status === 'Concluído'; });
+    var prevEntries = getWeekEntries(1).filter(function (t) { return t.status === 'Concluído'; });
+
+    var perCat = CATEGORIES.map(function (cat) {
+      return {
+        cat: cat,
+        cur: curEntries.filter(function (t) { return t.categoria === cat.id; }).length,
+        prev: prevEntries.filter(function (t) { return t.categoria === cat.id; }).length,
+      };
+    });
+
+    var totalCur = curEntries.length;
+    var totalPrev = prevEntries.length;
+    el.totalCur.textContent = totalCur;
+    el.totalPrev.textContent = totalPrev;
+
+    var badgeHtml;
+    if (totalPrev === 0 && totalCur === 0) {
+      badgeHtml = '<span class="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">Sem dados suficientes ainda</span>';
+    } else if (totalPrev === 0) {
+      badgeHtml = '<span class="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">▲ novo volume esta semana (+' + totalCur + ')</span>';
+    } else {
+      var pct = Math.round(((totalCur - totalPrev) / totalPrev) * 100);
+      var up = pct >= 0;
+      badgeHtml = '<span class="text-xs font-semibold ' + (up ? 'text-emerald-700 bg-emerald-100' : 'text-red-700 bg-red-100') + ' px-2.5 py-1 rounded-full">' +
+        (up ? '▲' : '▼') + ' ' + (up ? '+' : '') + pct + '% em relação à semana passada</span>';
+    }
+    el.yieldBadge.innerHTML = badgeHtml;
+
+    el.yieldCatList.innerHTML = perCat.map(function (p) {
+      var chip;
+      if (p.prev === 0 && p.cur === 0) {
+        chip = '<span class="text-xs text-slate-400">sem dados</span>';
+      } else if (p.prev === 0) {
+        chip = '<span class="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">novo</span>';
+      } else {
+        var pctCat = Math.round(((p.cur - p.prev) / p.prev) * 100);
+        var upCat = pctCat >= 0;
+        chip = '<span class="text-xs font-medium ' + (upCat ? 'text-emerald-700 bg-emerald-100' : 'text-red-700 bg-red-100') + ' px-2 py-0.5 rounded-full">' +
+          (upCat ? '+' : '') + pctCat + '%</span>';
+      }
+      return (
+        '<div class="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">' +
+          '<span class="text-sm text-slate-600">' + escapeHtml(p.cat.label) + '</span>' +
+          '<div class="flex items-center gap-2">' +
+            '<span class="text-xs text-slate-400">' + p.prev + ' → ' + p.cur + '</span>' + chip +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
+
+    updateChart(perCat);
+  }
+
+  function updateChart(perCat) {
+    var labels = perCat.map(function (p) { return p.cat.short; });
+    var dataCur = perCat.map(function (p) { return p.cur; });
+    var dataPrev = perCat.map(function (p) { return p.prev; });
+
+    if (chartInstance) {
+      chartInstance.data.labels = labels;
+      chartInstance.data.datasets[0].data = dataPrev;
+      chartInstance.data.datasets[1].data = dataCur;
+      chartInstance.update();
+      return;
+    }
+
+    if (typeof Chart === 'undefined') return;
+
+    var ctx = document.getElementById('yieldChart');
+    chartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: 'Semana anterior', data: dataPrev, backgroundColor: '#cbd5e1', borderRadius: 6, maxBarThickness: 40 },
+          { label: 'Semana atual', data: dataCur, backgroundColor: '#2563eb', borderRadius: 6, maxBarThickness: 40 },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0 } },
+          x: { grid: { display: false } },
+        },
+      },
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // 3. Relatório semanal
+  // ---------------------------------------------------------------------
+  function renderWeeklyReport() {
+    var offset = parseInt(el.weekSelect.value || '0', 10);
+    var range = weekRangeForOffset(offset);
+    var entries = getWeekEntries(offset);
+
+    el.periodLabel.textContent = 'Período: ' + formatBR(toISO(range.start)) + ' a ' + formatBR(toISO(range.end));
+
+    var rows = CATEGORIES.map(function (cat) {
+      var catEntries = entries.filter(function (t) { return t.categoria === cat.id; });
+      return {
+        cat: cat,
+        concluidos: catEntries.filter(function (t) { return t.status === 'Concluído'; }).length,
+        pendentes: catEntries.filter(function (t) { return t.status === 'Pendente'; }).length,
+        total: catEntries.length,
+      };
+    });
+
+    var totalConcluidos = rows.reduce(function (a, r) { return a + r.concluidos; }, 0);
+    var totalPendentes = rows.reduce(function (a, r) { return a + r.pendentes; }, 0);
+    var totalGeral = rows.reduce(function (a, r) { return a + r.total; }, 0);
+
+    el.weeklyReportBody.innerHTML = rows.map(function (r) {
+      var c = COLOR_CLASSES[r.cat.color];
+      return (
+        '<tr class="border-b border-slate-100">' +
+          '<td class="py-2 pr-3"><span class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full ' + c.badge + '">' + escapeHtml(r.cat.label) + '</span></td>' +
+          '<td class="py-2 px-3 text-center font-semibold text-emerald-700">' + r.concluidos + '</td>' +
+          '<td class="py-2 px-3 text-center font-semibold text-amber-700">' + r.pendentes + '</td>' +
+          '<td class="py-2 pl-3 text-center font-semibold text-slate-700">' + r.total + '</td>' +
+        '</tr>'
+      );
+    }).join('') + (
+      '<tr class="bg-slate-50 font-semibold">' +
+        '<td class="py-2 pr-3 text-slate-700">Total</td>' +
+        '<td class="py-2 px-3 text-center text-emerald-700">' + totalConcluidos + '</td>' +
+        '<td class="py-2 px-3 text-center text-amber-700">' + totalPendentes + '</td>' +
+        '<td class="py-2 pl-3 text-center text-slate-700">' + totalGeral + '</td>' +
+      '</tr>'
+    );
+
+    currentReportEntries = entries;
+    currentReportRows = rows;
+    currentReportRange = range;
+  }
+
+  function exportCsv() {
+    if (!currentReportRange) return;
+    var header = ['Categoria', 'Numero do Processo', 'Data', 'Status', 'Observacoes'];
+    var lines = [header.join(';')];
+    currentReportEntries.slice().sort(function (a, b) { return a.data.localeCompare(b.data); }).forEach(function (t) {
+      var cat = categoryById(t.categoria);
+      var obs = (t.observacoes || '').replace(/\n/g, ' ');
+      lines.push([cat ? cat.label : t.categoria, t.numeroProcesso, formatBR(t.data), t.status, obs].map(csvEscape).join(';'));
+    });
+    var csvContent = '﻿' + lines.join('\r\n');
+    var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'relatorio-semanal_' + toISO(currentReportRange.start) + '_a_' + toISO(currentReportRange.end) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast('CSV exportado com sucesso!');
+  }
+
+  function buildEmailText() {
+    if (!currentReportRange) return '';
+    var text = 'RELATÓRIO SEMANAL – ROTINA COMEX\n';
+    text += 'Período: ' + formatBR(toISO(currentReportRange.start)) + ' a ' + formatBR(toISO(currentReportRange.end)) + '\n\n';
+    currentReportRows.forEach(function (r) {
+      text += r.cat.label + ': ' + r.concluidos + ' concluído(s), ' + r.pendentes + ' pendente(s)\n';
+    });
+    var totalConcl = currentReportRows.reduce(function (a, r) { return a + r.concluidos; }, 0);
+    var totalPend = currentReportRows.reduce(function (a, r) { return a + r.pendentes; }, 0);
+    text += '\nTOTAL: ' + totalConcl + ' concluído(s), ' + totalPend + ' pendente(s)\n';
+    if (currentReportEntries.length) {
+      text += '\nDetalhamento:\n';
+      currentReportEntries.slice().sort(function (a, b) { return a.data.localeCompare(b.data); }).forEach(function (t) {
+        var cat = categoryById(t.categoria);
+        text += '- [' + formatBR(t.data) + '] ' + (cat ? cat.label : t.categoria) + ' | Processo ' + t.numeroProcesso + ' | ' + t.status +
+          (t.observacoes ? ' | Obs: ' + t.observacoes : '') + '\n';
+      });
+    } else {
+      text += '\nNenhum registro nesta semana.\n';
+    }
+    return text;
+  }
+
+  function copyEmailText() {
+    var text = buildEmailText();
+    function fallbackCopy() {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        toast('Resumo copiado para a área de transferência!');
+      } catch (e2) {
+        toast('Não foi possível copiar automaticamente. Selecione o texto manualmente.', true);
+      }
+      ta.remove();
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        toast('Resumo copiado para a área de transferência!');
+      }).catch(fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // 2. Histórico
+  // ---------------------------------------------------------------------
+  function getFilteredTasks() {
+    var busca = filters.busca.toLowerCase();
+    return tasks.filter(function (t) {
+      if (filters.categoria !== 'all' && t.categoria !== filters.categoria) return false;
+      if (filters.status !== 'all' && t.status !== filters.status) return false;
+      if (filters.de && t.data < filters.de) return false;
+      if (filters.ate && t.data > filters.ate) return false;
+      if (busca && t.numeroProcesso.toLowerCase().indexOf(busca) === -1 && (t.observacoes || '').toLowerCase().indexOf(busca) === -1) return false;
+      return true;
+    }).sort(function (a, b) {
+      return b.data.localeCompare(a.data) || b.createdAt - a.createdAt;
+    });
+  }
+
+  function renderHistoryTable() {
+    var rows = getFilteredTasks();
+    el.historyCount.textContent = rows.length + ' registro(s)';
+    el.historyBody.innerHTML = rows.length ? rows.map(rowHtml).join('') :
+      '<tr><td colspan="6" class="text-center text-slate-400 py-8">Nenhum registro encontrado.</td></tr>';
+  }
+
+  function rowHtml(t) {
+    var cat = categoryById(t.categoria);
+    var c = cat ? COLOR_CLASSES[cat.color] : COLOR_CLASSES.blue;
+    var statusClasses = t.status === 'Concluído' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800';
+    return (
+      '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
+        '<td class="py-2.5 px-3"><span class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full ' + c.badge + '">' + escapeHtml(cat ? cat.label : t.categoria) + '</span></td>' +
+        '<td class="py-2.5 px-3 font-medium text-slate-700">' + escapeHtml(t.numeroProcesso) + '</td>' +
+        '<td class="py-2.5 px-3 text-slate-500 whitespace-nowrap">' + formatBR(t.data) + '</td>' +
+        '<td class="py-2.5 px-3"><button data-action="toggle" data-id="' + t.id + '" class="text-xs font-medium px-2 py-1 rounded-full ' + statusClasses + ' hover:opacity-80 transition-opacity">' + t.status + '</button></td>' +
+        '<td class="py-2.5 px-3 text-slate-500 max-w-xs truncate" title="' + escapeHtml(t.observacoes || '') + '">' + (escapeHtml(t.observacoes || '') || '—') + '</td>' +
+        '<td class="py-2.5 px-3 text-right whitespace-nowrap">' +
+          '<button data-action="edit" data-id="' + t.id + '" class="text-slate-400 hover:text-blue-600 p-1" title="Editar">' +
+            '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H7a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-4M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+          '</button>' +
+          '<button data-action="delete" data-id="' + t.id + '" class="text-slate-400 hover:text-red-600 p-1" title="Excluir">' +
+            '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>' +
+          '</button>' +
+        '</td>' +
+      '</tr>'
+    );
+  }
+
+  function toggleStatus(id) {
+    var t = tasks.filter(function (x) { return x.id === id; })[0];
+    if (!t) return;
+    t.status = t.status === 'Concluído' ? 'Pendente' : 'Concluído';
+    saveAndRenderAll();
+    toast('Status atualizado.');
+  }
+
+  function deleteTask(id) {
+    if (!confirm('Tem certeza que deseja excluir este registro?')) return;
+    tasks = tasks.filter(function (x) { return x.id !== id; });
+    saveAndRenderAll();
+    toast('Registro excluído.');
+  }
+
+  function startEdit(id) {
+    var t = tasks.filter(function (x) { return x.id === id; })[0];
+    if (!t) return;
+    editingId = id;
+    el.fCategoria.value = t.categoria;
+    el.fProcesso.value = t.numeroProcesso;
+    el.fData.value = t.data;
+    el.fStatus.value = t.status;
+    el.fObs.value = t.observacoes || '';
+    el.submitBtn.textContent = 'Atualizar registro';
+    el.cancelEditBtn.classList.remove('hidden');
+    el.entryForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function cancelEdit() {
+    editingId = null;
+    el.entryForm.reset();
+    el.fData.value = todayISO();
+    el.fStatus.value = 'Pendente';
+    el.submitBtn.textContent = 'Adicionar registro';
+    el.cancelEditBtn.classList.add('hidden');
+  }
+
+  // ---------------------------------------------------------------------
+  // Render geral
+  // ---------------------------------------------------------------------
+  function renderAll() {
+    renderDailyCards();
+    renderYieldModule();
+    renderWeeklyReport();
+    renderHistoryTable();
+  }
+
+  function saveAndRenderAll() {
+    saveData();
+    renderAll();
+  }
+
+  // ---------------------------------------------------------------------
+  // Eventos
+  // ---------------------------------------------------------------------
+  el.entryForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var numeroProcesso = el.fProcesso.value.trim();
+    if (!numeroProcesso) { toast('Informe o número do processo.', true); return; }
+    if (!el.fData.value) { toast('Informe a data.', true); return; }
+
+    if (editingId) {
+      var t = tasks.filter(function (x) { return x.id === editingId; })[0];
+      if (t) {
+        t.categoria = el.fCategoria.value;
+        t.numeroProcesso = numeroProcesso;
+        t.data = el.fData.value;
+        t.status = el.fStatus.value;
+        t.observacoes = el.fObs.value.trim();
+      }
+      toast('Registro atualizado com sucesso!');
+    } else {
+      tasks.push({
+        id: generateId(),
+        categoria: el.fCategoria.value,
+        numeroProcesso: numeroProcesso,
+        data: el.fData.value,
+        status: el.fStatus.value,
+        observacoes: el.fObs.value.trim(),
+        createdAt: Date.now(),
+      });
+      toast('Registro adicionado com sucesso!');
+    }
+    cancelEdit();
+    saveAndRenderAll();
+  });
+
+  el.cancelEditBtn.addEventListener('click', cancelEdit);
+
+  el.historyBody.addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    var id = btn.getAttribute('data-id');
+    var action = btn.getAttribute('data-action');
+    if (action === 'toggle') toggleStatus(id);
+    else if (action === 'edit') startEdit(id);
+    else if (action === 'delete') deleteTask(id);
+  });
+
+  el.weekSelect.addEventListener('change', renderWeeklyReport);
+  el.exportCsvBtn.addEventListener('click', exportCsv);
+  el.copyEmailBtn.addEventListener('click', copyEmailText);
+
+  el.filterCategoria.addEventListener('change', function () { filters.categoria = this.value; renderHistoryTable(); });
+  el.filterStatus.addEventListener('change', function () { filters.status = this.value; renderHistoryTable(); });
+  el.filterDe.addEventListener('change', function () { filters.de = this.value; renderHistoryTable(); });
+  el.filterAte.addEventListener('change', function () { filters.ate = this.value; renderHistoryTable(); });
+  el.filterBusca.addEventListener('input', function () { filters.busca = this.value; renderHistoryTable(); });
+  el.clearFiltersBtn.addEventListener('click', function () {
+    filters = { categoria: 'all', status: 'all', busca: '', de: '', ate: '' };
+    el.filterCategoria.value = 'all';
+    el.filterStatus.value = 'all';
+    el.filterDe.value = '';
+    el.filterAte.value = '';
+    el.filterBusca.value = '';
+    renderHistoryTable();
+  });
+
+  // ---------------------------------------------------------------------
+  // Init
+  // ---------------------------------------------------------------------
+  initSelects();
+  el.fData.value = todayISO();
+  updateClock();
+  setInterval(updateClock, 60000);
+  renderAll();
+})();
+</script>
+</body>
+</html>
