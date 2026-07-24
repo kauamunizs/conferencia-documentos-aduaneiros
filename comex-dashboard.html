@@ -270,6 +270,23 @@
 
   .period-label { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; font-variant-numeric: tabular-nums; }
 
+  .sync-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .sync-status { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--muted); }
+  .sync-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--muted-2); flex-shrink: 0; }
+  .sync-dot.ok { background: var(--ok); }
+  .sync-dot.error { background: var(--danger); }
+  .sync-dot.syncing { background: var(--warn); animation: sync-pulse 1s ease-in-out infinite; }
+  @keyframes sync-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  .sync-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sync-panel { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: grid; gap: 14px; }
+  .sync-help { font-size: 12.5px; color: var(--muted); line-height: 1.55; margin: 0; }
+  .sync-help a { color: var(--accent); font-weight: 600; }
+  .gist-id-display {
+    display: flex; align-items: center; gap: 10px; background: var(--panel-muted); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 12px; font-size: 12.5px;
+  }
+  .gist-id-display strong { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 600; word-break: break-all; }
+
   .toast-stack { position: fixed; bottom: 18px; right: 18px; z-index: 50; display: flex; flex-direction: column; gap: 8px; }
   .toast {
     background: var(--ink); color: var(--bg); font-size: 13.5px; font-weight: 600; padding: 10px 16px;
@@ -309,6 +326,45 @@
   </header>
 
   <main class="page container">
+
+    <!-- Sincronização entre dispositivos -->
+    <section class="card" style="padding:16px 20px;">
+      <div class="sync-bar">
+        <div class="sync-status">
+          <span id="syncDot" class="sync-dot"></span>
+          <span id="syncStatusText">Sincronização não configurada.</span>
+        </div>
+        <div class="sync-actions">
+          <button id="syncNowBtn" type="button" class="btn btn-secondary">Sincronizar agora</button>
+          <button id="syncToggleBtn" type="button" class="btn btn-text">Configurar sincronização</button>
+        </div>
+      </div>
+      <div id="syncPanel" class="sync-panel hidden">
+        <p class="sync-help">
+          Sincroniza os dados entre PCs usando um Gist privado do GitHub como nuvem.
+          <a href="https://github.com/settings/tokens/new?description=Dashboard%20COMEX&scopes=gist" target="_blank" rel="noopener">Gerar token no GitHub</a>
+          com o escopo apenas <strong>gist</strong> e cole abaixo. No primeiro PC deixe o campo "ID do Gist" em branco — ele é criado automaticamente e você copia o ID para usar nos outros PCs. O token fica salvo apenas neste navegador.
+        </p>
+        <div class="field">
+          <label for="syncToken">Token de acesso pessoal (escopo gist)</label>
+          <input id="syncToken" type="password" placeholder="ghp_..." autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="syncGistId">ID do Gist (deixe em branco no primeiro PC)</label>
+          <input id="syncGistId" type="text" placeholder="Ex: 8f3a1c2b9e7d4f5a6b1c2d3e4f5a6b7c" autocomplete="off" />
+        </div>
+        <div id="gistIdDisplay" class="gist-id-display hidden">
+          <span>ID do Gist:</span> <strong id="gistIdValue"></strong>
+          <button id="copyGistIdBtn" type="button" class="icon-btn" title="Copiar ID">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          </button>
+        </div>
+        <div class="form-actions">
+          <button id="syncSaveBtn" type="button" class="btn btn-primary">Salvar e sincronizar</button>
+          <button id="syncDisconnectBtn" type="button" class="btn btn-text">Desconectar</button>
+        </div>
+      </div>
+    </section>
 
     <!-- 1. Indicadores diários -->
     <section>
@@ -480,6 +536,10 @@
   // Constantes
   // ---------------------------------------------------------------------
   var STORAGE_KEY = 'comex_dashboard_tasks_v1';
+  var SYNC_STORAGE_KEY = 'comex_dashboard_sync_v1';
+  var META_STORAGE_KEY = 'comex_dashboard_meta_v1';
+  var GIST_FILENAME = 'comex-dashboard-data.json';
+  var GIST_DESCRIPTION = 'Dashboard COMEX - dados sincronizados (gerado automaticamente)';
 
   var CATEGORIES = [
     { id: 'granel',    label: 'Abertura de processos granel',      short: 'Granel' },
@@ -518,6 +578,32 @@
 
   function generateId() {
     return 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+  }
+
+  function loadSyncConfig() {
+    try {
+      var raw = localStorage.getItem(SYNC_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : { token: '', gistId: '' };
+    } catch (e) {
+      return { token: '', gistId: '' };
+    }
+  }
+
+  function saveSyncConfig(cfg) {
+    localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify(cfg));
+  }
+
+  function getLocalUpdatedAt() {
+    try {
+      var raw = localStorage.getItem(META_STORAGE_KEY);
+      return raw ? (JSON.parse(raw).updatedAt || 0) : 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  function setLocalUpdatedAt(ts) {
+    localStorage.setItem(META_STORAGE_KEY, JSON.stringify({ updatedAt: ts }));
   }
 
   // ---------------------------------------------------------------------
@@ -647,6 +733,18 @@
     filterAte: document.getElementById('filterAte'),
     filterBusca: document.getElementById('filterBusca'),
     clearFiltersBtn: document.getElementById('clearFiltersBtn'),
+    syncDot: document.getElementById('syncDot'),
+    syncStatusText: document.getElementById('syncStatusText'),
+    syncNowBtn: document.getElementById('syncNowBtn'),
+    syncToggleBtn: document.getElementById('syncToggleBtn'),
+    syncPanel: document.getElementById('syncPanel'),
+    syncToken: document.getElementById('syncToken'),
+    syncGistId: document.getElementById('syncGistId'),
+    gistIdDisplay: document.getElementById('gistIdDisplay'),
+    gistIdValue: document.getElementById('gistIdValue'),
+    copyGistIdBtn: document.getElementById('copyGistIdBtn'),
+    syncSaveBtn: document.getElementById('syncSaveBtn'),
+    syncDisconnectBtn: document.getElementById('syncDisconnectBtn'),
   };
 
   // ---------------------------------------------------------------------
@@ -875,6 +973,130 @@
   }
 
   // ---------------------------------------------------------------------
+  // Sincronização entre dispositivos (GitHub Gist)
+  // ---------------------------------------------------------------------
+  function setSyncStatus(state, message) {
+    el.syncDot.className = 'sync-dot' + (state ? ' ' + state : '');
+    el.syncStatusText.textContent = message;
+  }
+
+  function renderGistIdDisplay(gistId) {
+    if (gistId) {
+      el.gistIdDisplay.classList.remove('hidden');
+      el.gistIdValue.textContent = gistId;
+    } else {
+      el.gistIdDisplay.classList.add('hidden');
+    }
+  }
+
+  function ghRequest(path, options) {
+    options = options || {};
+    var cfg = loadSyncConfig();
+    var headers = { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github+json' };
+    for (var k in (options.headers || {})) headers[k] = options.headers[k];
+    return fetch('https://api.github.com' + path, { method: options.method || 'GET', headers: headers, body: options.body })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.text().then(function (body) {
+            var msg = 'Erro ' + res.status;
+            try { msg = JSON.parse(body).message || msg; } catch (e) {}
+            throw new Error(msg);
+          });
+        }
+        return res.json();
+      });
+  }
+
+  function gistFilesPayload() {
+    var files = {};
+    files[GIST_FILENAME] = { content: JSON.stringify({ updatedAt: getLocalUpdatedAt(), tasks: tasks }) };
+    return files;
+  }
+
+  function createRemoteGist() {
+    return ghRequest('/gists', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: GIST_DESCRIPTION, public: false, files: gistFilesPayload() }),
+    });
+  }
+
+  function fetchRemoteGist(gistId) {
+    return ghRequest('/gists/' + gistId);
+  }
+
+  function updateRemoteGist(gistId) {
+    return ghRequest('/gists/' + gistId, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ files: gistFilesPayload() }),
+    });
+  }
+
+  function syncNow(isManual) {
+    var cfg = loadSyncConfig();
+    if (!cfg.token) {
+      setSyncStatus('', 'Sincronização não configurada.');
+      return Promise.resolve();
+    }
+    setSyncStatus('syncing', 'Sincronizando...');
+
+    var chain;
+    if (!cfg.gistId) {
+      chain = createRemoteGist().then(function (gist) {
+        cfg.gistId = gist.id;
+        saveSyncConfig(cfg);
+        setLocalUpdatedAt(Date.now());
+        el.syncGistId.value = gist.id;
+        renderGistIdDisplay(gist.id);
+        setSyncStatus('ok', 'Gist criado! Copie o ID abaixo para usar em outro PC.');
+      });
+    } else {
+      chain = fetchRemoteGist(cfg.gistId).then(function (gist) {
+        var file = gist.files && gist.files[GIST_FILENAME];
+        var remote = { updatedAt: 0, tasks: [] };
+        if (file && file.content) {
+          try { remote = JSON.parse(file.content); } catch (e) {}
+        }
+        var localUpdatedAt = getLocalUpdatedAt();
+        var remoteUpdatedAt = remote.updatedAt || 0;
+        renderGistIdDisplay(cfg.gistId);
+
+        if (remoteUpdatedAt > localUpdatedAt) {
+          tasks = remote.tasks || [];
+          saveData();
+          setLocalUpdatedAt(remoteUpdatedAt);
+          renderAll();
+          setSyncStatus('ok', 'Dados atualizados a partir da nuvem às ' + new Date().toLocaleTimeString('pt-BR') + '.');
+          return null;
+        }
+        if (localUpdatedAt > remoteUpdatedAt || isManual) {
+          return updateRemoteGist(cfg.gistId).then(function () {
+            setSyncStatus('ok', 'Dados enviados para a nuvem às ' + new Date().toLocaleTimeString('pt-BR') + '.');
+          });
+        }
+        setSyncStatus('ok', 'Já sincronizado.');
+        return null;
+      });
+    }
+
+    return chain.catch(function (err) {
+      setSyncStatus('error', 'Erro na sincronização: ' + err.message);
+    });
+  }
+
+  function pushIfConfigured() {
+    var cfg = loadSyncConfig();
+    if (!cfg.token || !cfg.gistId) return;
+    setSyncStatus('syncing', 'Sincronizando...');
+    updateRemoteGist(cfg.gistId).then(function () {
+      setSyncStatus('ok', 'Sincronizado às ' + new Date().toLocaleTimeString('pt-BR') + '.');
+    }).catch(function (err) {
+      setSyncStatus('error', 'Erro ao sincronizar: ' + err.message);
+    });
+  }
+
+  // ---------------------------------------------------------------------
   // 2. Histórico
   // ---------------------------------------------------------------------
   function getFilteredTasks() {
@@ -971,8 +1193,10 @@
   }
 
   function saveAndRenderAll() {
+    setLocalUpdatedAt(Date.now());
     saveData();
     renderAll();
+    pushIfConfigured();
   }
 
   // ---------------------------------------------------------------------
@@ -1041,6 +1265,40 @@
     renderHistoryTable();
   });
 
+  el.syncToggleBtn.addEventListener('click', function () {
+    el.syncPanel.classList.toggle('hidden');
+  });
+
+  el.syncNowBtn.addEventListener('click', function () { syncNow(true); });
+
+  el.syncSaveBtn.addEventListener('click', function () {
+    var token = el.syncToken.value.trim();
+    var gistId = el.syncGistId.value.trim();
+    if (!token) { toast('Informe o token do GitHub.', true); return; }
+    saveSyncConfig({ token: token, gistId: gistId });
+    syncNow(true);
+  });
+
+  el.syncDisconnectBtn.addEventListener('click', function () {
+    if (!confirm('Desconectar a sincronização? Os dados locais deste PC não serão apagados.')) return;
+    saveSyncConfig({ token: '', gistId: '' });
+    el.syncToken.value = '';
+    el.syncGistId.value = '';
+    renderGistIdDisplay('');
+    setSyncStatus('', 'Sincronização não configurada.');
+    toast('Sincronização desconectada.');
+  });
+
+  el.copyGistIdBtn.addEventListener('click', function () {
+    var cfg = loadSyncConfig();
+    if (!cfg.gistId) return;
+    navigator.clipboard.writeText(cfg.gistId).then(function () {
+      toast('ID do Gist copiado!');
+    }).catch(function () {
+      toast('Não foi possível copiar automaticamente.', true);
+    });
+  });
+
   // ---------------------------------------------------------------------
   // Init
   // ---------------------------------------------------------------------
@@ -1049,6 +1307,20 @@
   updateClock();
   setInterval(updateClock, 60000);
   renderAll();
+
+  (function initSync() {
+    var cfg = loadSyncConfig();
+    if (cfg.token) el.syncToken.value = cfg.token;
+    if (cfg.gistId) {
+      el.syncGistId.value = cfg.gistId;
+      renderGistIdDisplay(cfg.gistId);
+    }
+    if (cfg.token) {
+      syncNow(false);
+    } else {
+      setSyncStatus('', 'Sincronização não configurada.');
+    }
+  })();
 })();
 </script>
 </body>
