@@ -3,161 +3,422 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light dark" />
 <title>Dashboard COMEX — Rotina Operacional</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script>
-  if (typeof tailwind !== 'undefined') {
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
-        },
-      },
-    };
-  }
-</script>
 <style>
-  html { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+  :root {
+    color-scheme: light;
+    --bg: #eef1f6;
+    --panel: #ffffff;
+    --panel-muted: #f5f7fb;
+    --border: #dbe1ea;
+    --ink: #101826;
+    --muted: #5c6b81;
+    --muted-2: #8896aa;
+    --header-bg: #0d1b2a;
+    --header-ink: #eef2f8;
+    --header-muted: #90a0b8;
+
+    --accent: #0f6e63;
+    --accent-ink: #ffffff;
+    --accent-soft: #e2f0ee;
+    --focus-ring: rgba(15, 110, 99, .35);
+
+    --cat-granel: #8a5a20;
+    --cat-granel-bg: #f6eee1;
+    --cat-mexico: #a8452b;
+    --cat-mexico-bg: #f8e9e4;
+    --cat-fcomex: #3a4f9e;
+    --cat-fcomex-bg: #e8ebf7;
+    --cat-averbados: #75468a;
+    --cat-averbados-bg: #f1e7f5;
+
+    --ok: #1f8a5f;
+    --ok-bg: #e4f5ee;
+    --warn: #b9790a;
+    --warn-bg: #fdf1de;
+    --danger: #c23b3b;
+    --danger-bg: #fdeaea;
+
+    --shadow: 0 1px 2px rgba(16, 24, 38, .05), 0 1px 1px rgba(16, 24, 38, .04);
+    --radius: 10px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --bg: #0a0f1a;
+      --panel: #121a29;
+      --panel-muted: #0f1826;
+      --border: #24314a;
+      --ink: #e8edf6;
+      --muted: #93a1b8;
+      --muted-2: #6c7b93;
+      --header-bg: #060b14;
+      --header-ink: #eef2f8;
+      --header-muted: #7d8ba3;
+
+      --accent: #3fc7b6;
+      --accent-ink: #06231f;
+      --accent-soft: rgba(63, 199, 182, .16);
+      --focus-ring: rgba(63, 199, 182, .35);
+
+      --cat-granel: #e3b676;
+      --cat-granel-bg: rgba(138, 90, 32, .22);
+      --cat-mexico: #e8967c;
+      --cat-mexico-bg: rgba(168, 69, 43, .22);
+      --cat-fcomex: #9db0f2;
+      --cat-fcomex-bg: rgba(58, 79, 158, .28);
+      --cat-averbados: #d3a2e3;
+      --cat-averbados-bg: rgba(117, 70, 138, .26);
+
+      --ok: #6fd7ab;
+      --ok-bg: rgba(31, 138, 95, .2);
+      --warn: #f0b95e;
+      --warn-bg: rgba(185, 121, 10, .2);
+      --danger: #f29a9a;
+      --danger-bg: rgba(194, 59, 59, .2);
+
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 1px 1px rgba(0, 0, 0, .24);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0a0f1a; --panel: #121a29; --panel-muted: #0f1826; --border: #24314a;
+    --ink: #e8edf6; --muted: #93a1b8; --muted-2: #6c7b93;
+    --header-bg: #060b14; --header-ink: #eef2f8; --header-muted: #7d8ba3;
+    --accent: #3fc7b6; --accent-ink: #06231f; --accent-soft: rgba(63, 199, 182, .16); --focus-ring: rgba(63, 199, 182, .35);
+    --cat-granel: #e3b676; --cat-granel-bg: rgba(138, 90, 32, .22);
+    --cat-mexico: #e8967c; --cat-mexico-bg: rgba(168, 69, 43, .22);
+    --cat-fcomex: #9db0f2; --cat-fcomex-bg: rgba(58, 79, 158, .28);
+    --cat-averbados: #d3a2e3; --cat-averbados-bg: rgba(117, 70, 138, .26);
+    --ok: #6fd7ab; --ok-bg: rgba(31, 138, 95, .2);
+    --warn: #f0b95e; --warn-bg: rgba(185, 121, 10, .2);
+    --danger: #f29a9a; --danger-bg: rgba(194, 59, 59, .2);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 1px 1px rgba(0, 0, 0, .24);
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #eef1f6; --panel: #ffffff; --panel-muted: #f5f7fb; --border: #dbe1ea;
+    --ink: #101826; --muted: #5c6b81; --muted-2: #8896aa;
+    --header-bg: #0d1b2a; --header-ink: #eef2f8; --header-muted: #90a0b8;
+    --accent: #0f6e63; --accent-ink: #ffffff; --accent-soft: #e2f0ee; --focus-ring: rgba(15, 110, 99, .35);
+    --cat-granel: #8a5a20; --cat-granel-bg: #f6eee1;
+    --cat-mexico: #a8452b; --cat-mexico-bg: #f8e9e4;
+    --cat-fcomex: #3a4f9e; --cat-fcomex-bg: #e8ebf7;
+    --cat-averbados: #75468a; --cat-averbados-bg: #f1e7f5;
+    --ok: #1f8a5f; --ok-bg: #e4f5ee;
+    --warn: #b9790a; --warn-bg: #fdf1de;
+    --danger: #c23b3b; --danger-bg: #fdeaea;
+    --shadow: 0 1px 2px rgba(16, 24, 38, .05), 0 1px 1px rgba(16, 24, 38, .04);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
   ::-webkit-scrollbar { height: 8px; width: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
-  .toast { animation: toast-in .25s ease-out; }
-  @keyframes toast-in { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
-  .fade-out { transition: opacity .3s ease, transform .3s ease; opacity: 0 !important; transform: translateY(-4px); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 9999px; }
+
+  .cat-stripe { display: flex; height: 4px; }
+  .cat-stripe span { flex: 1; }
+  .cat-stripe .s-granel { background: var(--cat-granel); }
+  .cat-stripe .s-mexico { background: var(--cat-mexico); }
+  .cat-stripe .s-fcomex { background: var(--cat-fcomex); }
+  .cat-stripe .s-averbados { background: var(--cat-averbados); }
+
+  .container { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+  @media (min-width: 640px) { .container { padding: 0 24px; } }
+  @media (min-width: 1024px) { .container { padding: 0 32px; } }
+
+  .app-header { background: var(--header-bg); color: var(--header-ink); position: sticky; top: 0; z-index: 30; box-shadow: var(--shadow); }
+  .header-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 14px 0; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark { width: 38px; height: 38px; border-radius: 9px; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .brand-mark svg { width: 22px; height: 22px; }
+  .brand-text h1 { font-size: 16px; font-weight: 800; margin: 0; line-height: 1.2; letter-spacing: -0.01em; }
+  .brand-text p { font-size: 12px; color: var(--header-muted); margin: 2px 0 0; }
+  .header-meta { text-align: right; }
+  .header-meta p:first-child { font-size: 13px; font-weight: 600; margin: 0; text-transform: capitalize; }
+  .header-meta p:last-child { font-size: 11.5px; color: var(--header-muted); margin: 2px 0 0; }
+
+  main.page { padding: 24px 0 48px; display: flex; flex-direction: column; gap: 28px; }
+
+  .section-title {
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); display: flex; align-items: center; gap: 8px; margin: 0 0 12px;
+  }
+  .section-title svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+  .cards-row { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  @media (min-width: 560px) { .cards-row { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1024px) { .cards-row { grid-template-columns: repeat(4, 1fr); } }
+
+  .stat-card {
+    background: var(--panel); border: 1px solid var(--border); border-top: 3px solid var(--cat);
+    border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px;
+  }
+  .stat-card .cat-name { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--cat); display: block; margin-bottom: 10px; }
+  .stat-card .big-num { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1; }
+  .stat-card .sub { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+
+  .layout-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+  @media (min-width: 1024px) { .layout-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: start; } }
+  .stack { display: flex; flex-direction: column; gap: 20px; }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .field:last-of-type { margin-bottom: 0; }
+  .field label { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  input, select, textarea {
+    font: inherit; font-size: 14px; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; width: 100%;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  input:focus, select:focus, textarea:focus, button:focus-visible {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+  ::placeholder { color: var(--muted-2); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    font: inherit; font-size: 13.5px; font-weight: 700; border-radius: 8px; border: 1px solid transparent;
+    padding: 10px 16px; cursor: pointer; transition: background-color .15s ease, border-color .15s ease, opacity .15s ease;
+    white-space: nowrap;
+  }
+  .btn svg { width: 15px; height: 15px; }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover { opacity: .9; }
+  .btn-secondary { background: var(--panel-muted); color: var(--ink); border-color: var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-text { background: transparent; color: var(--muted); padding: 10px 10px; }
+  .btn-text:hover { color: var(--ink); }
+  .form-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+  .form-actions .btn-primary { flex: 1; }
+  .hidden { display: none !important; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700;
+    padding: 4px 10px; border-radius: 999px; white-space: nowrap; line-height: 1.4;
+  }
+  .badge-granel { background: var(--cat-granel-bg); color: var(--cat-granel); }
+  .badge-mexico { background: var(--cat-mexico-bg); color: var(--cat-mexico); }
+  .badge-fcomex { background: var(--cat-fcomex-bg); color: var(--cat-fcomex); }
+  .badge-averbados { background: var(--cat-averbados-bg); color: var(--cat-averbados); }
+  .badge-ok { background: var(--ok-bg); color: var(--ok); }
+  .badge-warn { background: var(--warn-bg); color: var(--warn); }
+  .badge-neutral { background: var(--panel-muted); color: var(--muted); }
+  button.badge { border: none; cursor: pointer; font: inherit; }
+  button.badge:hover { filter: brightness(0.95); }
+
+  .dot { width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0; }
+
+  .yield-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+  .yield-tile { border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; background: var(--panel-muted); }
+  .yield-tile.is-current { background: var(--accent-soft); border-color: var(--accent); }
+  .yield-tile p:first-child { font-size: 11.5px; color: var(--muted); margin: 0; }
+  .yield-tile.is-current p:first-child { color: var(--accent); }
+  .yield-tile .num { font-size: 26px; font-weight: 800; margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+  .bar-chart { display: flex; flex-direction: column; gap: 14px; margin-top: 4px; }
+  .bar-legend { display: flex; gap: 16px; font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+  .bar-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .bar-legend .sw { width: 10px; height: 10px; border-radius: 3px; }
+  .bar-row-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .bar-line { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .bar-line:last-child { margin-bottom: 0; }
+  .bar-line .bar-tag { font-size: 11px; color: var(--muted-2); width: 30px; flex-shrink: 0; }
+  .bar-track { flex: 1; background: var(--panel-muted); border-radius: 999px; height: 9px; overflow: hidden; border: 1px solid var(--border); }
+  .bar-fill { height: 100%; border-radius: 999px; transition: width .35s ease; }
+  .bar-fill.prev { background: var(--muted-2); }
+  .bar-fill.cur { background: var(--accent); }
+  .bar-line .bar-value { font-size: 12.5px; color: var(--muted); width: 20px; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+  .table-wrap { overflow-x: auto; }
+  table.ledger { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  table.ledger th {
+    text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; font-weight: 700;
+    color: var(--muted-2); padding: 8px 12px; border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  table.ledger td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  table.ledger tbody tr:hover { background: var(--panel-muted); }
+  table.ledger tbody tr:last-child td { border-bottom: none; }
+  table.ledger td.num, table.ledger th.num { text-align: center; font-variant-numeric: tabular-nums; }
+  table.ledger tfoot td, table.ledger tr.totals td { background: var(--panel-muted); font-weight: 700; }
+  .truncate { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .empty-row { text-align: center; color: var(--muted-2); padding: 32px 12px; }
+  .row-actions { display: flex; justify-content: flex-end; gap: 2px; }
+  .icon-btn { background: transparent; border: none; color: var(--muted-2); cursor: pointer; padding: 6px; border-radius: 6px; display: inline-flex; }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .icon-btn:hover { color: var(--ink); background: var(--panel-muted); }
+  .icon-btn.danger:hover { color: var(--danger); }
+
+  .filters-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .filters-bar select, .filters-bar input[type="date"] { width: auto; padding: 8px 10px; font-size: 13px; }
+  .filters-bar input[type="text"] { flex: 1; min-width: 180px; padding: 8px 10px; font-size: 13px; }
+
+  .period-label { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; font-variant-numeric: tabular-nums; }
+
+  .toast-stack { position: fixed; bottom: 18px; right: 18px; z-index: 50; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: var(--ink); color: var(--bg); font-size: 13.5px; font-weight: 600; padding: 10px 16px;
+    border-radius: 8px; box-shadow: var(--shadow); animation: toast-in .2s ease-out;
+  }
+  .toast.is-error { background: var(--danger); color: #fff; }
+  .toast.fade-out { transition: opacity .3s ease, transform .3s ease; opacity: 0; transform: translateY(-6px); }
+  @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+  }
 </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen">
+<body>
 
-  <!-- Header -->
-  <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4 flex-wrap">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m-1 4h1m4-4h1m-1 4h1M9 21v-4h6v4"/></svg>
+  <div class="cat-stripe" aria-hidden="true">
+    <span class="s-granel"></span><span class="s-mexico"></span><span class="s-fcomex"></span><span class="s-averbados"></span>
+  </div>
+
+  <header class="app-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m-1 4h1m4-4h1m-1 4h1M9 21v-4h6v4"/></svg>
         </div>
-        <div>
-          <h1 class="text-lg font-bold leading-tight">Dashboard COMEX</h1>
-          <p class="text-xs text-slate-400 leading-tight">Rotina de Comércio Exterior</p>
+        <div class="brand-text">
+          <h1>Dashboard COMEX</h1>
+          <p>Rotina de Comércio Exterior</p>
         </div>
       </div>
-      <div class="text-right">
-        <p id="clockDate" class="text-sm font-medium capitalize"></p>
-        <p class="text-xs text-slate-400">Dados salvos localmente neste navegador</p>
+      <div class="header-meta">
+        <p id="clockDate"></p>
+        <p>Dados salvos localmente neste navegador</p>
       </div>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+  <main class="page container">
 
     <!-- 1. Indicadores diários -->
     <section>
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-3">Indicadores de hoje</h2>
-      <div id="dailyCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+      <h2 class="section-title">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3M4 5h16M4 19h16"/></svg>
+        Indicadores de hoje
+      </h2>
+      <div id="dailyCards" class="cards-row"></div>
     </section>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="layout-grid">
 
       <!-- Formulário de entrada -->
-      <section class="lg:col-span-1 bg-white rounded-xl border border-slate-200 shadow-sm p-5 h-fit">
-        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-4 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      <section class="card">
+        <h2 class="section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
           Novo registro
         </h2>
-        <form id="entryForm" class="space-y-4">
-          <div>
-            <label class="block text-xs font-medium text-slate-600 mb-1">Categoria</label>
-            <select id="fCategoria" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required></select>
+        <form id="entryForm">
+          <div class="field">
+            <label for="fCategoria">Categoria</label>
+            <select id="fCategoria" required></select>
           </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-600 mb-1">Número do processo</label>
-            <input id="fProcesso" type="text" placeholder="Ex: 2026/00123-4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required />
+          <div class="field">
+            <label for="fProcesso">Número do processo</label>
+            <input id="fProcesso" type="text" placeholder="Ex: 2026/00123-4" required />
           </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Data</label>
-              <input id="fData" type="date" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required />
+          <div class="field-row">
+            <div class="field">
+              <label for="fData">Data</label>
+              <input id="fData" type="date" required />
             </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Status</label>
-              <select id="fStatus" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <div class="field">
+              <label for="fStatus">Status</label>
+              <select id="fStatus">
                 <option value="Pendente">Pendente</option>
                 <option value="Concluído">Concluído</option>
               </select>
             </div>
           </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-600 mb-1">Observações</label>
-            <textarea id="fObs" rows="3" placeholder="Detalhes adicionais (opcional)" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
+          <div class="field">
+            <label for="fObs">Observações</label>
+            <textarea id="fObs" rows="3" placeholder="Detalhes adicionais (opcional)"></textarea>
           </div>
-          <div class="flex items-center gap-2 pt-1">
-            <button id="submitBtn" type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors">Adicionar registro</button>
-            <button id="cancelEditBtn" type="button" class="hidden text-sm font-medium text-slate-500 hover:text-slate-700 px-3 py-2.5">Cancelar</button>
+          <div class="form-actions">
+            <button id="submitBtn" type="submit" class="btn btn-primary">Adicionar registro</button>
+            <button id="cancelEditBtn" type="button" class="btn btn-text hidden">Cancelar</button>
           </div>
         </form>
       </section>
 
       <!-- Coluna direita: Rendimento + Relatório semanal -->
-      <div class="lg:col-span-2 space-y-6">
+      <div class="stack">
 
         <!-- 4. Módulo de rendimento comparado -->
-        <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-          <div class="flex items-center justify-between flex-wrap gap-2 mb-1">
-            <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>
+        <section class="card">
+          <div class="card-head">
+            <h2 class="section-title" style="margin-bottom:0;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>
               Rendimento comparado (semana atual x anterior)
             </h2>
             <span id="yieldBadge"></span>
           </div>
-          <div class="grid grid-cols-2 gap-4 my-4">
-            <div class="rounded-lg bg-slate-50 border border-slate-200 p-3 text-center">
-              <p class="text-xs text-slate-500">Concluídos — semana anterior</p>
-              <p id="totalPrev" class="text-2xl font-bold text-slate-700">0</p>
+          <div class="yield-summary">
+            <div class="yield-tile">
+              <p>Concluídos — semana anterior</p>
+              <p id="totalPrev" class="num">0</p>
             </div>
-            <div class="rounded-lg bg-blue-50 border border-blue-200 p-3 text-center">
-              <p class="text-xs text-blue-600">Concluídos — semana atual</p>
-              <p id="totalCur" class="text-2xl font-bold text-blue-700">0</p>
+            <div class="yield-tile is-current">
+              <p>Concluídos — semana atual</p>
+              <p id="totalCur" class="num">0</p>
             </div>
           </div>
-          <div class="h-56">
-            <canvas id="yieldChart"></canvas>
+          <div class="bar-legend">
+            <span><span class="sw" style="background:var(--muted-2)"></span>Semana anterior</span>
+            <span><span class="sw" style="background:var(--accent)"></span>Semana atual</span>
           </div>
-          <div id="yieldCatList" class="mt-3"></div>
+          <div id="yieldChart" class="bar-chart"></div>
         </section>
 
         <!-- 3. Relatório semanal -->
-        <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-          <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
-            <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+        <section class="card">
+          <div class="card-head">
+            <h2 class="section-title" style="margin-bottom:0;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
               Relatório semanal
             </h2>
-            <select id="weekSelect" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+            <select id="weekSelect"></select>
           </div>
-          <p id="periodLabel" class="text-xs text-slate-500 mb-3"></p>
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+          <p id="periodLabel" class="period-label"></p>
+          <div class="table-wrap">
+            <table class="ledger">
               <thead>
-                <tr class="text-left text-xs text-slate-400 uppercase border-b border-slate-200">
-                  <th class="py-2 pr-3 font-medium">Categoria</th>
-                  <th class="py-2 px-3 font-medium text-center">Concluídos</th>
-                  <th class="py-2 px-3 font-medium text-center">Pendentes</th>
-                  <th class="py-2 pl-3 font-medium text-center">Total</th>
+                <tr>
+                  <th>Categoria</th>
+                  <th class="num">Concluídos</th>
+                  <th class="num">Pendentes</th>
+                  <th class="num">Total</th>
                 </tr>
               </thead>
               <tbody id="weeklyReportBody"></tbody>
             </table>
           </div>
-          <div class="flex flex-wrap gap-2 mt-4">
-            <button id="exportCsvBtn" type="button" class="inline-flex items-center gap-1.5 text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-2 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+          <div class="form-actions" style="margin-top:16px;">
+            <button id="exportCsvBtn" type="button" class="btn btn-secondary">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
               Exportar CSV
             </button>
-            <button id="copyEmailBtn" type="button" class="inline-flex items-center gap-1.5 text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-2 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <button id="copyEmailBtn" type="button" class="btn btn-secondary">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
               Copiar como texto (e-mail)
             </button>
           </div>
@@ -166,40 +427,40 @@
     </div>
 
     <!-- 2. Histórico -->
-    <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-      <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
-        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <section class="card">
+      <div class="card-head">
+        <h2 class="section-title" style="margin-bottom:0;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           Histórico de processos
         </h2>
-        <span id="historyCount" class="text-xs text-slate-400"></span>
+        <span id="historyCount" style="font-size:12px;color:var(--muted-2);"></span>
       </div>
 
-      <div class="flex flex-wrap gap-2 mb-4">
-        <select id="filterCategoria" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <div class="filters-bar" style="margin-top:16px;">
+        <select id="filterCategoria">
           <option value="all">Todas as categorias</option>
         </select>
-        <select id="filterStatus" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <select id="filterStatus">
           <option value="all">Todos os status</option>
           <option value="Pendente">Pendente</option>
           <option value="Concluído">Concluído</option>
         </select>
-        <input id="filterDe" type="date" title="De" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        <input id="filterAte" type="date" title="Até" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        <input id="filterBusca" type="text" placeholder="Buscar processo ou observação..." class="flex-1 min-w-[180px] rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        <button id="clearFiltersBtn" type="button" class="text-sm font-medium text-slate-500 hover:text-slate-700 px-3 py-1.5">Limpar filtros</button>
+        <input id="filterDe" type="date" title="De" />
+        <input id="filterAte" type="date" title="Até" />
+        <input id="filterBusca" type="text" placeholder="Buscar processo ou observação..." />
+        <button id="clearFiltersBtn" type="button" class="btn btn-text">Limpar filtros</button>
       </div>
 
-      <div class="overflow-x-auto -mx-1">
-        <table class="w-full text-sm min-w-[720px]">
+      <div class="table-wrap">
+        <table class="ledger" style="min-width:720px;">
           <thead>
-            <tr class="text-left text-xs text-slate-400 uppercase border-b border-slate-200">
-              <th class="py-2 px-3 font-medium">Categoria</th>
-              <th class="py-2 px-3 font-medium">Processo</th>
-              <th class="py-2 px-3 font-medium">Data</th>
-              <th class="py-2 px-3 font-medium">Status</th>
-              <th class="py-2 px-3 font-medium">Observações</th>
-              <th class="py-2 px-3 font-medium text-right">Ações</th>
+            <tr>
+              <th>Categoria</th>
+              <th>Processo</th>
+              <th>Data</th>
+              <th>Status</th>
+              <th>Observações</th>
+              <th style="text-align:right;">Ações</th>
             </tr>
           </thead>
           <tbody id="historyBody"></tbody>
@@ -209,7 +470,7 @@
 
   </main>
 
-  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+  <div id="toastContainer" class="toast-stack"></div>
 
 <script>
 (function () {
@@ -221,18 +482,11 @@
   var STORAGE_KEY = 'comex_dashboard_tasks_v1';
 
   var CATEGORIES = [
-    { id: 'granel',     label: 'Abertura de processos granel',      short: 'Granel',     color: 'blue' },
-    { id: 'mexico',     label: 'Envio México no e-mail',             short: 'México',     color: 'amber' },
-    { id: 'fcomex',     label: 'Faturamento de processos no FComex', short: 'FComex',     color: 'emerald' },
-    { id: 'averbados',  label: 'Docs averbados',                     short: 'Averbados',  color: 'violet' },
+    { id: 'granel',    label: 'Abertura de processos granel',      short: 'Granel' },
+    { id: 'mexico',    label: 'Envio México no e-mail',             short: 'México' },
+    { id: 'fcomex',    label: 'Faturamento de processos no FComex', short: 'FComex' },
+    { id: 'averbados', label: 'Docs averbados',                     short: 'Averbados' },
   ];
-
-  var COLOR_CLASSES = {
-    blue:    { text: 'text-blue-700',    dot: 'bg-blue-500',    badge: 'bg-blue-100 text-blue-800' },
-    amber:   { text: 'text-amber-700',   dot: 'bg-amber-500',   badge: 'bg-amber-100 text-amber-800' },
-    emerald: { text: 'text-emerald-700', dot: 'bg-emerald-500', badge: 'bg-emerald-100 text-emerald-800' },
-    violet:  { text: 'text-violet-700',  dot: 'bg-violet-500',  badge: 'bg-violet-100 text-violet-800' },
-  };
 
   var WEEK_OPTIONS_COUNT = 12;
 
@@ -245,7 +499,6 @@
   var currentReportEntries = [];
   var currentReportRows = [];
   var currentReportRange = null;
-  var chartInstance = null;
 
   // ---------------------------------------------------------------------
   // Persistência
@@ -353,13 +606,13 @@
   }
 
   function toast(msg, isError) {
-    var el = document.createElement('div');
-    el.className = 'toast text-sm font-medium text-white px-4 py-2.5 rounded-lg shadow-lg ' + (isError ? 'bg-red-600' : 'bg-slate-800');
-    el.textContent = msg;
-    document.getElementById('toastContainer').appendChild(el);
+    var t = document.createElement('div');
+    t.className = 'toast' + (isError ? ' is-error' : '');
+    t.textContent = msg;
+    document.getElementById('toastContainer').appendChild(t);
     setTimeout(function () {
-      el.classList.add('fade-out');
-      setTimeout(function () { el.remove(); }, 300);
+      t.classList.add('fade-out');
+      setTimeout(function () { t.remove(); }, 300);
     }, 2600);
   }
 
@@ -380,7 +633,7 @@
     yieldBadge: document.getElementById('yieldBadge'),
     totalPrev: document.getElementById('totalPrev'),
     totalCur: document.getElementById('totalCur'),
-    yieldCatList: document.getElementById('yieldCatList'),
+    yieldChart: document.getElementById('yieldChart'),
     weekSelect: document.getElementById('weekSelect'),
     periodLabel: document.getElementById('periodLabel'),
     weeklyReportBody: document.getElementById('weeklyReportBody'),
@@ -428,15 +681,11 @@
       var entriesToday = tasks.filter(function (t) { return t.categoria === cat.id && t.data === today; });
       var concl = entriesToday.filter(function (t) { return t.status === 'Concluído'; }).length;
       var pend = entriesToday.filter(function (t) { return t.status === 'Pendente'; }).length;
-      var c = COLOR_CLASSES[cat.color];
       return (
-        '<div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">' +
-          '<div class="flex items-center justify-between mb-2">' +
-            '<span class="text-xs font-semibold uppercase tracking-wide ' + c.text + '">' + escapeHtml(cat.label) + '</span>' +
-            '<span class="w-2.5 h-2.5 rounded-full ' + c.dot + ' shrink-0"></span>' +
-          '</div>' +
-          '<div class="text-3xl font-bold text-slate-800">' + concl + '</div>' +
-          '<div class="text-xs text-slate-500 mt-1">concluído(s) hoje' + (pend > 0 ? ' · ' + pend + ' pendente(s)' : '') + '</div>' +
+        '<div class="stat-card" style="--cat: var(--cat-' + cat.id + ')">' +
+          '<span class="cat-name">' + escapeHtml(cat.label) + '</span>' +
+          '<div class="big-num">' + concl + '</div>' +
+          '<div class="sub">concluído(s) hoje' + (pend > 0 ? ' · ' + pend + ' pendente(s)' : '') + '</div>' +
         '</div>'
       );
     }).join('');
@@ -469,77 +718,42 @@
 
     var badgeHtml;
     if (totalPrev === 0 && totalCur === 0) {
-      badgeHtml = '<span class="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">Sem dados suficientes ainda</span>';
+      badgeHtml = '<span class="badge badge-neutral">Sem dados suficientes ainda</span>';
     } else if (totalPrev === 0) {
-      badgeHtml = '<span class="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">▲ novo volume esta semana (+' + totalCur + ')</span>';
+      badgeHtml = '<span class="badge badge-ok">▲ novo volume esta semana (+' + totalCur + ')</span>';
     } else {
       var pct = Math.round(((totalCur - totalPrev) / totalPrev) * 100);
       var up = pct >= 0;
-      badgeHtml = '<span class="text-xs font-semibold ' + (up ? 'text-emerald-700 bg-emerald-100' : 'text-red-700 bg-red-100') + ' px-2.5 py-1 rounded-full">' +
+      badgeHtml = '<span class="badge ' + (up ? 'badge-ok' : 'badge-warn') + '">' +
         (up ? '▲' : '▼') + ' ' + (up ? '+' : '') + pct + '% em relação à semana passada</span>';
     }
     el.yieldBadge.innerHTML = badgeHtml;
 
-    el.yieldCatList.innerHTML = perCat.map(function (p) {
-      var chip;
+    var maxVal = Math.max(1, Math.max.apply(null, perCat.map(function (p) { return Math.max(p.cur, p.prev); })));
+
+    el.yieldChart.innerHTML = perCat.map(function (p) {
+      var pctPrev = Math.round((p.prev / maxVal) * 100);
+      var pctCur = Math.round((p.cur / maxVal) * 100);
+      var deltaChip;
       if (p.prev === 0 && p.cur === 0) {
-        chip = '<span class="text-xs text-slate-400">sem dados</span>';
+        deltaChip = '<span class="badge badge-neutral">sem dados</span>';
       } else if (p.prev === 0) {
-        chip = '<span class="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">novo</span>';
+        deltaChip = '<span class="badge badge-ok">novo</span>';
       } else {
         var pctCat = Math.round(((p.cur - p.prev) / p.prev) * 100);
         var upCat = pctCat >= 0;
-        chip = '<span class="text-xs font-medium ' + (upCat ? 'text-emerald-700 bg-emerald-100' : 'text-red-700 bg-red-100') + ' px-2 py-0.5 rounded-full">' +
-          (upCat ? '+' : '') + pctCat + '%</span>';
+        deltaChip = '<span class="badge ' + (upCat ? 'badge-ok' : 'badge-warn') + '">' + (upCat ? '+' : '') + pctCat + '%</span>';
       }
       return (
-        '<div class="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">' +
-          '<span class="text-sm text-slate-600">' + escapeHtml(p.cat.label) + '</span>' +
-          '<div class="flex items-center gap-2">' +
-            '<span class="text-xs text-slate-400">' + p.prev + ' → ' + p.cur + '</span>' + chip +
+        '<div class="bar-group">' +
+          '<div class="bar-row-label" style="display:flex;align-items:center;justify-content:space-between;">' +
+            '<span>' + escapeHtml(p.cat.label) + '</span>' + deltaChip +
           '</div>' +
+          '<div class="bar-line"><span class="bar-tag">Ant.</span><div class="bar-track"><div class="bar-fill prev" style="width:' + pctPrev + '%"></div></div><span class="bar-value">' + p.prev + '</span></div>' +
+          '<div class="bar-line"><span class="bar-tag">Atual</span><div class="bar-track"><div class="bar-fill cur" style="width:' + pctCur + '%"></div></div><span class="bar-value">' + p.cur + '</span></div>' +
         '</div>'
       );
     }).join('');
-
-    updateChart(perCat);
-  }
-
-  function updateChart(perCat) {
-    var labels = perCat.map(function (p) { return p.cat.short; });
-    var dataCur = perCat.map(function (p) { return p.cur; });
-    var dataPrev = perCat.map(function (p) { return p.prev; });
-
-    if (chartInstance) {
-      chartInstance.data.labels = labels;
-      chartInstance.data.datasets[0].data = dataPrev;
-      chartInstance.data.datasets[1].data = dataCur;
-      chartInstance.update();
-      return;
-    }
-
-    if (typeof Chart === 'undefined') return;
-
-    var ctx = document.getElementById('yieldChart');
-    chartInstance = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [
-          { label: 'Semana anterior', data: dataPrev, backgroundColor: '#cbd5e1', borderRadius: 6, maxBarThickness: 40 },
-          { label: 'Semana atual', data: dataCur, backgroundColor: '#2563eb', borderRadius: 6, maxBarThickness: 40 },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } } },
-        scales: {
-          y: { beginAtZero: true, ticks: { precision: 0 } },
-          x: { grid: { display: false } },
-        },
-      },
-    });
   }
 
   // ---------------------------------------------------------------------
@@ -567,21 +781,20 @@
     var totalGeral = rows.reduce(function (a, r) { return a + r.total; }, 0);
 
     el.weeklyReportBody.innerHTML = rows.map(function (r) {
-      var c = COLOR_CLASSES[r.cat.color];
       return (
-        '<tr class="border-b border-slate-100">' +
-          '<td class="py-2 pr-3"><span class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full ' + c.badge + '">' + escapeHtml(r.cat.label) + '</span></td>' +
-          '<td class="py-2 px-3 text-center font-semibold text-emerald-700">' + r.concluidos + '</td>' +
-          '<td class="py-2 px-3 text-center font-semibold text-amber-700">' + r.pendentes + '</td>' +
-          '<td class="py-2 pl-3 text-center font-semibold text-slate-700">' + r.total + '</td>' +
+        '<tr>' +
+          '<td><span class="badge badge-' + r.cat.id + '">' + escapeHtml(r.cat.label) + '</span></td>' +
+          '<td class="num" style="color:var(--ok);font-weight:700;">' + r.concluidos + '</td>' +
+          '<td class="num" style="color:var(--warn);font-weight:700;">' + r.pendentes + '</td>' +
+          '<td class="num" style="font-weight:700;">' + r.total + '</td>' +
         '</tr>'
       );
     }).join('') + (
-      '<tr class="bg-slate-50 font-semibold">' +
-        '<td class="py-2 pr-3 text-slate-700">Total</td>' +
-        '<td class="py-2 px-3 text-center text-emerald-700">' + totalConcluidos + '</td>' +
-        '<td class="py-2 px-3 text-center text-amber-700">' + totalPendentes + '</td>' +
-        '<td class="py-2 pl-3 text-center text-slate-700">' + totalGeral + '</td>' +
+      '<tr class="totals">' +
+        '<td>Total</td>' +
+        '<td class="num" style="color:var(--ok);">' + totalConcluidos + '</td>' +
+        '<td class="num" style="color:var(--warn);">' + totalPendentes + '</td>' +
+        '<td class="num">' + totalGeral + '</td>' +
       '</tr>'
     );
 
@@ -682,27 +895,28 @@
     var rows = getFilteredTasks();
     el.historyCount.textContent = rows.length + ' registro(s)';
     el.historyBody.innerHTML = rows.length ? rows.map(rowHtml).join('') :
-      '<tr><td colspan="6" class="text-center text-slate-400 py-8">Nenhum registro encontrado.</td></tr>';
+      '<tr><td colspan="6" class="empty-row">Nenhum registro encontrado.</td></tr>';
   }
 
   function rowHtml(t) {
     var cat = categoryById(t.categoria);
-    var c = cat ? COLOR_CLASSES[cat.color] : COLOR_CLASSES.blue;
-    var statusClasses = t.status === 'Concluído' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800';
+    var statusClass = t.status === 'Concluído' ? 'badge-ok' : 'badge-warn';
     return (
-      '<tr class="border-b border-slate-100 hover:bg-slate-50">' +
-        '<td class="py-2.5 px-3"><span class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full ' + c.badge + '">' + escapeHtml(cat ? cat.label : t.categoria) + '</span></td>' +
-        '<td class="py-2.5 px-3 font-medium text-slate-700">' + escapeHtml(t.numeroProcesso) + '</td>' +
-        '<td class="py-2.5 px-3 text-slate-500 whitespace-nowrap">' + formatBR(t.data) + '</td>' +
-        '<td class="py-2.5 px-3"><button data-action="toggle" data-id="' + t.id + '" class="text-xs font-medium px-2 py-1 rounded-full ' + statusClasses + ' hover:opacity-80 transition-opacity">' + t.status + '</button></td>' +
-        '<td class="py-2.5 px-3 text-slate-500 max-w-xs truncate" title="' + escapeHtml(t.observacoes || '') + '">' + (escapeHtml(t.observacoes || '') || '—') + '</td>' +
-        '<td class="py-2.5 px-3 text-right whitespace-nowrap">' +
-          '<button data-action="edit" data-id="' + t.id + '" class="text-slate-400 hover:text-blue-600 p-1" title="Editar">' +
-            '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H7a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-4M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
-          '</button>' +
-          '<button data-action="delete" data-id="' + t.id + '" class="text-slate-400 hover:text-red-600 p-1" title="Excluir">' +
-            '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>' +
-          '</button>' +
+      '<tr>' +
+        '<td><span class="badge badge-' + (cat ? cat.id : 'granel') + '">' + escapeHtml(cat ? cat.label : t.categoria) + '</span></td>' +
+        '<td style="font-weight:600;">' + escapeHtml(t.numeroProcesso) + '</td>' +
+        '<td style="white-space:nowrap;color:var(--muted);font-variant-numeric:tabular-nums;">' + formatBR(t.data) + '</td>' +
+        '<td><button data-action="toggle" data-id="' + t.id + '" class="badge ' + statusClass + '">' + t.status + '</button></td>' +
+        '<td class="truncate" title="' + escapeHtml(t.observacoes || '') + '" style="color:var(--muted);">' + (escapeHtml(t.observacoes || '') || '—') + '</td>' +
+        '<td>' +
+          '<div class="row-actions">' +
+            '<button data-action="edit" data-id="' + t.id + '" class="icon-btn" title="Editar">' +
+              '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H7a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-4M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+            '</button>' +
+            '<button data-action="delete" data-id="' + t.id + '" class="icon-btn danger" title="Excluir">' +
+              '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>' +
+            '</button>' +
+          '</div>' +
         '</td>' +
       '</tr>'
     );
