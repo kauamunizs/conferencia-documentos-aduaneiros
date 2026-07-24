@@ -538,6 +538,7 @@
         <input id="filterAte" type="date" title="Até" />
         <input id="filterBusca" type="text" placeholder="Buscar processo ou observação..." />
         <button id="clearFiltersBtn" type="button" class="btn btn-text">Limpar filtros</button>
+        <button id="deleteFilteredBtn" type="button" class="btn btn-text" style="color:var(--danger);">Excluir filtrados</button>
       </div>
 
       <div class="table-wrap">
@@ -813,6 +814,7 @@
     filterAte: document.getElementById('filterAte'),
     filterBusca: document.getElementById('filterBusca'),
     clearFiltersBtn: document.getElementById('clearFiltersBtn'),
+    deleteFilteredBtn: document.getElementById('deleteFilteredBtn'),
     syncDot: document.getElementById('syncDot'),
     syncStatusText: document.getElementById('syncStatusText'),
     syncNowBtn: document.getElementById('syncNowBtn'),
@@ -1403,6 +1405,17 @@
     el.filterAte.value = '';
     el.filterBusca.value = '';
     renderHistoryTable();
+  });
+
+  el.deleteFilteredBtn.addEventListener('click', function () {
+    var toDelete = getFilteredTasks();
+    if (!toDelete.length) { toast('Nenhum registro corresponde aos filtros atuais.', true); return; }
+    if (!confirm('Excluir ' + toDelete.length + ' registro(s) que correspondem aos filtros atuais? Essa ação não pode ser desfeita.')) return;
+    var ids = {};
+    toDelete.forEach(function (t) { ids[t.id] = true; addTombstone(t.id); });
+    tasks = tasks.filter(function (t) { return !ids[t.id]; });
+    saveAndRenderAll();
+    toast(toDelete.length + ' registro(s) excluído(s).');
   });
 
   el.syncToggleBtn.addEventListener('click', function () {
