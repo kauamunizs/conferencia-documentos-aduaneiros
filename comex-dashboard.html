@@ -1336,24 +1336,39 @@
     if (!Array.isArray(items)) { toast('O JSON precisa ser uma lista de registros.', true); return; }
 
     var added = 0;
+    var updated = 0;
     items.forEach(function (item) {
       if (!item || !item.numeroProcesso || !categoryById(item.categoria)) return;
-      tasks.push({
-        id: generateId(),
-        categoria: item.categoria,
-        numeroProcesso: String(item.numeroProcesso),
-        data: item.data || todayISO(),
-        status: item.status === 'Concluído' ? 'Concluído' : 'Pendente',
-        observacoes: item.observacoes || '',
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      });
-      added++;
+      var numeroProcesso = String(item.numeroProcesso);
+      var existing = tasks.filter(function (t) { return t.numeroProcesso === numeroProcesso; })[0];
+      if (existing) {
+        existing.categoria = item.categoria;
+        existing.data = item.data || existing.data;
+        existing.status = item.status === 'Concluído' ? 'Concluído' : 'Pendente';
+        existing.observacoes = item.observacoes || '';
+        existing.updatedAt = Date.now();
+        updated++;
+      } else {
+        tasks.push({
+          id: generateId(),
+          categoria: item.categoria,
+          numeroProcesso: numeroProcesso,
+          data: item.data || todayISO(),
+          status: item.status === 'Concluído' ? 'Concluído' : 'Pendente',
+          observacoes: item.observacoes || '',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+        added++;
+      }
     });
 
-    if (added) {
+    if (added || updated) {
       saveAndRenderAll();
-      toast(added + ' registro(s) importado(s) com sucesso!');
+      var parts = [];
+      if (added) parts.push(added + ' novo(s)');
+      if (updated) parts.push(updated + ' atualizado(s)');
+      toast('Importação concluída: ' + parts.join(', ') + '.');
       el.importText.value = '';
       el.importPanel.classList.add('hidden');
     } else {
