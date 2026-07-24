@@ -635,8 +635,50 @@
     }
   }
 
+  function loadMeta() {
+    try {
+      var raw = localStorage.getItem(META_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
   function setLocalUpdatedAt(ts) {
-    localStorage.setItem(META_STORAGE_KEY, JSON.stringify({ updatedAt: ts }));
+    var meta = loadMeta();
+    meta.updatedAt = ts;
+    localStorage.setItem(META_STORAGE_KEY, JSON.stringify(meta));
+  }
+
+  function getTombstones() {
+    return loadMeta().tombstones || {};
+  }
+
+  function addTombstone(id) {
+    var meta = loadMeta();
+    meta.tombstones = meta.tombstones || {};
+    meta.tombstones[id] = Date.now();
+    localStorage.setItem(META_STORAGE_KEY, JSON.stringify(meta));
+  }
+
+  // Combines two task lists by id, keeping whichever version of each record
+  // was updated more recently instead of letting one device's snapshot
+  // blindly replace the other's (which previously caused data loss when the
+  // two machines' clocks disagreed).
+  function mergeTasks(localList, remoteList) {
+    var tombstones = getTombstones();
+    var map = {};
+    function consider(t) {
+      if (!t || !t.id) return;
+      var stamp = t.updatedAt || t.createdAt || 0;
+      if (tombstones[t.id] && tombstones[t.id] >= stamp) return;
+      var existing = map[t.id];
+      var existingStamp = existing ? (existing.updatedAt || existing.createdAt || 0) : -1;
+      if (!existing || stamp >= existingStamp) map[t.id] = t;
+    }
+    (localList || []).forEach(consider);
+    (remoteList || []).forEach(consider);
+    return Object.keys(map).map(function (k) { return map[k]; });
   }
 
   // ---------------------------------------------------------------------
@@ -1096,25 +1138,24 @@
         if (file && file.content) {
           try { remote = JSON.parse(file.content); } catch (e) {}
         }
-        var localUpdatedAt = getLocalUpdatedAt();
-        var remoteUpdatedAt = remote.updatedAt || 0;
         renderGistIdDisplay(cfg.gistId);
 
-        if (remoteUpdatedAt > localUpdatedAt) {
-          tasks = remote.tasks || [];
+        // Merge instead of replace: combining by record id (keeping whichever
+        // side edited each record more recently) means a sync can never wipe
+        // out data just because one device's clock reads earlier than the
+        // other's.
+        var merged = mergeTasks(tasks, remote.tasks || []);
+        var changedLocally = JSON.stringify(merged) !== JSON.stringify(tasks);
+        tasks = merged;
+        if (changedLocally) {
           saveData();
-          setLocalUpdatedAt(remoteUpdatedAt);
           renderAll();
-          setSyncStatus('ok', 'Dados atualizados a partir da nuvem às ' + new Date().toLocaleTimeString('pt-BR') + '.');
-          return null;
         }
-        if (localUpdatedAt > remoteUpdatedAt || isManual) {
-          return updateRemoteGist(cfg.gistId).then(function () {
-            setSyncStatus('ok', 'Dados enviados para a nuvem às ' + new Date().toLocaleTimeString('pt-BR') + '.');
-          });
-        }
-        setSyncStatus('ok', 'Já sincronizado.');
-        return null;
+        setLocalUpdatedAt(Date.now());
+
+        return updateRemoteGist(cfg.gistId).then(function () {
+          setSyncStatus('ok', 'Sincronizado às ' + new Date().toLocaleTimeString('pt-BR') + '.');
+        });
       });
     }
 
@@ -1126,12 +1167,7 @@
   function pushIfConfigured() {
     var cfg = loadSyncConfig();
     if (!cfg.token || !cfg.gistId) return;
-    setSyncStatus('syncing', 'Sincronizando...');
-    updateRemoteGist(cfg.gistId).then(function () {
-      setSyncStatus('ok', 'Sincronizado às ' + new Date().toLocaleTimeString('pt-BR') + '.');
-    }).catch(function (err) {
-      setSyncStatus('error', 'Erro ao sincronizar: ' + err.message);
-    });
+    syncNow(false);
   }
 
   // ---------------------------------------------------------------------
@@ -1186,6 +1222,7 @@
     var t = tasks.filter(function (x) { return x.id === id; })[0];
     if (!t) return;
     t.status = t.status === 'Concluído' ? 'Pendente' : 'Concluído';
+    t.updatedAt = Date.now();
     saveAndRenderAll();
     toast('Status atualizado.');
   }
@@ -1193,6 +1230,7 @@
   function deleteTask(id) {
     if (!confirm('Tem certeza que deseja excluir este registro?')) return;
     tasks = tasks.filter(function (x) { return x.id !== id; });
+    addTombstone(id);
     saveAndRenderAll();
     toast('Registro excluído.');
   }
@@ -1254,6 +1292,7 @@
         t.data = el.fData.value;
         t.status = el.fStatus.value;
         t.observacoes = el.fObs.value.trim();
+        t.updatedAt = Date.now();
       }
       toast('Registro atualizado com sucesso!');
     } else {
@@ -1265,6 +1304,7 @@
         status: el.fStatus.value,
         observacoes: el.fObs.value.trim(),
         createdAt: Date.now(),
+        updatedAt: Date.now(),
       });
       toast('Registro adicionado com sucesso!');
     }
@@ -1306,6 +1346,7 @@
         status: item.status === 'Concluído' ? 'Concluído' : 'Pendente',
         observacoes: item.observacoes || '',
         createdAt: Date.now(),
+        updatedAt: Date.now(),
       });
       added++;
     });
