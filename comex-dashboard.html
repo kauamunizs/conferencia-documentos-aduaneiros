@@ -160,6 +160,32 @@
   .header-meta p:first-child { font-size: 13px; font-weight: 500; margin: 0; text-transform: capitalize; }
   .header-meta p:last-child { font-size: 11.5px; color: var(--header-muted); margin: 2px 0 0; }
 
+  .header-icon-btn {
+    position: relative; background: transparent; border: none; color: var(--header-muted); cursor: pointer;
+    padding: 8px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: background-color .15s var(--ease), color .15s var(--ease);
+  }
+  .header-icon-btn svg { width: 19px; height: 19px; }
+  .header-icon-btn:hover { color: var(--header-ink); background: rgba(127, 137, 153, .16); }
+  .header-icon-btn .status-dot {
+    position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 999px;
+    background: var(--muted-2); border: 2px solid var(--header-bg); box-sizing: content-box;
+  }
+  .header-icon-btn .status-dot.ok { background: var(--ok); }
+  .header-icon-btn .status-dot.error { background: var(--danger); }
+  .header-icon-btn .status-dot.syncing { background: var(--warn); animation: sync-pulse 1s ease-in-out infinite; }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, .32);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center; z-index: 60; padding: 20px;
+  }
+  .modal-card {
+    background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow);
+    width: 100%; max-width: 460px; max-height: 85vh; overflow-y: auto; padding: 24px;
+  }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+
   main.page { padding: 28px 0 56px; display: flex; flex-direction: column; gap: 28px; }
 
   .section-title {
@@ -337,49 +363,14 @@
         <p id="clockDate"></p>
         <p>Dados salvos localmente neste navegador</p>
       </div>
+      <button id="settingsBtn" type="button" class="header-icon-btn" title="Configurações" aria-label="Configurações">
+        <span id="headerSyncDot" class="status-dot"></span>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 008.6 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H2a2 2 0 010-4h.09A1.65 1.65 0 003.6 8.6a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H8a1.65 1.65 0 001-1.51V2a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V8c.16.6.6 1.14 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </button>
     </div>
   </header>
 
   <main class="page container">
-
-    <!-- Sincronização entre dispositivos -->
-    <section class="card" style="padding:16px 20px;">
-      <div class="sync-bar">
-        <div class="sync-status">
-          <span id="syncDot" class="sync-dot"></span>
-          <span id="syncStatusText">Sincronização não configurada.</span>
-        </div>
-        <div class="sync-actions">
-          <button id="syncNowBtn" type="button" class="btn btn-secondary">Sincronizar agora</button>
-          <button id="syncToggleBtn" type="button" class="btn btn-text">Configurar sincronização</button>
-        </div>
-      </div>
-      <div id="syncPanel" class="sync-panel hidden">
-        <p class="sync-help">
-          Sincroniza os dados entre PCs usando um Gist privado do GitHub como nuvem.
-          <a href="https://github.com/settings/tokens/new?description=Dashboard%20COMEX&scopes=gist" target="_blank" rel="noopener">Gerar token no GitHub</a>
-          com o escopo apenas <strong>gist</strong> e cole abaixo. No primeiro PC deixe o campo "ID do Gist" em branco — ele é criado automaticamente e você copia o ID para usar nos outros PCs. O token fica salvo apenas neste navegador.
-        </p>
-        <div class="field">
-          <label for="syncToken">Token de acesso pessoal (escopo gist)</label>
-          <input id="syncToken" type="password" placeholder="ghp_..." autocomplete="off" />
-        </div>
-        <div class="field">
-          <label for="syncGistId">ID do Gist (deixe em branco no primeiro PC)</label>
-          <input id="syncGistId" type="text" placeholder="Ex: 8f3a1c2b9e7d4f5a6b1c2d3e4f5a6b7c" autocomplete="off" />
-        </div>
-        <div id="gistIdDisplay" class="gist-id-display hidden">
-          <span>ID do Gist:</span> <strong id="gistIdValue"></strong>
-          <button id="copyGistIdBtn" type="button" class="icon-btn" title="Copiar ID">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-          </button>
-        </div>
-        <div class="form-actions">
-          <button id="syncSaveBtn" type="button" class="btn btn-primary">Salvar e sincronizar</button>
-          <button id="syncDisconnectBtn" type="button" class="btn btn-text">Desconectar</button>
-        </div>
-      </div>
-    </section>
 
     <!-- 1. Indicadores diários -->
     <section>
@@ -538,6 +529,47 @@
     </section>
 
   </main>
+
+  <div id="settingsOverlay" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 class="section-title" style="margin:0;">Configurações</h2>
+        <button id="settingsCloseBtn" type="button" class="icon-btn" aria-label="Fechar">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="sync-status" style="margin-bottom:16px;">
+        <span id="syncDot" class="sync-dot"></span>
+        <span id="syncStatusText">Sincronização não configurada.</span>
+      </div>
+
+      <p class="sync-help">
+        Sincroniza os dados entre PCs usando um Gist privado do GitHub como nuvem.
+        <a href="https://github.com/settings/tokens/new?description=Dashboard%20COMEX&scopes=gist" target="_blank" rel="noopener">Gerar token no GitHub</a>
+        com o escopo apenas <strong>gist</strong> e cole abaixo. No primeiro PC deixe o campo "ID do Gist" em branco — ele é criado automaticamente e você copia o ID para usar nos outros PCs. O token fica salvo apenas neste navegador.
+      </p>
+      <div class="field">
+        <label for="syncToken">Token de acesso pessoal (escopo gist)</label>
+        <input id="syncToken" type="password" placeholder="ghp_..." autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="syncGistId">ID do Gist (deixe em branco no primeiro PC)</label>
+        <input id="syncGistId" type="text" placeholder="Ex: 8f3a1c2b9e7d4f5a6b1c2d3e4f5a6b7c" autocomplete="off" />
+      </div>
+      <div id="gistIdDisplay" class="gist-id-display hidden">
+        <span>ID do Gist:</span> <strong id="gistIdValue"></strong>
+        <button id="copyGistIdBtn" type="button" class="icon-btn" title="Copiar ID">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        </button>
+      </div>
+      <div class="form-actions">
+        <button id="syncSaveBtn" type="button" class="btn btn-primary">Salvar e sincronizar</button>
+        <button id="syncNowBtn" type="button" class="btn btn-secondary">Sincronizar agora</button>
+      </div>
+      <button id="syncDisconnectBtn" type="button" class="btn btn-text" style="margin-top:8px;color:var(--danger);">Desconectar sincronização</button>
+    </div>
+  </div>
 
   <div id="toastContainer" class="toast-stack"></div>
 
@@ -794,11 +826,13 @@
     filterBusca: document.getElementById('filterBusca'),
     clearFiltersBtn: document.getElementById('clearFiltersBtn'),
     deleteFilteredBtn: document.getElementById('deleteFilteredBtn'),
+    settingsBtn: document.getElementById('settingsBtn'),
+    settingsOverlay: document.getElementById('settingsOverlay'),
+    settingsCloseBtn: document.getElementById('settingsCloseBtn'),
+    headerSyncDot: document.getElementById('headerSyncDot'),
     syncDot: document.getElementById('syncDot'),
     syncStatusText: document.getElementById('syncStatusText'),
     syncNowBtn: document.getElementById('syncNowBtn'),
-    syncToggleBtn: document.getElementById('syncToggleBtn'),
-    syncPanel: document.getElementById('syncPanel'),
     syncToken: document.getElementById('syncToken'),
     syncGistId: document.getElementById('syncGistId'),
     gistIdDisplay: document.getElementById('gistIdDisplay'),
@@ -1039,6 +1073,7 @@
   function setSyncStatus(state, message) {
     el.syncDot.className = 'sync-dot' + (state ? ' ' + state : '');
     el.syncStatusText.textContent = message;
+    el.headerSyncDot.className = 'status-dot' + (state ? ' ' + state : '');
   }
 
   function renderGistIdDisplay(gistId) {
@@ -1397,8 +1432,16 @@
     toast(toDelete.length + ' registro(s) excluído(s).');
   });
 
-  el.syncToggleBtn.addEventListener('click', function () {
-    el.syncPanel.classList.toggle('hidden');
+  function openSettings() { el.settingsOverlay.classList.remove('hidden'); }
+  function closeSettings() { el.settingsOverlay.classList.add('hidden'); }
+
+  el.settingsBtn.addEventListener('click', openSettings);
+  el.settingsCloseBtn.addEventListener('click', closeSettings);
+  el.settingsOverlay.addEventListener('click', function (e) {
+    if (e.target === el.settingsOverlay) closeSettings();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !el.settingsOverlay.classList.contains('hidden')) closeSettings();
   });
 
   el.syncNowBtn.addEventListener('click', function () { syncNow(true); });
