@@ -296,6 +296,8 @@
   @keyframes sync-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   .sync-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   .sync-panel { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: grid; gap: 14px; }
+  .import-panel { margin-top: 12px; padding-top: 16px; border-top: 1px solid var(--border); display: grid; gap: 14px; }
+  .import-panel textarea { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; }
   .sync-help { font-size: 12.5px; color: var(--muted); line-height: 1.55; margin: 0; }
   .sync-help a { color: var(--accent); font-weight: 500; }
   .gist-id-display {
@@ -433,6 +435,18 @@
             <button id="cancelEditBtn" type="button" class="btn btn-text hidden">Cancelar</button>
           </div>
         </form>
+        <button id="importToggleBtn" type="button" class="btn btn-text" style="margin-top:12px;padding-left:0;">Importar em lote (JSON)</button>
+        <div id="importPanel" class="import-panel hidden">
+          <p class="sync-help">Cole abaixo uma lista de registros em formato JSON (cada item com categoria, número do processo, data, status e observações) para adicionar vários de uma vez.</p>
+          <div class="field">
+            <label for="importText">Registros (JSON)</label>
+            <textarea id="importText" rows="6" placeholder='[{"categoria":"granel","numeroProcesso":"...","data":"2026-07-23","status":"Concluído","observacoes":"..."}]'></textarea>
+          </div>
+          <div class="form-actions">
+            <button id="importBtn" type="button" class="btn btn-primary">Importar registros</button>
+            <button id="importCancelBtn" type="button" class="btn btn-text">Cancelar</button>
+          </div>
+        </div>
       </section>
 
       <!-- Coluna direita: Rendimento + Relatório semanal -->
@@ -735,6 +749,11 @@
     fObs: document.getElementById('fObs'),
     submitBtn: document.getElementById('submitBtn'),
     cancelEditBtn: document.getElementById('cancelEditBtn'),
+    importToggleBtn: document.getElementById('importToggleBtn'),
+    importPanel: document.getElementById('importPanel'),
+    importText: document.getElementById('importText'),
+    importBtn: document.getElementById('importBtn'),
+    importCancelBtn: document.getElementById('importCancelBtn'),
     yieldBadge: document.getElementById('yieldBadge'),
     totalPrev: document.getElementById('totalPrev'),
     totalCur: document.getElementById('totalCur'),
@@ -1254,6 +1273,52 @@
   });
 
   el.cancelEditBtn.addEventListener('click', cancelEdit);
+
+  el.importToggleBtn.addEventListener('click', function () {
+    el.importPanel.classList.toggle('hidden');
+  });
+
+  el.importCancelBtn.addEventListener('click', function () {
+    el.importPanel.classList.add('hidden');
+    el.importText.value = '';
+  });
+
+  el.importBtn.addEventListener('click', function () {
+    var raw = el.importText.value.trim();
+    if (!raw) { toast('Cole o JSON antes de importar.', true); return; }
+    var items;
+    try {
+      items = JSON.parse(raw);
+    } catch (e) {
+      toast('JSON inválido. Confira a formatação.', true);
+      return;
+    }
+    if (!Array.isArray(items)) { toast('O JSON precisa ser uma lista de registros.', true); return; }
+
+    var added = 0;
+    items.forEach(function (item) {
+      if (!item || !item.numeroProcesso || !categoryById(item.categoria)) return;
+      tasks.push({
+        id: generateId(),
+        categoria: item.categoria,
+        numeroProcesso: String(item.numeroProcesso),
+        data: item.data || todayISO(),
+        status: item.status === 'Concluído' ? 'Concluído' : 'Pendente',
+        observacoes: item.observacoes || '',
+        createdAt: Date.now(),
+      });
+      added++;
+    });
+
+    if (added) {
+      saveAndRenderAll();
+      toast(added + ' registro(s) importado(s) com sucesso!');
+      el.importText.value = '';
+      el.importPanel.classList.add('hidden');
+    } else {
+      toast('Nenhum registro válido encontrado no JSON.', true);
+    }
+  });
 
   el.historyBody.addEventListener('click', function (e) {
     var btn = e.target.closest('button[data-action]');
