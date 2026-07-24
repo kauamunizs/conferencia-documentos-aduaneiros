@@ -163,24 +163,18 @@
   main.page { padding: 28px 0 56px; display: flex; flex-direction: column; gap: 28px; }
 
   .section-title {
-    font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
-    color: var(--muted); display: flex; align-items: center; gap: 8px; margin: 0 0 12px;
+    font-size: 17px; font-weight: 600; letter-spacing: -0.011em;
+    color: var(--ink); margin: 0 0 14px;
   }
-  .section-title svg { width: 15px; height: 15px; flex-shrink: 0; }
 
-  .cards-row { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .cards-row { display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
   @media (min-width: 560px) { .cards-row { grid-template-columns: 1fr 1fr; } }
   @media (min-width: 1024px) { .cards-row { grid-template-columns: repeat(4, 1fr); } }
 
-  .stat-card {
-    background: var(--panel); border: 1px solid var(--border); position: relative;
-    border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 18px; overflow: hidden;
-    transition: transform .2s var(--ease), box-shadow .2s var(--ease);
-  }
-  .stat-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--cat); }
-  .stat-card:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
-  .stat-card .cat-name { font-size: 11.5px; font-weight: 600; letter-spacing: -0.006em; color: var(--cat); display: block; margin-bottom: 12px; }
-  .stat-card .big-num { font-size: 34px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1; }
+  .stat-card { background: var(--panel); padding: 18px; }
+  .stat-card .cat-name { font-size: 13px; font-weight: 500; color: var(--muted); display: flex; align-items: center; gap: 7px; margin-bottom: 14px; }
+  .stat-card .cat-name::before { content: ""; width: 8px; height: 8px; border-radius: 999px; background: var(--cat); flex-shrink: 0; }
+  .stat-card .big-num { font-size: 32px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1; }
   .stat-card .sub { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
 
   .layout-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
@@ -389,10 +383,7 @@
 
     <!-- 1. Indicadores diários -->
     <section>
-      <h2 class="section-title">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3M4 5h16M4 19h16"/></svg>
-        Indicadores de hoje
-      </h2>
+      <h2 class="section-title">Indicadores de hoje</h2>
       <div id="dailyCards" class="cards-row"></div>
     </section>
 
@@ -400,10 +391,7 @@
 
       <!-- Formulário de entrada -->
       <section class="card">
-        <h2 class="section-title">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-          Novo registro
-        </h2>
+        <h2 class="section-title">Novo registro</h2>
         <form id="entryForm">
           <div class="field">
             <label for="fCategoria">Categoria</label>
@@ -455,10 +443,7 @@
         <!-- 4. Módulo de rendimento comparado -->
         <section class="card">
           <div class="card-head">
-            <h2 class="section-title" style="margin-bottom:0;">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>
-              Rendimento comparado (semana atual x anterior)
-            </h2>
+            <h2 class="section-title" style="margin-bottom:0;">Rendimento comparado (semana atual x anterior)</h2>
             <span id="yieldBadge"></span>
           </div>
           <div class="yield-summary">
@@ -481,10 +466,7 @@
         <!-- 3. Relatório semanal -->
         <section class="card">
           <div class="card-head">
-            <h2 class="section-title" style="margin-bottom:0;">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
-              Relatório semanal
-            </h2>
+            <h2 class="section-title" style="margin-bottom:0;">Relatório semanal</h2>
             <select id="weekSelect"></select>
           </div>
           <p id="periodLabel" class="period-label"></p>
@@ -518,10 +500,7 @@
     <!-- 2. Histórico -->
     <section class="card">
       <div class="card-head">
-        <h2 class="section-title" style="margin-bottom:0;">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          Histórico de processos
-        </h2>
+        <h2 class="section-title" style="margin-bottom:0;">Histórico de processos</h2>
         <span id="historyCount" style="font-size:12px;color:var(--muted-2);"></span>
       </div>
 
