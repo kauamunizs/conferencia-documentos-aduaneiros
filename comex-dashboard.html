@@ -185,6 +185,19 @@
     width: 100%; max-width: 460px; max-height: 85vh; overflow-y: auto; padding: 24px;
   }
   .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .toggle-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .toggle-row-title { font-size: 13px; font-weight: 500; color: var(--ink); margin: 0; }
+  .toggle-row input[type="checkbox"] { margin-top: 2px; }
+
+  .alert-banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    background: var(--warn-bg); color: var(--warn); border-radius: var(--radius-sm);
+    padding: 12px 16px; margin-bottom: 14px; font-size: 13.5px; font-weight: 500;
+    animation: fade-up .3s var(--ease) both;
+  }
+  .alert-banner strong { font-variant-numeric: tabular-nums; }
+  .alert-banner .btn-text { color: var(--warn); }
+  .alert-banner .btn-text:hover { background: rgba(0, 0, 0, .08); }
 
   main.page { padding: 28px 0 56px; display: flex; flex-direction: column; gap: 28px; }
 
@@ -231,6 +244,10 @@
     outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--focus-ring);
   }
   ::placeholder { color: var(--muted-2); }
+  input[type="checkbox"] {
+    width: 17px; height: 17px; padding: 0; background: none; flex-shrink: 0;
+    border: 1px solid var(--border-strong); border-radius: 5px; accent-color: var(--accent);
+  }
 
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 7px;
@@ -387,6 +404,10 @@
 
     <!-- 1. Indicadores diários -->
     <section>
+      <div id="pendingAlert" class="alert-banner hidden">
+        <span><strong id="pendingAlertCount"></strong> processo(s) pendente(s) há mais de um dia.</span>
+        <button id="pendingAlertBtn" type="button" class="btn btn-text">Ver pendências</button>
+      </div>
       <h2 class="section-title">Indicadores de hoje</h2>
       <div id="dailyCards" class="cards-row"></div>
     </section>
@@ -502,7 +523,7 @@
     </div>
 
     <!-- 2. Histórico -->
-    <section class="card">
+    <section id="historySection" class="card">
       <div class="card-head">
         <h2 class="section-title" style="margin-bottom:0;">Histórico de processos</h2>
         <span id="historyCount" style="font-size:12px;color:var(--muted-2);"></span>
@@ -581,6 +602,16 @@
         <button id="syncNowBtn" type="button" class="btn btn-secondary">Sincronizar agora</button>
       </div>
       <button id="syncDisconnectBtn" type="button" class="btn btn-text" style="margin-top:8px;color:var(--danger);">Desconectar sincronização</button>
+
+      <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border);">
+        <div class="toggle-row">
+          <div>
+            <p class="toggle-row-title">Notificar pendências antigas</p>
+            <p class="sync-help" style="margin:2px 0 0;">Avisa no navegador quando houver processos pendentes há mais de um dia, mesmo com a aba em segundo plano.</p>
+          </div>
+          <input id="notifyToggle" type="checkbox" />
+        </div>
+      </div>
     </div>
   </div>
 
@@ -596,6 +627,9 @@
   var STORAGE_KEY = 'comex_dashboard_tasks_v1';
   var SYNC_STORAGE_KEY = 'comex_dashboard_sync_v1';
   var META_STORAGE_KEY = 'comex_dashboard_meta_v1';
+  var NOTIFY_STORAGE_KEY = 'comex_dashboard_notify_v1';
+  var AUTO_SYNC_INTERVAL_MS = 2 * 60 * 1000;
+  var NOTIFY_THROTTLE_MS = 2 * 60 * 60 * 1000;
   var GIST_FILENAME = 'comex-dashboard-data.json';
   var GIST_DESCRIPTION = 'Dashboard COMEX - dados sincronizados (gerado automaticamente)';
 
@@ -683,6 +717,30 @@
     var meta = loadMeta();
     meta.tombstones = meta.tombstones || {};
     meta.tombstones[id] = Date.now();
+    localStorage.setItem(META_STORAGE_KEY, JSON.stringify(meta));
+  }
+
+  function isNotifyEnabled() {
+    return localStorage.getItem(NOTIFY_STORAGE_KEY) === '1';
+  }
+
+  function setNotifyEnabled(v) {
+    localStorage.setItem(NOTIFY_STORAGE_KEY, v ? '1' : '0');
+  }
+
+  // Fires a native browser notification for old pending tasks, throttled so
+  // the periodic tick can't spam it more than once per NOTIFY_THROTTLE_MS.
+  function maybeNotifyPending() {
+    if (!isNotifyEnabled() || !('Notification' in window) || Notification.permission !== 'granted') return;
+    var count = getOldPendingTasks().length;
+    if (!count) return;
+    var meta = loadMeta();
+    var last = meta.lastPendingNotifyAt || 0;
+    if (Date.now() - last < NOTIFY_THROTTLE_MS) return;
+    new Notification('Dashboard COMEX', {
+      body: count + ' processo(s) pendente(s) há mais de um dia.',
+    });
+    meta.lastPendingNotifyAt = Date.now();
     localStorage.setItem(META_STORAGE_KEY, JSON.stringify(meta));
   }
 
@@ -828,6 +886,10 @@
   var el = {
     clockDate: document.getElementById('clockDate'),
     dailyCards: document.getElementById('dailyCards'),
+    pendingAlert: document.getElementById('pendingAlert'),
+    pendingAlertCount: document.getElementById('pendingAlertCount'),
+    pendingAlertBtn: document.getElementById('pendingAlertBtn'),
+    historySection: document.getElementById('historySection'),
     entryForm: document.getElementById('entryForm'),
     fCategoria: document.getElementById('fCategoria'),
     fProcesso: document.getElementById('fProcesso'),
@@ -873,6 +935,7 @@
     copyGistIdBtn: document.getElementById('copyGistIdBtn'),
     syncSaveBtn: document.getElementById('syncSaveBtn'),
     syncDisconnectBtn: document.getElementById('syncDisconnectBtn'),
+    notifyToggle: document.getElementById('notifyToggle'),
   };
 
   // ---------------------------------------------------------------------
@@ -896,6 +959,24 @@
   function updateClock() {
     var now = new Date();
     el.clockDate.textContent = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  // ---------------------------------------------------------------------
+  // Alerta de pendências antigas
+  // ---------------------------------------------------------------------
+  function getOldPendingTasks() {
+    var today = todayISO();
+    return tasks.filter(function (t) { return t.status === 'Pendente' && t.data < today; });
+  }
+
+  function renderPendingAlert() {
+    var old = getOldPendingTasks();
+    if (old.length) {
+      el.pendingAlertCount.textContent = old.length;
+      el.pendingAlert.classList.remove('hidden');
+    } else {
+      el.pendingAlert.classList.add('hidden');
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -1360,6 +1441,7 @@
   // Render geral
   // ---------------------------------------------------------------------
   function renderAll() {
+    renderPendingAlert();
     renderDailyCards();
     renderYieldModule();
     renderWeeklyReport();
@@ -1503,6 +1585,13 @@
     renderHistoryTable();
   });
 
+  el.pendingAlertBtn.addEventListener('click', function () {
+    filters.status = 'Pendente';
+    el.filterStatus.value = 'Pendente';
+    renderHistoryTable();
+    el.historySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
   el.deleteFilteredBtn.addEventListener('click', function () {
     var toDelete = getFilteredTasks();
     if (!toDelete.length) { toast('Nenhum registro corresponde aos filtros atuais.', true); return; }
@@ -1546,6 +1635,29 @@
     toast('Sincronização desconectada.');
   });
 
+  el.notifyToggle.addEventListener('change', function () {
+    if (!el.notifyToggle.checked) {
+      setNotifyEnabled(false);
+      return;
+    }
+    if (!('Notification' in window)) {
+      toast('Seu navegador não suporta notificações.', true);
+      el.notifyToggle.checked = false;
+      return;
+    }
+    Notification.requestPermission().then(function (perm) {
+      if (perm === 'granted') {
+        setNotifyEnabled(true);
+        toast('Notificações de pendências ativadas.');
+        maybeNotifyPending();
+      } else {
+        el.notifyToggle.checked = false;
+        setNotifyEnabled(false);
+        toast('Permissão de notificação negada pelo navegador.', true);
+      }
+    });
+  });
+
   el.copyGistIdBtn.addEventListener('click', function () {
     var cfg = loadSyncConfig();
     if (!cfg.gistId) return;
@@ -1578,6 +1690,29 @@
       setSyncStatus('', 'Sincronização não configurada.');
     }
   })();
+
+  (function initNotify() {
+    if ('Notification' in window && isNotifyEnabled() && Notification.permission === 'granted') {
+      el.notifyToggle.checked = true;
+      maybeNotifyPending();
+    } else {
+      el.notifyToggle.checked = false;
+      if (isNotifyEnabled()) setNotifyEnabled(false);
+    }
+  })();
+
+  // Keeps sync and pending-reminder checks running on their own — on a
+  // timer, and again whenever the tab regains focus — instead of only
+  // reacting to a manual save or page reload.
+  function periodicTick() {
+    var cfg = loadSyncConfig();
+    if (cfg.token && cfg.gistId) syncNow(false);
+    maybeNotifyPending();
+  }
+  setInterval(periodicTick, AUTO_SYNC_INTERVAL_MS);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') periodicTick();
+  });
 })();
 </script>
 </body>
