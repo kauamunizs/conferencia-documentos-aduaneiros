@@ -229,6 +229,18 @@
   .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 22px; }
   .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
 
+  .section-toggle {
+    display: flex; align-items: center; gap: 8px; background: none; border: none; padding: 0;
+    cursor: pointer; font: inherit; color: inherit; text-align: left; flex: 1; min-width: 0;
+  }
+  .section-toggle .chevron { width: 15px; height: 15px; color: var(--muted-2); transition: transform .25s var(--ease); flex-shrink: 0; }
+  .section-toggle[aria-expanded="true"] .chevron { transform: rotate(90deg); }
+  .section-toggle:hover .section-title { color: var(--accent); }
+
+  .card-body-wrap { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s var(--ease); }
+  .card-body-wrap.expanded { grid-template-rows: 1fr; }
+  .card-body-wrap > .card-body-inner { overflow: hidden; min-height: 0; }
+
   .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
   .field:last-of-type { margin-bottom: 0; }
   .field label { font-size: 11.5px; font-weight: 600; color: var(--muted); letter-spacing: -0.006em; }
@@ -416,48 +428,57 @@
 
       <!-- Formulário de entrada -->
       <section class="card">
-        <h2 class="section-title">Novo registro</h2>
-        <form id="entryForm">
-          <div class="field">
-            <label for="fCategoria">Categoria</label>
-            <select id="fCategoria" required></select>
-          </div>
-          <div class="field">
-            <label for="fProcesso">Número do processo</label>
-            <input id="fProcesso" type="text" placeholder="Ex: 2026/00123-4" required />
-          </div>
-          <div class="field-row">
-            <div class="field">
-              <label for="fData">Data</label>
-              <input id="fData" type="date" required />
+        <div class="card-head">
+          <button type="button" class="section-toggle" data-toggle="entry" aria-expanded="true">
+            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            <h2 class="section-title" style="margin:0;">Novo registro</h2>
+          </button>
+        </div>
+        <div id="entryWrap" class="card-body-wrap expanded">
+          <div class="card-body-inner">
+            <form id="entryForm">
+              <div class="field">
+                <label for="fCategoria">Categoria</label>
+                <select id="fCategoria" required></select>
+              </div>
+              <div class="field">
+                <label for="fProcesso">Número do processo</label>
+                <input id="fProcesso" type="text" placeholder="Ex: 2026/00123-4" required />
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="fData">Data</label>
+                  <input id="fData" type="date" required />
+                </div>
+                <div class="field">
+                  <label for="fStatus">Status</label>
+                  <select id="fStatus">
+                    <option value="Pendente">Pendente</option>
+                    <option value="Concluído">Concluído</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label for="fObs">Observações</label>
+                <textarea id="fObs" rows="3" placeholder="Detalhes adicionais (opcional)"></textarea>
+              </div>
+              <div class="form-actions">
+                <button id="submitBtn" type="submit" class="btn btn-primary">Adicionar registro</button>
+                <button id="cancelEditBtn" type="button" class="btn btn-text hidden">Cancelar</button>
+              </div>
+            </form>
+            <button id="importToggleBtn" type="button" class="btn btn-text" style="margin-top:12px;padding-left:0;">Importar em lote (JSON)</button>
+            <div id="importPanel" class="import-panel hidden">
+              <p class="sync-help">Cole abaixo uma lista de registros em formato JSON (cada item com categoria, número do processo, data, status e observações) para adicionar vários de uma vez.</p>
+              <div class="field">
+                <label for="importText">Registros (JSON)</label>
+                <textarea id="importText" rows="6" placeholder='[{"categoria":"granel","numeroProcesso":"...","data":"2026-07-23","status":"Concluído","observacoes":"..."}]'></textarea>
+              </div>
+              <div class="form-actions">
+                <button id="importBtn" type="button" class="btn btn-primary">Importar registros</button>
+                <button id="importCancelBtn" type="button" class="btn btn-text">Cancelar</button>
+              </div>
             </div>
-            <div class="field">
-              <label for="fStatus">Status</label>
-              <select id="fStatus">
-                <option value="Pendente">Pendente</option>
-                <option value="Concluído">Concluído</option>
-              </select>
-            </div>
-          </div>
-          <div class="field">
-            <label for="fObs">Observações</label>
-            <textarea id="fObs" rows="3" placeholder="Detalhes adicionais (opcional)"></textarea>
-          </div>
-          <div class="form-actions">
-            <button id="submitBtn" type="submit" class="btn btn-primary">Adicionar registro</button>
-            <button id="cancelEditBtn" type="button" class="btn btn-text hidden">Cancelar</button>
-          </div>
-        </form>
-        <button id="importToggleBtn" type="button" class="btn btn-text" style="margin-top:12px;padding-left:0;">Importar em lote (JSON)</button>
-        <div id="importPanel" class="import-panel hidden">
-          <p class="sync-help">Cole abaixo uma lista de registros em formato JSON (cada item com categoria, número do processo, data, status e observações) para adicionar vários de uma vez.</p>
-          <div class="field">
-            <label for="importText">Registros (JSON)</label>
-            <textarea id="importText" rows="6" placeholder='[{"categoria":"granel","numeroProcesso":"...","data":"2026-07-23","status":"Concluído","observacoes":"..."}]'></textarea>
-          </div>
-          <div class="form-actions">
-            <button id="importBtn" type="button" class="btn btn-primary">Importar registros</button>
-            <button id="importCancelBtn" type="button" class="btn btn-text">Cancelar</button>
           </div>
         </div>
       </section>
@@ -468,55 +489,69 @@
         <!-- 4. Módulo de rendimento comparado -->
         <section class="card">
           <div class="card-head">
-            <h2 class="section-title" style="margin-bottom:0;">Rendimento comparado (semana atual x anterior)</h2>
+            <button type="button" class="section-toggle" data-toggle="yield" aria-expanded="false">
+              <svg class="chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+              <h2 class="section-title" style="margin:0;">Rendimento comparado (semana atual x anterior)</h2>
+            </button>
             <span id="yieldBadge"></span>
           </div>
-          <div class="yield-summary">
-            <div class="yield-tile">
-              <p>Concluídos — semana anterior</p>
-              <p id="totalPrev" class="num">0</p>
-            </div>
-            <div class="yield-tile is-current">
-              <p>Concluídos — semana atual</p>
-              <p id="totalCur" class="num">0</p>
+          <div id="yieldWrap" class="card-body-wrap">
+            <div class="card-body-inner">
+              <div class="yield-summary">
+                <div class="yield-tile">
+                  <p>Concluídos — semana anterior</p>
+                  <p id="totalPrev" class="num">0</p>
+                </div>
+                <div class="yield-tile is-current">
+                  <p>Concluídos — semana atual</p>
+                  <p id="totalCur" class="num">0</p>
+                </div>
+              </div>
+              <div class="bar-legend">
+                <span><span class="sw" style="background:var(--muted-2)"></span>Semana anterior</span>
+                <span><span class="sw" style="background:var(--accent)"></span>Semana atual</span>
+              </div>
+              <div id="yieldChart" class="bar-chart"></div>
             </div>
           </div>
-          <div class="bar-legend">
-            <span><span class="sw" style="background:var(--muted-2)"></span>Semana anterior</span>
-            <span><span class="sw" style="background:var(--accent)"></span>Semana atual</span>
-          </div>
-          <div id="yieldChart" class="bar-chart"></div>
         </section>
 
         <!-- 3. Relatório semanal -->
         <section class="card">
           <div class="card-head">
-            <h2 class="section-title" style="margin-bottom:0;">Relatório semanal</h2>
+            <button type="button" class="section-toggle" data-toggle="weekly" aria-expanded="false">
+              <svg class="chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+              <h2 class="section-title" style="margin:0;">Relatório semanal</h2>
+            </button>
             <select id="weekSelect"></select>
           </div>
-          <p id="periodLabel" class="period-label"></p>
-          <div class="table-wrap">
-            <table class="ledger">
-              <thead>
-                <tr>
-                  <th>Categoria</th>
-                  <th class="num">Concluídos</th>
-                  <th class="num">Pendentes</th>
-                  <th class="num">Total</th>
-                </tr>
-              </thead>
-              <tbody id="weeklyReportBody"></tbody>
-            </table>
-          </div>
-          <div class="form-actions" style="margin-top:16px;">
-            <button id="exportCsvBtn" type="button" class="btn btn-secondary">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-              Exportar CSV
-            </button>
-            <button id="copyEmailBtn" type="button" class="btn btn-secondary">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-              Copiar como texto (e-mail)
-            </button>
+          <div id="weeklyWrap" class="card-body-wrap">
+            <div class="card-body-inner">
+              <p id="periodLabel" class="period-label"></p>
+              <div class="table-wrap">
+                <table class="ledger">
+                  <thead>
+                    <tr>
+                      <th>Categoria</th>
+                      <th class="num">Concluídos</th>
+                      <th class="num">Pendentes</th>
+                      <th class="num">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="weeklyReportBody"></tbody>
+                </table>
+              </div>
+              <div class="form-actions" style="margin-top:16px;">
+                <button id="exportCsvBtn" type="button" class="btn btn-secondary">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+                  Exportar CSV
+                </button>
+                <button id="copyEmailBtn" type="button" class="btn btn-secondary">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                  Copiar como texto (e-mail)
+                </button>
+              </div>
+            </div>
           </div>
         </section>
       </div>
@@ -525,40 +560,46 @@
     <!-- 2. Histórico -->
     <section id="historySection" class="card">
       <div class="card-head">
-        <h2 class="section-title" style="margin-bottom:0;">Histórico de processos</h2>
+        <button type="button" class="section-toggle" data-toggle="history" aria-expanded="true">
+          <svg class="chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          <h2 class="section-title" style="margin:0;">Histórico de processos</h2>
+        </button>
         <span id="historyCount" style="font-size:12px;color:var(--muted-2);"></span>
       </div>
+      <div id="historyWrap" class="card-body-wrap expanded">
+        <div class="card-body-inner">
+          <div class="filters-bar" style="margin-top:16px;">
+            <select id="filterCategoria">
+              <option value="all">Todas as categorias</option>
+            </select>
+            <select id="filterStatus">
+              <option value="all">Todos os status</option>
+              <option value="Pendente">Pendente</option>
+              <option value="Concluído">Concluído</option>
+            </select>
+            <input id="filterDe" type="date" title="De" />
+            <input id="filterAte" type="date" title="Até" />
+            <input id="filterBusca" type="text" placeholder="Buscar processo ou observação..." />
+            <button id="clearFiltersBtn" type="button" class="btn btn-text">Limpar filtros</button>
+            <button id="deleteFilteredBtn" type="button" class="btn btn-text" style="color:var(--danger);">Excluir filtrados</button>
+          </div>
 
-      <div class="filters-bar" style="margin-top:16px;">
-        <select id="filterCategoria">
-          <option value="all">Todas as categorias</option>
-        </select>
-        <select id="filterStatus">
-          <option value="all">Todos os status</option>
-          <option value="Pendente">Pendente</option>
-          <option value="Concluído">Concluído</option>
-        </select>
-        <input id="filterDe" type="date" title="De" />
-        <input id="filterAte" type="date" title="Até" />
-        <input id="filterBusca" type="text" placeholder="Buscar processo ou observação..." />
-        <button id="clearFiltersBtn" type="button" class="btn btn-text">Limpar filtros</button>
-        <button id="deleteFilteredBtn" type="button" class="btn btn-text" style="color:var(--danger);">Excluir filtrados</button>
-      </div>
-
-      <div class="table-wrap">
-        <table class="ledger" style="min-width:720px;">
-          <thead>
-            <tr>
-              <th>Categoria</th>
-              <th>Processo</th>
-              <th>Data</th>
-              <th>Status</th>
-              <th>Observações</th>
-              <th style="text-align:right;">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="historyBody"></tbody>
-        </table>
+          <div class="table-wrap">
+            <table class="ledger" style="min-width:720px;">
+              <thead>
+                <tr>
+                  <th>Categoria</th>
+                  <th>Processo</th>
+                  <th>Data</th>
+                  <th>Status</th>
+                  <th>Observações</th>
+                  <th style="text-align:right;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="historyBody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -628,6 +669,8 @@
   var SYNC_STORAGE_KEY = 'comex_dashboard_sync_v1';
   var META_STORAGE_KEY = 'comex_dashboard_meta_v1';
   var NOTIFY_STORAGE_KEY = 'comex_dashboard_notify_v1';
+  var SECTIONS_STORAGE_KEY = 'comex_dashboard_sections_v1';
+  var SECTION_DEFAULTS = { entry: true, yield: false, weekly: false, history: true };
   var AUTO_SYNC_INTERVAL_MS = 2 * 60 * 1000;
   var NOTIFY_THROTTLE_MS = 2 * 60 * 60 * 1000;
   var GIST_FILENAME = 'comex-dashboard-data.json';
@@ -959,6 +1002,66 @@
   function updateClock() {
     var now = new Date();
     el.clockDate.textContent = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  // ---------------------------------------------------------------------
+  // Seções recolhíveis (clique no título para expandir/recolher)
+  // ---------------------------------------------------------------------
+  function loadSectionsState() {
+    try {
+      var raw = localStorage.getItem(SECTIONS_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function setSectionExpanded(key, expanded, skipSave) {
+    var wrap = document.getElementById(key + 'Wrap');
+    var btn = document.querySelector('.section-toggle[data-toggle="' + key + '"]');
+    if (!wrap || !btn) return;
+    var inner = wrap.querySelector('.card-body-inner');
+    if (expanded) {
+      wrap.classList.add('expanded');
+    } else {
+      if (inner) inner.style.overflow = 'hidden';
+      wrap.classList.remove('expanded');
+    }
+    btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    if (!skipSave) {
+      var state = loadSectionsState();
+      state[key] = expanded;
+      localStorage.setItem(SECTIONS_STORAGE_KEY, JSON.stringify(state));
+    }
+  }
+
+  function initCollapsibleSections() {
+    var saved = loadSectionsState();
+    Object.keys(SECTION_DEFAULTS).forEach(function (key) {
+      var expanded = saved.hasOwnProperty(key) ? saved[key] : SECTION_DEFAULTS[key];
+      setSectionExpanded(key, expanded, true);
+    });
+
+    var toggles = document.querySelectorAll('.section-toggle');
+    for (var i = 0; i < toggles.length; i++) {
+      toggles[i].addEventListener('click', function () {
+        var key = this.getAttribute('data-toggle');
+        var wrap = document.getElementById(key + 'Wrap');
+        setSectionExpanded(key, !wrap.classList.contains('expanded'));
+      });
+    }
+
+    // Overflow stays hidden during the grow/shrink transition (so content
+    // doesn't spill past the animated height) and only opens up once fully
+    // expanded, so focus rings and dropdowns inside aren't clipped at rest.
+    var wraps = document.querySelectorAll('.card-body-wrap');
+    for (var j = 0; j < wraps.length; j++) {
+      wraps[j].addEventListener('transitionend', function (e) {
+        if (e.propertyName !== 'grid-template-rows') return;
+        var inner = this.querySelector('.card-body-inner');
+        if (inner) inner.style.overflow = this.classList.contains('expanded') ? 'visible' : 'hidden';
+      });
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -1425,6 +1528,7 @@
     el.fObs.value = t.observacoes || '';
     el.submitBtn.textContent = 'Atualizar registro';
     el.cancelEditBtn.classList.remove('hidden');
+    setSectionExpanded('entry', true);
     el.entryForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
@@ -1589,6 +1693,7 @@
     filters.status = 'Pendente';
     el.filterStatus.value = 'Pendente';
     renderHistoryTable();
+    setSectionExpanded('history', true);
     el.historySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
@@ -1672,6 +1777,7 @@
   // Init
   // ---------------------------------------------------------------------
   initSelects();
+  initCollapsibleSections();
   el.fData.value = todayISO();
   updateClock();
   setInterval(updateClock, 60000);
