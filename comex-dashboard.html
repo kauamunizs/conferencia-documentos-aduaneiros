@@ -197,11 +197,17 @@
   @media (min-width: 560px) { .cards-row { grid-template-columns: 1fr 1fr; } }
   @media (min-width: 1024px) { .cards-row { grid-template-columns: repeat(4, 1fr); } }
 
-  .stat-card { background: var(--panel); padding: 18px; }
+  .stat-card { background: var(--panel); padding: 18px; animation: fade-up .35s var(--ease) both; }
   .stat-card .cat-name { font-size: 13px; font-weight: 500; color: var(--muted); display: flex; align-items: center; gap: 7px; margin-bottom: 14px; }
   .stat-card .cat-name::before { content: ""; width: 8px; height: 8px; border-radius: 999px; background: var(--cat); flex-shrink: 0; }
   .stat-card .big-num { font-size: 32px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1; }
   .stat-card .sub { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+  .stat-card:nth-child(1) { animation-delay: 0ms; }
+  .stat-card:nth-child(2) { animation-delay: 30ms; }
+  .stat-card:nth-child(3) { animation-delay: 60ms; }
+  .stat-card:nth-child(4) { animation-delay: 90ms; }
+
+  @keyframes fade-up { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
   .layout-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
   @media (min-width: 1024px) { .layout-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: start; } }
@@ -280,6 +286,7 @@
   .bar-fill.prev { background: var(--muted-2); }
   .bar-fill.cur { background: var(--accent); }
   .bar-line .bar-value { font-size: 12.5px; color: var(--muted); width: 20px; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .bar-group { animation: fade-up .35s var(--ease) both; }
 
   .table-wrap { overflow-x: auto; }
   table.ledger { width: 100%; border-collapse: collapse; font-size: 13.5px; }
@@ -288,9 +295,15 @@
     color: var(--muted-2); padding: 8px 12px; border-bottom: 1px solid var(--border); white-space: nowrap;
   }
   table.ledger td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-  table.ledger tbody tr { transition: background-color .1s var(--ease); }
+  table.ledger tbody tr { transition: background-color .1s var(--ease); animation: fade-up .3s var(--ease) both; }
   table.ledger tbody tr:hover { background: var(--panel-muted); }
   table.ledger tbody tr:last-child td { border-bottom: none; }
+  table.ledger tbody tr:nth-child(1) { animation-delay: 0ms; }
+  table.ledger tbody tr:nth-child(2) { animation-delay: 20ms; }
+  table.ledger tbody tr:nth-child(3) { animation-delay: 40ms; }
+  table.ledger tbody tr:nth-child(4) { animation-delay: 60ms; }
+  table.ledger tbody tr:nth-child(5) { animation-delay: 80ms; }
+  table.ledger tbody tr:nth-child(n+6) { animation-delay: 100ms; }
   table.ledger td.num, table.ledger th.num { text-align: center; font-variant-numeric: tabular-nums; }
   table.ledger tfoot td, table.ledger tr.totals td { background: var(--panel-muted); font-weight: 600; }
   .truncate { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -778,6 +791,26 @@
     return null;
   }
 
+  function animateNumber(node, to) {
+    var from = parseInt(node.textContent, 10);
+    if (isNaN(from)) from = 0;
+    if (from === to || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      node.textContent = to;
+      return;
+    }
+    var duration = 450;
+    var start = null;
+    function step(ts) {
+      if (start === null) start = ts;
+      var progress = Math.min((ts - start) / duration, 1);
+      var eased = 1 - Math.pow(1 - progress, 3);
+      node.textContent = Math.round(from + (to - from) * eased);
+      if (progress < 1) requestAnimationFrame(step);
+      else node.textContent = to;
+    }
+    requestAnimationFrame(step);
+  }
+
   function toast(msg, isError) {
     var t = document.createElement('div');
     t.className = 'toast' + (isError ? ' is-error' : '');
@@ -868,20 +901,33 @@
   // ---------------------------------------------------------------------
   // 5. Indicadores diários
   // ---------------------------------------------------------------------
+  var prevDailyCounts = {};
+
   function renderDailyCards() {
     var today = todayISO();
-    el.dailyCards.innerHTML = CATEGORIES.map(function (cat) {
+    var data = CATEGORIES.map(function (cat) {
       var entriesToday = tasks.filter(function (t) { return t.categoria === cat.id && t.data === today; });
-      var concl = entriesToday.filter(function (t) { return t.status === 'Concluído'; }).length;
-      var pend = entriesToday.filter(function (t) { return t.status === 'Pendente'; }).length;
+      return {
+        cat: cat,
+        concl: entriesToday.filter(function (t) { return t.status === 'Concluído'; }).length,
+        pend: entriesToday.filter(function (t) { return t.status === 'Pendente'; }).length,
+      };
+    });
+    el.dailyCards.innerHTML = data.map(function (d) {
+      var from = prevDailyCounts.hasOwnProperty(d.cat.id) ? prevDailyCounts[d.cat.id] : d.concl;
       return (
-        '<div class="stat-card" style="--cat: var(--cat-' + cat.id + ')">' +
-          '<span class="cat-name">' + escapeHtml(cat.label) + '</span>' +
-          '<div class="big-num">' + concl + '</div>' +
-          '<div class="sub">concluído(s) hoje' + (pend > 0 ? ' · ' + pend + ' pendente(s)' : '') + '</div>' +
+        '<div class="stat-card" style="--cat: var(--cat-' + d.cat.id + ')">' +
+          '<span class="cat-name">' + escapeHtml(d.cat.label) + '</span>' +
+          '<div class="big-num" data-cat="' + d.cat.id + '">' + from + '</div>' +
+          '<div class="sub">concluído(s) hoje' + (d.pend > 0 ? ' · ' + d.pend + ' pendente(s)' : '') + '</div>' +
         '</div>'
       );
     }).join('');
+    data.forEach(function (d) {
+      var node = el.dailyCards.querySelector('.big-num[data-cat="' + d.cat.id + '"]');
+      if (node) animateNumber(node, d.concl);
+      prevDailyCounts[d.cat.id] = d.concl;
+    });
   }
 
   // ---------------------------------------------------------------------
@@ -906,8 +952,8 @@
 
     var totalCur = curEntries.length;
     var totalPrev = prevEntries.length;
-    el.totalCur.textContent = totalCur;
-    el.totalPrev.textContent = totalPrev;
+    animateNumber(el.totalCur, totalCur);
+    animateNumber(el.totalPrev, totalPrev);
 
     var badgeHtml;
     if (totalPrev === 0 && totalCur === 0) {
@@ -942,11 +988,22 @@
           '<div class="bar-row-label" style="display:flex;align-items:center;justify-content:space-between;">' +
             '<span>' + escapeHtml(p.cat.label) + '</span>' + deltaChip +
           '</div>' +
-          '<div class="bar-line"><span class="bar-tag">Ant.</span><div class="bar-track"><div class="bar-fill prev" style="width:' + pctPrev + '%"></div></div><span class="bar-value">' + p.prev + '</span></div>' +
-          '<div class="bar-line"><span class="bar-tag">Atual</span><div class="bar-track"><div class="bar-fill cur" style="width:' + pctCur + '%"></div></div><span class="bar-value">' + p.cur + '</span></div>' +
+          '<div class="bar-line"><span class="bar-tag">Ant.</span><div class="bar-track"><div class="bar-fill prev" data-w="' + pctPrev + '" style="width:0%"></div></div><span class="bar-value">' + p.prev + '</span></div>' +
+          '<div class="bar-line"><span class="bar-tag">Atual</span><div class="bar-track"><div class="bar-fill cur" data-w="' + pctCur + '" style="width:0%"></div></div><span class="bar-value">' + p.cur + '</span></div>' +
         '</div>'
       );
     }).join('');
+
+    // Draw bars at 0 then grow them on the next frame so progress reads as
+    // motion instead of snapping straight to their final width.
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        var fills = el.yieldChart.querySelectorAll('.bar-fill');
+        for (var i = 0; i < fills.length; i++) {
+          fills[i].style.width = fills[i].getAttribute('data-w') + '%';
+        }
+      });
+    });
   }
 
   // ---------------------------------------------------------------------
@@ -1070,11 +1127,35 @@
   // ---------------------------------------------------------------------
   // Sincronização entre dispositivos (GitHub Gist)
   // ---------------------------------------------------------------------
+  var lastSyncAt = null;
+
+  function relativeTime(ts) {
+    var min = Math.floor(Math.max(0, Date.now() - ts) / 60000);
+    if (min < 1) return 'agora mesmo';
+    if (min === 1) return 'há 1 minuto';
+    if (min < 60) return 'há ' + min + ' minutos';
+    var hr = Math.floor(min / 60);
+    return hr === 1 ? 'há 1 hora' : 'há ' + hr + ' horas';
+  }
+
   function setSyncStatus(state, message) {
     el.syncDot.className = 'sync-dot' + (state ? ' ' + state : '');
     el.syncStatusText.textContent = message;
     el.headerSyncDot.className = 'status-dot' + (state ? ' ' + state : '');
   }
+
+  function setSyncSuccess() {
+    lastSyncAt = Date.now();
+    setSyncStatus('ok', 'Sincronizado ' + relativeTime(lastSyncAt));
+  }
+
+  // Keeps the "Sincronizado há X minutos" text ticking upward on its own,
+  // without waiting for the next sync to refresh it.
+  setInterval(function () {
+    if (lastSyncAt && el.syncDot.classList.contains('ok')) {
+      el.syncStatusText.textContent = 'Sincronizado ' + relativeTime(lastSyncAt);
+    }
+  }, 30000);
 
   function renderGistIdDisplay(gistId) {
     if (gistId) {
@@ -1145,6 +1226,7 @@
         setLocalUpdatedAt(Date.now());
         el.syncGistId.value = gist.id;
         renderGistIdDisplay(gist.id);
+        lastSyncAt = Date.now();
         setSyncStatus('ok', 'Gist criado! Copie o ID abaixo para usar em outro PC.');
       });
     } else {
@@ -1170,7 +1252,7 @@
         setLocalUpdatedAt(Date.now());
 
         return updateRemoteGist(cfg.gistId).then(function () {
-          setSyncStatus('ok', 'Sincronizado às ' + new Date().toLocaleTimeString('pt-BR') + '.');
+          setSyncSuccess();
         });
       });
     }
