@@ -441,6 +441,10 @@
                 <label for="fCategoria">Categoria</label>
                 <select id="fCategoria" required></select>
               </div>
+              <div class="field hidden" id="fPortoField">
+                <label for="fPorto">Porto</label>
+                <select id="fPorto"></select>
+              </div>
               <div class="field">
                 <label for="fProcesso">Número do processo</label>
                 <input id="fProcesso" type="text" placeholder="Ex: 2026/00123-4" required />
@@ -469,10 +473,10 @@
             </form>
             <button id="importToggleBtn" type="button" class="btn btn-text" style="margin-top:12px;padding-left:0;">Importar em lote (JSON)</button>
             <div id="importPanel" class="import-panel hidden">
-              <p class="sync-help">Cole abaixo uma lista de registros em formato JSON (cada item com categoria, número do processo, data, status e observações) para adicionar vários de uma vez.</p>
+              <p class="sync-help">Cole abaixo uma lista de registros em formato JSON (cada item com categoria, número do processo, porto — quando for FComex —, data, status e observações) para adicionar vários de uma vez.</p>
               <div class="field">
                 <label for="importText">Registros (JSON)</label>
-                <textarea id="importText" rows="6" placeholder='[{"categoria":"granel","numeroProcesso":"...","data":"2026-07-23","status":"Concluído","observacoes":"..."}]'></textarea>
+                <textarea id="importText" rows="6" placeholder='[{"categoria":"fcomex","numeroProcesso":"...","porto":"ITAQUI","data":"2026-07-23","status":"Concluído","observacoes":"..."}]'></textarea>
               </div>
               <div class="form-actions">
                 <button id="importBtn" type="button" class="btn btn-primary">Importar registros</button>
@@ -590,6 +594,7 @@
                 <tr>
                   <th>Categoria</th>
                   <th>Processo</th>
+                  <th>Porto</th>
                   <th>Data</th>
                   <th>Status</th>
                   <th>Observações</th>
@@ -682,6 +687,8 @@
     { id: 'fcomex',    label: 'Faturamento de processos no FComex', short: 'FComex' },
     { id: 'averbados', label: 'Docs averbados',                     short: 'Averbados' },
   ];
+
+  var PORTOS = ['ITAQUI', 'SANTARÉM', 'RIO GRANDE', 'BARCARENA', 'TUBARÃO'];
 
   var WEEK_OPTIONS_COUNT = 12;
 
@@ -935,6 +942,8 @@
     historySection: document.getElementById('historySection'),
     entryForm: document.getElementById('entryForm'),
     fCategoria: document.getElementById('fCategoria'),
+    fPortoField: document.getElementById('fPortoField'),
+    fPorto: document.getElementById('fPorto'),
     fProcesso: document.getElementById('fProcesso'),
     fData: document.getElementById('fData'),
     fStatus: document.getElementById('fStatus'),
@@ -991,12 +1000,22 @@
     el.fCategoria.innerHTML = categoryOptions;
     el.filterCategoria.innerHTML = '<option value="all">Todas as categorias</option>' + categoryOptions;
 
+    el.fPorto.innerHTML = '<option value="">Selecione o porto</option>' + PORTOS.map(function (p) {
+      return '<option value="' + p + '">' + p + '</option>';
+    }).join('');
+
     var weekOptions = [];
     for (var i = 0; i < WEEK_OPTIONS_COUNT; i++) {
       var range = weekRangeForOffset(i);
       weekOptions.push('<option value="' + i + '">' + escapeHtml(weekLabel(i, range.start, range.end)) + '</option>');
     }
     el.weekSelect.innerHTML = weekOptions.join('');
+  }
+
+  function updatePortoFieldVisibility() {
+    var isFcomex = el.fCategoria.value === 'fcomex';
+    el.fPortoField.classList.toggle('hidden', !isFcomex);
+    if (!isFcomex) el.fPorto.value = '';
   }
 
   function updateClock() {
@@ -1239,12 +1258,12 @@
 
   function exportCsv() {
     if (!currentReportRange) return;
-    var header = ['Categoria', 'Numero do Processo', 'Data', 'Status', 'Observacoes'];
+    var header = ['Categoria', 'Numero do Processo', 'Porto', 'Data', 'Status', 'Observacoes'];
     var lines = [header.join(';')];
     currentReportEntries.slice().sort(function (a, b) { return a.data.localeCompare(b.data); }).forEach(function (t) {
       var cat = categoryById(t.categoria);
       var obs = (t.observacoes || '').replace(/\n/g, ' ');
-      lines.push([cat ? cat.label : t.categoria, t.numeroProcesso, formatBR(t.data), t.status, obs].map(csvEscape).join(';'));
+      lines.push([cat ? cat.label : t.categoria, t.numeroProcesso, t.porto || '', formatBR(t.data), t.status, obs].map(csvEscape).join(';'));
     });
     var csvContent = '﻿' + lines.join('\r\n');
     var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1273,7 +1292,8 @@
       text += '\nDetalhamento:\n';
       currentReportEntries.slice().sort(function (a, b) { return a.data.localeCompare(b.data); }).forEach(function (t) {
         var cat = categoryById(t.categoria);
-        text += '- [' + formatBR(t.data) + '] ' + (cat ? cat.label : t.categoria) + ' | Processo ' + t.numeroProcesso + ' | ' + t.status +
+        text += '- [' + formatBR(t.data) + '] ' + (cat ? cat.label : t.categoria) + ' | Processo ' + t.numeroProcesso +
+          (t.porto ? ' | Porto: ' + t.porto : '') + ' | ' + t.status +
           (t.observacoes ? ' | Obs: ' + t.observacoes : '') + '\n';
       });
     } else {
@@ -1473,7 +1493,7 @@
     var rows = getFilteredTasks();
     el.historyCount.textContent = rows.length + ' registro(s)';
     el.historyBody.innerHTML = rows.length ? rows.map(rowHtml).join('') :
-      '<tr><td colspan="6" class="empty-row">Nenhum registro encontrado.</td></tr>';
+      '<tr><td colspan="7" class="empty-row">Nenhum registro encontrado.</td></tr>';
   }
 
   function rowHtml(t) {
@@ -1483,6 +1503,7 @@
       '<tr>' +
         '<td><span class="badge badge-' + (cat ? cat.id : 'granel') + '">' + escapeHtml(cat ? cat.label : t.categoria) + '</span></td>' +
         '<td style="font-weight:600;">' + escapeHtml(t.numeroProcesso) + '</td>' +
+        '<td style="color:var(--muted);">' + (t.porto ? escapeHtml(t.porto) : '—') + '</td>' +
         '<td style="white-space:nowrap;color:var(--muted);font-variant-numeric:tabular-nums;">' + formatBR(t.data) + '</td>' +
         '<td><button data-action="toggle" data-id="' + t.id + '" class="badge ' + statusClass + '">' + t.status + '</button></td>' +
         '<td class="truncate" title="' + escapeHtml(t.observacoes || '') + '" style="color:var(--muted);">' + (escapeHtml(t.observacoes || '') || '—') + '</td>' +
@@ -1522,6 +1543,8 @@
     if (!t) return;
     editingId = id;
     el.fCategoria.value = t.categoria;
+    updatePortoFieldVisibility();
+    el.fPorto.value = t.porto || '';
     el.fProcesso.value = t.numeroProcesso;
     el.fData.value = t.data;
     el.fStatus.value = t.status;
@@ -1537,6 +1560,7 @@
     el.entryForm.reset();
     el.fData.value = todayISO();
     el.fStatus.value = 'Pendente';
+    updatePortoFieldVisibility();
     el.submitBtn.textContent = 'Adicionar registro';
     el.cancelEditBtn.classList.add('hidden');
   }
@@ -1567,11 +1591,15 @@
     var numeroProcesso = el.fProcesso.value.trim();
     if (!numeroProcesso) { toast('Informe o número do processo.', true); return; }
     if (!el.fData.value) { toast('Informe a data.', true); return; }
+    var isFcomex = el.fCategoria.value === 'fcomex';
+    if (isFcomex && !el.fPorto.value) { toast('Selecione o porto.', true); return; }
+    var porto = isFcomex ? el.fPorto.value : '';
 
     if (editingId) {
       var t = tasks.filter(function (x) { return x.id === editingId; })[0];
       if (t) {
         t.categoria = el.fCategoria.value;
+        t.porto = porto;
         t.numeroProcesso = numeroProcesso;
         t.data = el.fData.value;
         t.status = el.fStatus.value;
@@ -1583,6 +1611,7 @@
       tasks.push({
         id: generateId(),
         categoria: el.fCategoria.value,
+        porto: porto,
         numeroProcesso: numeroProcesso,
         data: el.fData.value,
         status: el.fStatus.value,
@@ -1595,6 +1624,8 @@
     cancelEdit();
     saveAndRenderAll();
   });
+
+  el.fCategoria.addEventListener('change', updatePortoFieldVisibility);
 
   el.cancelEditBtn.addEventListener('click', cancelEdit);
 
@@ -1627,6 +1658,7 @@
       var existing = tasks.filter(function (t) { return t.numeroProcesso === numeroProcesso; })[0];
       if (existing) {
         existing.categoria = item.categoria;
+        existing.porto = item.porto || '';
         existing.data = item.data || existing.data;
         existing.status = item.status === 'Concluído' ? 'Concluído' : 'Pendente';
         existing.observacoes = item.observacoes || '';
@@ -1636,6 +1668,7 @@
         tasks.push({
           id: generateId(),
           categoria: item.categoria,
+          porto: item.porto || '',
           numeroProcesso: numeroProcesso,
           data: item.data || todayISO(),
           status: item.status === 'Concluído' ? 'Concluído' : 'Pendente',
@@ -1778,6 +1811,7 @@
   // ---------------------------------------------------------------------
   initSelects();
   initCollapsibleSections();
+  updatePortoFieldVisibility();
   el.fData.value = todayISO();
   updateClock();
   setInterval(updateClock, 60000);
