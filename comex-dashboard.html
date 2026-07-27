@@ -539,6 +539,10 @@
           </div>
           <div id="weeklyWrap" class="card-body-wrap">
             <div class="card-body-inner">
+              <div class="field" style="max-width:280px;margin-bottom:14px;">
+                <label for="reportCategoriaFilter">Filtrar por categoria</label>
+                <select id="reportCategoriaFilter"></select>
+              </div>
               <p id="periodLabel" class="period-label"></p>
               <div class="table-wrap">
                 <table class="ledger">
@@ -978,6 +982,7 @@
     totalCur: document.getElementById('totalCur'),
     yieldChart: document.getElementById('yieldChart'),
     weekSelect: document.getElementById('weekSelect'),
+    reportCategoriaFilter: document.getElementById('reportCategoriaFilter'),
     periodLabel: document.getElementById('periodLabel'),
     weeklyReportBody: document.getElementById('weeklyReportBody'),
     exportCsvBtn: document.getElementById('exportCsvBtn'),
@@ -1017,6 +1022,7 @@
     }).join('');
     el.fCategoria.innerHTML = categoryOptions;
     el.filterCategoria.innerHTML = '<option value="all">Todas as categorias</option>' + categoryOptions;
+    el.reportCategoriaFilter.innerHTML = '<option value="all">Todas as categorias</option>' + categoryOptions;
 
     el.fPorto.innerHTML = '<option value="">Selecione o porto</option>' + PORTOS.map(function (p) {
       return '<option value="' + p + '">' + p + '</option>';
@@ -1234,10 +1240,14 @@
     var offset = parseInt(el.weekSelect.value || '0', 10);
     var range = weekRangeForOffset(offset);
     var entries = getWeekEntries(offset);
+    var categoriaFiltro = el.reportCategoriaFilter.value;
+    if (categoriaFiltro !== 'all') entries = entries.filter(function (t) { return t.categoria === categoriaFiltro; });
 
     el.periodLabel.textContent = 'Período: ' + formatBR(toISO(range.start)) + ' a ' + formatBR(toISO(range.end));
 
-    var rows = CATEGORIES.map(function (cat) {
+    var categoriesToShow = categoriaFiltro === 'all' ? CATEGORIES : CATEGORIES.filter(function (c) { return c.id === categoriaFiltro; });
+
+    var rows = categoriesToShow.map(function (cat) {
       var catEntries = entries.filter(function (t) { return t.categoria === cat.id; });
       return {
         cat: cat,
@@ -1288,7 +1298,8 @@
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    a.download = 'relatorio-semanal_' + toISO(currentReportRange.start) + '_a_' + toISO(currentReportRange.end) + '.csv';
+    var catSuffix = el.reportCategoriaFilter.value !== 'all' ? '_' + el.reportCategoriaFilter.value : '';
+    a.download = 'relatorio-semanal' + catSuffix + '_' + toISO(currentReportRange.start) + '_a_' + toISO(currentReportRange.end) + '.csv';
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -1299,7 +1310,12 @@
   function buildEmailText() {
     if (!currentReportRange) return '';
     var text = 'RELATÓRIO SEMANAL – ROTINA COMEX\n';
-    text += 'Período: ' + formatBR(toISO(currentReportRange.start)) + ' a ' + formatBR(toISO(currentReportRange.end)) + '\n\n';
+    text += 'Período: ' + formatBR(toISO(currentReportRange.start)) + ' a ' + formatBR(toISO(currentReportRange.end)) + '\n';
+    if (el.reportCategoriaFilter.value !== 'all') {
+      var filterCat = categoryById(el.reportCategoriaFilter.value);
+      text += 'Categoria: ' + (filterCat ? filterCat.label : el.reportCategoriaFilter.value) + '\n';
+    }
+    text += '\n';
     currentReportRows.forEach(function (r) {
       text += r.cat.label + ': ' + r.concluidos + ' concluído(s), ' + r.pendentes + ' pendente(s)\n';
     });
@@ -1724,6 +1740,7 @@
   });
 
   el.weekSelect.addEventListener('change', renderWeeklyReport);
+  el.reportCategoriaFilter.addEventListener('change', renderWeeklyReport);
   el.exportCsvBtn.addEventListener('click', exportCsv);
   el.copyEmailBtn.addEventListener('click', copyEmailText);
 
