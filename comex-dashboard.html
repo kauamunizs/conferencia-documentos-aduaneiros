@@ -34,6 +34,8 @@
     --cat-fcomex-bg: rgba(63, 87, 181, .1);
     --cat-averbados: #8a4ba3;
     --cat-averbados-bg: rgba(138, 75, 163, .1);
+    --cat-retificacao: #1a7a5e;
+    --cat-retificacao-bg: rgba(26, 122, 94, .1);
 
     --ok: #248a3d;
     --ok-bg: rgba(52, 199, 89, .12);
@@ -79,6 +81,8 @@
       --cat-fcomex-bg: rgba(157, 176, 242, .16);
       --cat-averbados: #d3a2e3;
       --cat-averbados-bg: rgba(211, 162, 227, .16);
+      --cat-retificacao: #63d9b7;
+      --cat-retificacao-bg: rgba(99, 217, 183, .16);
 
       --ok: #30d158;
       --ok-bg: rgba(48, 209, 88, .16);
@@ -101,6 +105,7 @@
     --cat-mexico: #ff8f78; --cat-mexico-bg: rgba(255, 143, 120, .16);
     --cat-fcomex: #9db0f2; --cat-fcomex-bg: rgba(157, 176, 242, .16);
     --cat-averbados: #d3a2e3; --cat-averbados-bg: rgba(211, 162, 227, .16);
+    --cat-retificacao: #63d9b7; --cat-retificacao-bg: rgba(99, 217, 183, .16);
     --ok: #30d158; --ok-bg: rgba(48, 209, 88, .16);
     --warn: #ff9f0a; --warn-bg: rgba(255, 159, 10, .16);
     --danger: #ff453a; --danger-bg: rgba(255, 69, 58, .16);
@@ -117,6 +122,7 @@
     --cat-mexico: #c1402a; --cat-mexico-bg: rgba(193, 64, 42, .1);
     --cat-fcomex: #3f57b5; --cat-fcomex-bg: rgba(63, 87, 181, .1);
     --cat-averbados: #8a4ba3; --cat-averbados-bg: rgba(138, 75, 163, .1);
+    --cat-retificacao: #1a7a5e; --cat-retificacao-bg: rgba(26, 122, 94, .1);
     --ok: #248a3d; --ok-bg: rgba(52, 199, 89, .12);
     --warn: #c1690a; --warn-bg: rgba(255, 149, 0, .12);
     --danger: #d70015; --danger-bg: rgba(255, 59, 48, .1);
@@ -208,7 +214,7 @@
 
   .cards-row { display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
   @media (min-width: 560px) { .cards-row { grid-template-columns: 1fr 1fr; } }
-  @media (min-width: 1024px) { .cards-row { grid-template-columns: repeat(4, 1fr); } }
+  @media (min-width: 1024px) { .cards-row { grid-template-columns: repeat(5, 1fr); } }
 
   .stat-card { background: var(--panel); padding: 18px; animation: fade-up .35s var(--ease) both; }
   .stat-card .cat-name { font-size: 13px; font-weight: 500; color: var(--muted); display: flex; align-items: center; gap: 7px; margin-bottom: 14px; }
@@ -219,6 +225,7 @@
   .stat-card:nth-child(2) { animation-delay: 30ms; }
   .stat-card:nth-child(3) { animation-delay: 60ms; }
   .stat-card:nth-child(4) { animation-delay: 90ms; }
+  .stat-card:nth-child(5) { animation-delay: 120ms; }
 
   @keyframes fade-up { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -287,6 +294,7 @@
   .badge-mexico { background: var(--cat-mexico-bg); color: var(--cat-mexico); }
   .badge-fcomex { background: var(--cat-fcomex-bg); color: var(--cat-fcomex); }
   .badge-averbados { background: var(--cat-averbados-bg); color: var(--cat-averbados); }
+  .badge-retificacao { background: var(--cat-retificacao-bg); color: var(--cat-retificacao); }
   .badge-ok { background: var(--ok-bg); color: var(--ok); }
   .badge-warn { background: var(--warn-bg); color: var(--warn); }
   .badge-neutral { background: var(--panel-muted); color: var(--muted); }
@@ -686,6 +694,7 @@
     { id: 'mexico',    label: 'Envio México no e-mail',             short: 'México' },
     { id: 'fcomex',    label: 'Faturamento de processos no FComex', short: 'FComex' },
     { id: 'averbados', label: 'Docs averbados',                     short: 'Averbados' },
+    { id: 'retificacao', label: 'Retificação de processos',          short: 'Retificação' },
   ];
 
   var PORTOS = ['ITAQUI', 'SANTARÉM', 'RIO GRANDE', 'BARCARENA', 'TUBARÃO'];
