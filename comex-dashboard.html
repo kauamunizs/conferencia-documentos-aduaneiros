@@ -894,6 +894,15 @@
     return v;
   }
 
+  var MISSING_INVOICE_NOTE = 'Falta INV';
+
+  function stripMissingInvoiceNote(obs) {
+    var text = String(obs == null ? '' : obs);
+    text = text.replace(/\s*[—-]\s*Falta INV\s*/i, '');
+    text = text.replace(/^\s*Falta INV\s*[—-]?\s*/i, '');
+    return text.trim();
+  }
+
   function categoryById(id) {
     for (var i = 0; i < CATEGORIES.length; i++) if (CATEGORIES[i].id === id) return CATEGORIES[i];
     return null;
@@ -1525,6 +1534,7 @@
     var t = tasks.filter(function (x) { return x.id === id; })[0];
     if (!t) return;
     t.status = t.status === 'Concluído' ? 'Pendente' : 'Concluído';
+    if (t.status === 'Concluído') t.observacoes = stripMissingInvoiceNote(t.observacoes);
     t.updatedAt = Date.now();
     saveAndRenderAll();
     toast('Status atualizado.');
@@ -1604,6 +1614,7 @@
         t.data = el.fData.value;
         t.status = el.fStatus.value;
         t.observacoes = el.fObs.value.trim();
+        if (t.status === 'Concluído') t.observacoes = stripMissingInvoiceNote(t.observacoes);
         t.updatedAt = Date.now();
       }
       toast('Registro atualizado com sucesso!');
