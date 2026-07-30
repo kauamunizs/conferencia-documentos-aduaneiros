@@ -1592,7 +1592,9 @@
 
   function cancelEdit() {
     editingId = null;
+    var lastCategoria = el.fCategoria.value;
     el.entryForm.reset();
+    el.fCategoria.value = lastCategoria;
     el.fData.value = todayISO();
     el.fStatus.value = 'Pendente';
     updatePortoFieldVisibility();
