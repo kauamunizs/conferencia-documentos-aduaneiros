@@ -358,6 +358,14 @@
 
   .period-label { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; font-variant-numeric: tabular-nums; }
 
+  .period-tabs { display: inline-flex; background: var(--panel-muted); border-radius: var(--radius-pill); padding: 3px; gap: 2px; margin-bottom: 16px; }
+  .period-tab { border: none; background: transparent; padding: 7px 16px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; transition: background .15s var(--ease), color .15s var(--ease); }
+  .period-tab:hover { color: var(--ink); }
+  .period-tab.active { background: var(--panel); color: var(--ink); box-shadow: var(--shadow-sm); }
+  .period-tab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .period-panel.hidden { display: none; }
+  .panel-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+
   .sync-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .sync-status { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--muted); }
   .sync-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--muted-2); flex-shrink: 0; }
@@ -529,87 +537,87 @@
           </div>
         </section>
 
-        <!-- 3. Relatório semanal -->
+        <!-- 3. Relatório (semanal / mensal) -->
         <section class="card">
           <div class="card-head">
             <button type="button" class="section-toggle" data-toggle="weekly" aria-expanded="false">
               <svg class="chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-              <h2 class="section-title" style="margin:0;">Relatório semanal</h2>
+              <h2 class="section-title" style="margin:0;">Relatório</h2>
             </button>
-            <select id="weekSelect"></select>
           </div>
           <div id="weeklyWrap" class="card-body-wrap">
             <div class="card-body-inner">
-              <div class="field" style="max-width:280px;margin-bottom:14px;">
-                <label for="reportCategoriaFilter">Filtrar por categoria</label>
-                <select id="reportCategoriaFilter"></select>
+              <div class="period-tabs" role="tablist">
+                <button type="button" class="period-tab" data-period="weekly" role="tab">Semanal</button>
+                <button type="button" class="period-tab" data-period="monthly" role="tab">Mensal</button>
               </div>
-              <p id="periodLabel" class="period-label"></p>
-              <div class="table-wrap">
-                <table class="ledger">
-                  <thead>
-                    <tr>
-                      <th>Categoria</th>
-                      <th class="num">Concluídos</th>
-                      <th class="num">Pendentes</th>
-                      <th class="num">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody id="weeklyReportBody"></tbody>
-                </table>
-              </div>
-              <div class="form-actions" style="margin-top:16px;">
-                <button id="exportCsvBtn" type="button" class="btn btn-secondary">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-                  Exportar CSV
-                </button>
-                <button id="copyEmailBtn" type="button" class="btn btn-secondary">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                  Copiar como texto (e-mail)
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        <!-- 3b. Relatório mensal -->
-        <section class="card">
-          <div class="card-head">
-            <button type="button" class="section-toggle" data-toggle="monthly" aria-expanded="false">
-              <svg class="chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-              <h2 class="section-title" style="margin:0;">Relatório mensal</h2>
-            </button>
-            <select id="monthSelect"></select>
-          </div>
-          <div id="monthlyWrap" class="card-body-wrap">
-            <div class="card-body-inner">
-              <div class="field" style="max-width:280px;margin-bottom:14px;">
-                <label for="monthlyReportCategoriaFilter">Filtrar por categoria</label>
-                <select id="monthlyReportCategoriaFilter"></select>
+              <div id="weeklyPanel" class="period-panel">
+                <div class="panel-head">
+                  <div class="field" style="max-width:280px;margin-bottom:0;">
+                    <label for="reportCategoriaFilter">Filtrar por categoria</label>
+                    <select id="reportCategoriaFilter"></select>
+                  </div>
+                  <select id="weekSelect"></select>
+                </div>
+                <p id="periodLabel" class="period-label"></p>
+                <div class="table-wrap">
+                  <table class="ledger">
+                    <thead>
+                      <tr>
+                        <th>Categoria</th>
+                        <th class="num">Concluídos</th>
+                        <th class="num">Pendentes</th>
+                        <th class="num">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody id="weeklyReportBody"></tbody>
+                  </table>
+                </div>
+                <div class="form-actions" style="margin-top:16px;">
+                  <button id="exportCsvBtn" type="button" class="btn btn-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+                    Exportar CSV
+                  </button>
+                  <button id="copyEmailBtn" type="button" class="btn btn-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    Copiar como texto (e-mail)
+                  </button>
+                </div>
               </div>
-              <p id="monthlyPeriodLabel" class="period-label"></p>
-              <div class="table-wrap">
-                <table class="ledger">
-                  <thead>
-                    <tr>
-                      <th>Categoria</th>
-                      <th class="num">Concluídos</th>
-                      <th class="num">Pendentes</th>
-                      <th class="num">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody id="monthlyReportBody"></tbody>
-                </table>
-              </div>
-              <div class="form-actions" style="margin-top:16px;">
-                <button id="exportMonthlyCsvBtn" type="button" class="btn btn-secondary">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-                  Exportar CSV
-                </button>
-                <button id="copyMonthlyEmailBtn" type="button" class="btn btn-secondary">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                  Copiar como texto (e-mail)
-                </button>
+
+              <div id="monthlyPanel" class="period-panel hidden">
+                <div class="panel-head">
+                  <div class="field" style="max-width:280px;margin-bottom:0;">
+                    <label for="monthlyReportCategoriaFilter">Filtrar por categoria</label>
+                    <select id="monthlyReportCategoriaFilter"></select>
+                  </div>
+                  <select id="monthSelect"></select>
+                </div>
+                <p id="monthlyPeriodLabel" class="period-label"></p>
+                <div class="table-wrap">
+                  <table class="ledger">
+                    <thead>
+                      <tr>
+                        <th>Categoria</th>
+                        <th class="num">Concluídos</th>
+                        <th class="num">Pendentes</th>
+                        <th class="num">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody id="monthlyReportBody"></tbody>
+                  </table>
+                </div>
+                <div class="form-actions" style="margin-top:16px;">
+                  <button id="exportMonthlyCsvBtn" type="button" class="btn btn-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+                    Exportar CSV
+                  </button>
+                  <button id="copyMonthlyEmailBtn" type="button" class="btn btn-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    Copiar como texto (e-mail)
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -731,7 +739,8 @@
   var META_STORAGE_KEY = 'comex_dashboard_meta_v1';
   var NOTIFY_STORAGE_KEY = 'comex_dashboard_notify_v1';
   var SECTIONS_STORAGE_KEY = 'comex_dashboard_sections_v1';
-  var SECTION_DEFAULTS = { entry: true, yield: false, weekly: false, monthly: false, history: true };
+  var REPORT_PERIOD_STORAGE_KEY = 'comex_dashboard_report_period_v1';
+  var SECTION_DEFAULTS = { entry: true, yield: false, weekly: false, history: true };
   var AUTO_SYNC_INTERVAL_MS = 2 * 60 * 1000;
   var NOTIFY_THROTTLE_MS = 2 * 60 * 60 * 1000;
   var GIST_FILENAME = 'comex-dashboard-data.json';
@@ -1049,6 +1058,8 @@
     totalPrev: document.getElementById('totalPrev'),
     totalCur: document.getElementById('totalCur'),
     yieldChart: document.getElementById('yieldChart'),
+    weeklyPanel: document.getElementById('weeklyPanel'),
+    monthlyPanel: document.getElementById('monthlyPanel'),
     weekSelect: document.getElementById('weekSelect'),
     reportCategoriaFilter: document.getElementById('reportCategoriaFilter'),
     periodLabel: document.getElementById('periodLabel'),
@@ -1185,6 +1196,34 @@
         if (e.propertyName !== 'grid-template-rows') return;
         var inner = this.querySelector('.card-body-inner');
         if (inner) inner.style.overflow = this.classList.contains('expanded') ? 'visible' : 'hidden';
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Alternância Relatório semanal / mensal
+  // ---------------------------------------------------------------------
+  function setReportPeriod(period, skipSave) {
+    var isWeekly = period === 'weekly';
+    el.weeklyPanel.classList.toggle('hidden', !isWeekly);
+    el.monthlyPanel.classList.toggle('hidden', isWeekly);
+    var tabs = document.querySelectorAll('.period-tab');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.toggle('active', tabs[i].getAttribute('data-period') === period);
+    }
+    if (!skipSave) {
+      try { localStorage.setItem(REPORT_PERIOD_STORAGE_KEY, period); } catch (e) {}
+    }
+  }
+
+  function initReportPeriodTabs() {
+    var saved = 'weekly';
+    try { saved = localStorage.getItem(REPORT_PERIOD_STORAGE_KEY) || 'weekly'; } catch (e) {}
+    setReportPeriod(saved, true);
+    var tabs = document.querySelectorAll('.period-tab');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].addEventListener('click', function () {
+        setReportPeriod(this.getAttribute('data-period'));
       });
     }
   }
@@ -2069,6 +2108,7 @@
   // ---------------------------------------------------------------------
   initSelects();
   initCollapsibleSections();
+  initReportPeriodTabs();
   updatePortoFieldVisibility();
   el.fData.value = todayISO();
   updateClock();
