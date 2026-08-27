@@ -366,6 +366,17 @@
   .period-panel.hidden { display: none; }
   .panel-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 
+  .view-tabs { display: inline-flex; gap: 4px; margin-bottom: 16px; }
+  .view-tab { border: 1px solid var(--border); background: transparent; padding: 5px 12px; border-radius: var(--radius-pill); font-size: 12.5px; font-weight: 500; color: var(--muted); cursor: pointer; transition: background .15s var(--ease), color .15s var(--ease), border-color .15s var(--ease); }
+  .view-tab:hover { color: var(--ink); border-color: var(--border-strong); }
+  .view-tab.active { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+  .view-tab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .report-text {
+    white-space: pre-wrap; word-break: break-word; font-family: inherit; font-size: 13px; line-height: 1.65;
+    color: var(--ink); background: var(--panel-muted); border-radius: var(--radius-sm); padding: 16px;
+    font-variant-numeric: tabular-nums; margin: 0;
+  }
+
   .sync-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .sync-status { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--muted); }
   .sync-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--muted-2); flex-shrink: 0; }
@@ -552,6 +563,11 @@
                 <button type="button" class="period-tab" data-period="monthly" role="tab">Mensal</button>
               </div>
 
+              <div class="view-tabs" role="tablist">
+                <button type="button" class="view-tab" data-view="table" role="tab">Tabela</button>
+                <button type="button" class="view-tab" data-view="text" role="tab">Resumo por escrito</button>
+              </div>
+
               <div id="weeklyPanel" class="period-panel">
                 <div class="panel-head">
                   <div class="field" style="max-width:280px;margin-bottom:0;">
@@ -574,6 +590,7 @@
                     <tbody id="weeklyReportBody"></tbody>
                   </table>
                 </div>
+                <pre id="weeklyReportText" class="report-text hidden"></pre>
                 <div class="form-actions" style="margin-top:16px;">
                   <button id="exportCsvBtn" type="button" class="btn btn-secondary">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
@@ -608,6 +625,7 @@
                     <tbody id="monthlyReportBody"></tbody>
                   </table>
                 </div>
+                <pre id="monthlyReportText" class="report-text hidden"></pre>
                 <div class="form-actions" style="margin-top:16px;">
                   <button id="exportMonthlyCsvBtn" type="button" class="btn btn-secondary">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
@@ -740,6 +758,7 @@
   var NOTIFY_STORAGE_KEY = 'comex_dashboard_notify_v1';
   var SECTIONS_STORAGE_KEY = 'comex_dashboard_sections_v1';
   var REPORT_PERIOD_STORAGE_KEY = 'comex_dashboard_report_period_v1';
+  var REPORT_VIEW_STORAGE_KEY = 'comex_dashboard_report_view_v1';
   var SECTION_DEFAULTS = { entry: true, yield: false, weekly: false, history: true };
   var AUTO_SYNC_INTERVAL_MS = 2 * 60 * 1000;
   var NOTIFY_THROTTLE_MS = 2 * 60 * 60 * 1000;
@@ -906,6 +925,13 @@
     return String(Math.max(diff, 0));
   }
 
+  function extractProcessNumber(numeroProcesso) {
+    var matches = String(numeroProcesso || '').match(/\d+/g);
+    if (!matches) return 0;
+    var longest = matches.reduce(function (a, b) { return b.length > a.length ? b : a; });
+    return parseInt(longest, 10);
+  }
+
   function formatBR(iso) {
     if (!iso) return '';
     var p = iso.split('-');
@@ -1064,12 +1090,14 @@
     reportCategoriaFilter: document.getElementById('reportCategoriaFilter'),
     periodLabel: document.getElementById('periodLabel'),
     weeklyReportBody: document.getElementById('weeklyReportBody'),
+    weeklyReportText: document.getElementById('weeklyReportText'),
     exportCsvBtn: document.getElementById('exportCsvBtn'),
     copyEmailBtn: document.getElementById('copyEmailBtn'),
     monthSelect: document.getElementById('monthSelect'),
     monthlyReportCategoriaFilter: document.getElementById('monthlyReportCategoriaFilter'),
     monthlyPeriodLabel: document.getElementById('monthlyPeriodLabel'),
     monthlyReportBody: document.getElementById('monthlyReportBody'),
+    monthlyReportText: document.getElementById('monthlyReportText'),
     exportMonthlyCsvBtn: document.getElementById('exportMonthlyCsvBtn'),
     copyMonthlyEmailBtn: document.getElementById('copyMonthlyEmailBtn'),
     historyCount: document.getElementById('historyCount'),
@@ -1224,6 +1252,35 @@
     for (var i = 0; i < tabs.length; i++) {
       tabs[i].addEventListener('click', function () {
         setReportPeriod(this.getAttribute('data-period'));
+      });
+    }
+  }
+
+  function setReportView(view, skipSave) {
+    var isTable = view !== 'text';
+    [el.weeklyPanel, el.monthlyPanel].forEach(function (panel) {
+      var tableWrap = panel.querySelector('.table-wrap');
+      var textBlock = panel.querySelector('.report-text');
+      if (tableWrap) tableWrap.classList.toggle('hidden', !isTable);
+      if (textBlock) textBlock.classList.toggle('hidden', isTable);
+    });
+    var tabs = document.querySelectorAll('.view-tab');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.toggle('active', tabs[i].getAttribute('data-view') === view);
+    }
+    if (!skipSave) {
+      try { localStorage.setItem(REPORT_VIEW_STORAGE_KEY, view); } catch (e) {}
+    }
+  }
+
+  function initReportViewTabs() {
+    var saved = 'table';
+    try { saved = localStorage.getItem(REPORT_VIEW_STORAGE_KEY) || 'table'; } catch (e) {}
+    setReportView(saved, true);
+    var tabs = document.querySelectorAll('.view-tab');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].addEventListener('click', function () {
+        setReportView(this.getAttribute('data-view'));
       });
     }
   }
@@ -1408,6 +1465,7 @@
     currentReportEntries = entries;
     currentReportRows = rows;
     currentReportRange = range;
+    el.weeklyReportText.textContent = buildEmailText();
   }
 
   function buildReportCsvLines(titulo, range, categoriaFiltroValue, rows, entries) {
@@ -1573,6 +1631,7 @@
     currentMonthlyReportEntries = entries;
     currentMonthlyReportRows = rows;
     currentMonthlyReportRange = range;
+    el.monthlyReportText.textContent = buildMonthlyEmailText();
   }
 
   function exportMonthlyCsv() {
@@ -1772,7 +1831,8 @@
       if (busca && t.numeroProcesso.toLowerCase().indexOf(busca) === -1 && (t.observacoes || '').toLowerCase().indexOf(busca) === -1) return false;
       return true;
     }).sort(function (a, b) {
-      return b.data.localeCompare(a.data) || b.createdAt - a.createdAt;
+      return extractProcessNumber(b.numeroProcesso) - extractProcessNumber(a.numeroProcesso) ||
+        b.data.localeCompare(a.data) || b.createdAt - a.createdAt;
     });
   }
 
@@ -2109,6 +2169,7 @@
   initSelects();
   initCollapsibleSections();
   initReportPeriodTabs();
+  initReportViewTabs();
   updatePortoFieldVisibility();
   el.fData.value = todayISO();
   updateClock();
