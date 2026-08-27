@@ -571,6 +571,49 @@
             </div>
           </div>
         </section>
+
+        <!-- 3b. Relatório mensal -->
+        <section class="card">
+          <div class="card-head">
+            <button type="button" class="section-toggle" data-toggle="monthly" aria-expanded="false">
+              <svg class="chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+              <h2 class="section-title" style="margin:0;">Relatório mensal</h2>
+            </button>
+            <select id="monthSelect"></select>
+          </div>
+          <div id="monthlyWrap" class="card-body-wrap">
+            <div class="card-body-inner">
+              <div class="field" style="max-width:280px;margin-bottom:14px;">
+                <label for="monthlyReportCategoriaFilter">Filtrar por categoria</label>
+                <select id="monthlyReportCategoriaFilter"></select>
+              </div>
+              <p id="monthlyPeriodLabel" class="period-label"></p>
+              <div class="table-wrap">
+                <table class="ledger">
+                  <thead>
+                    <tr>
+                      <th>Categoria</th>
+                      <th class="num">Concluídos</th>
+                      <th class="num">Pendentes</th>
+                      <th class="num">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="monthlyReportBody"></tbody>
+                </table>
+              </div>
+              <div class="form-actions" style="margin-top:16px;">
+                <button id="exportMonthlyCsvBtn" type="button" class="btn btn-secondary">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+                  Exportar CSV
+                </button>
+                <button id="copyMonthlyEmailBtn" type="button" class="btn btn-secondary">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                  Copiar como texto (e-mail)
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
 
@@ -688,7 +731,7 @@
   var META_STORAGE_KEY = 'comex_dashboard_meta_v1';
   var NOTIFY_STORAGE_KEY = 'comex_dashboard_notify_v1';
   var SECTIONS_STORAGE_KEY = 'comex_dashboard_sections_v1';
-  var SECTION_DEFAULTS = { entry: true, yield: false, weekly: false, history: true };
+  var SECTION_DEFAULTS = { entry: true, yield: false, weekly: false, monthly: false, history: true };
   var AUTO_SYNC_INTERVAL_MS = 2 * 60 * 1000;
   var NOTIFY_THROTTLE_MS = 2 * 60 * 60 * 1000;
   var GIST_FILENAME = 'comex-dashboard-data.json';
@@ -705,6 +748,7 @@
   var PORTOS = ['ITAQUI', 'SANTARÉM', 'RIO GRANDE', 'BARCARENA', 'TUBARÃO'];
 
   var WEEK_OPTIONS_COUNT = 12;
+  var MONTH_OPTIONS_COUNT = 12;
 
   // ---------------------------------------------------------------------
   // Estado
@@ -715,6 +759,9 @@
   var currentReportEntries = [];
   var currentReportRows = [];
   var currentReportRange = null;
+  var currentMonthlyReportEntries = [];
+  var currentMonthlyReportRows = [];
+  var currentMonthlyReportRange = null;
 
   // ---------------------------------------------------------------------
   // Persistência
@@ -893,6 +940,20 @@
     return prefix + ' (' + startStr + ' – ' + endStr + ')';
   }
 
+  function monthRangeForOffset(offset) {
+    var now = new Date();
+    var start = new Date(now.getFullYear(), now.getMonth() - offset, 1, 0, 0, 0, 0);
+    var end = new Date(now.getFullYear(), now.getMonth() - offset + 1, 0, 23, 59, 59, 999);
+    return { start: start, end: end };
+  }
+
+  function monthLabel(offset, start) {
+    var label = start.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    label = label.charAt(0).toUpperCase() + label.slice(1);
+    var prefix = offset === 0 ? 'Mês atual' : offset === 1 ? 'Mês passado' : offset + ' meses atrás';
+    return prefix + ' (' + label + ')';
+  }
+
   // ---------------------------------------------------------------------
   // Utilidades
   // ---------------------------------------------------------------------
@@ -988,6 +1049,12 @@
     weeklyReportBody: document.getElementById('weeklyReportBody'),
     exportCsvBtn: document.getElementById('exportCsvBtn'),
     copyEmailBtn: document.getElementById('copyEmailBtn'),
+    monthSelect: document.getElementById('monthSelect'),
+    monthlyReportCategoriaFilter: document.getElementById('monthlyReportCategoriaFilter'),
+    monthlyPeriodLabel: document.getElementById('monthlyPeriodLabel'),
+    monthlyReportBody: document.getElementById('monthlyReportBody'),
+    exportMonthlyCsvBtn: document.getElementById('exportMonthlyCsvBtn'),
+    copyMonthlyEmailBtn: document.getElementById('copyMonthlyEmailBtn'),
     historyCount: document.getElementById('historyCount'),
     historyBody: document.getElementById('historyBody'),
     filterCategoria: document.getElementById('filterCategoria'),
@@ -1024,6 +1091,7 @@
     el.fCategoria.innerHTML = categoryOptions;
     el.filterCategoria.innerHTML = '<option value="all">Todas as categorias</option>' + categoryOptions;
     el.reportCategoriaFilter.innerHTML = '<option value="all">Todas as categorias</option>' + categoryOptions;
+    el.monthlyReportCategoriaFilter.innerHTML = '<option value="all">Todas as categorias</option>' + categoryOptions;
 
     el.fPorto.innerHTML = '<option value="">Selecione o porto</option>' + PORTOS.map(function (p) {
       return '<option value="' + p + '">' + p + '</option>';
@@ -1035,6 +1103,13 @@
       weekOptions.push('<option value="' + i + '">' + escapeHtml(weekLabel(i, range.start, range.end)) + '</option>');
     }
     el.weekSelect.innerHTML = weekOptions.join('');
+
+    var monthOptions = [];
+    for (var j = 0; j < MONTH_OPTIONS_COUNT; j++) {
+      var mRange = monthRangeForOffset(j);
+      monthOptions.push('<option value="' + j + '">' + escapeHtml(monthLabel(j, mRange.start)) + '</option>');
+    }
+    el.monthSelect.innerHTML = monthOptions.join('');
   }
 
   function updatePortoFieldVisibility() {
@@ -1163,6 +1238,11 @@
   // ---------------------------------------------------------------------
   function getWeekEntries(offset) {
     var range = weekRangeForOffset(offset);
+    return tasks.filter(function (t) { return inRange(t.data, range.start, range.end); });
+  }
+
+  function getMonthEntries(offset) {
+    var range = monthRangeForOffset(offset);
     return tasks.filter(function (t) { return inRange(t.data, range.start, range.end); });
   }
 
@@ -1337,8 +1417,7 @@
     return text;
   }
 
-  function copyEmailText() {
-    var text = buildEmailText();
+  function copyTextToClipboard(text) {
     function fallbackCopy() {
       var ta = document.createElement('textarea');
       ta.value = text;
@@ -1361,6 +1440,117 @@
     } else {
       fallbackCopy();
     }
+  }
+
+  function copyEmailText() {
+    copyTextToClipboard(buildEmailText());
+  }
+
+  // ---------------------------------------------------------------------
+  // 3b. Relatório mensal
+  // ---------------------------------------------------------------------
+  function renderMonthlyReport() {
+    var offset = parseInt(el.monthSelect.value || '0', 10);
+    var range = monthRangeForOffset(offset);
+    var entries = getMonthEntries(offset);
+    var categoriaFiltro = el.monthlyReportCategoriaFilter.value;
+    if (categoriaFiltro !== 'all') entries = entries.filter(function (t) { return t.categoria === categoriaFiltro; });
+
+    el.monthlyPeriodLabel.textContent = 'Período: ' + formatBR(toISO(range.start)) + ' a ' + formatBR(toISO(range.end));
+
+    var categoriesToShow = categoriaFiltro === 'all' ? CATEGORIES : CATEGORIES.filter(function (c) { return c.id === categoriaFiltro; });
+
+    var rows = categoriesToShow.map(function (cat) {
+      var catEntries = entries.filter(function (t) { return t.categoria === cat.id; });
+      return {
+        cat: cat,
+        concluidos: catEntries.filter(function (t) { return t.status === 'Concluído'; }).length,
+        pendentes: catEntries.filter(function (t) { return t.status === 'Pendente'; }).length,
+        total: catEntries.length,
+      };
+    });
+
+    var totalConcluidos = rows.reduce(function (a, r) { return a + r.concluidos; }, 0);
+    var totalPendentes = rows.reduce(function (a, r) { return a + r.pendentes; }, 0);
+    var totalGeral = rows.reduce(function (a, r) { return a + r.total; }, 0);
+
+    el.monthlyReportBody.innerHTML = rows.map(function (r) {
+      return (
+        '<tr>' +
+          '<td><span class="badge badge-' + r.cat.id + '">' + escapeHtml(r.cat.label) + '</span></td>' +
+          '<td class="num" style="color:var(--ok);font-weight:700;">' + r.concluidos + '</td>' +
+          '<td class="num" style="color:var(--warn);font-weight:700;">' + r.pendentes + '</td>' +
+          '<td class="num" style="font-weight:700;">' + r.total + '</td>' +
+        '</tr>'
+      );
+    }).join('') + (
+      '<tr class="totals">' +
+        '<td>Total</td>' +
+        '<td class="num" style="color:var(--ok);">' + totalConcluidos + '</td>' +
+        '<td class="num" style="color:var(--warn);">' + totalPendentes + '</td>' +
+        '<td class="num">' + totalGeral + '</td>' +
+      '</tr>'
+    );
+
+    currentMonthlyReportEntries = entries;
+    currentMonthlyReportRows = rows;
+    currentMonthlyReportRange = range;
+  }
+
+  function exportMonthlyCsv() {
+    if (!currentMonthlyReportRange) return;
+    var header = ['Categoria', 'Numero do Processo', 'Porto', 'Data', 'Status', 'Observacoes'];
+    var lines = [header.join(';')];
+    currentMonthlyReportEntries.slice().sort(function (a, b) { return a.data.localeCompare(b.data); }).forEach(function (t) {
+      var cat = categoryById(t.categoria);
+      var obs = (t.observacoes || '').replace(/\n/g, ' ');
+      lines.push([cat ? cat.label : t.categoria, t.numeroProcesso, t.porto || '', formatBR(t.data), t.status, obs].map(csvEscape).join(';'));
+    });
+    var csvContent = '﻿' + lines.join('\r\n');
+    var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    var catSuffix = el.monthlyReportCategoriaFilter.value !== 'all' ? '_' + el.monthlyReportCategoriaFilter.value : '';
+    a.download = 'relatorio-mensal' + catSuffix + '_' + toISO(currentMonthlyReportRange.start) + '_a_' + toISO(currentMonthlyReportRange.end) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast('CSV exportado com sucesso!');
+  }
+
+  function buildMonthlyEmailText() {
+    if (!currentMonthlyReportRange) return '';
+    var text = 'RELATÓRIO MENSAL – ROTINA COMEX\n';
+    text += 'Período: ' + formatBR(toISO(currentMonthlyReportRange.start)) + ' a ' + formatBR(toISO(currentMonthlyReportRange.end)) + '\n';
+    if (el.monthlyReportCategoriaFilter.value !== 'all') {
+      var filterCat = categoryById(el.monthlyReportCategoriaFilter.value);
+      text += 'Categoria: ' + (filterCat ? filterCat.label : el.monthlyReportCategoriaFilter.value) + '\n';
+    }
+    text += '\n';
+    currentMonthlyReportRows.forEach(function (r) {
+      text += r.cat.label + ': ' + r.concluidos + ' concluído(s), ' + r.pendentes + ' pendente(s)\n';
+    });
+    var totalConcl = currentMonthlyReportRows.reduce(function (a, r) { return a + r.concluidos; }, 0);
+    var totalPend = currentMonthlyReportRows.reduce(function (a, r) { return a + r.pendentes; }, 0);
+    text += '\nTOTAL: ' + totalConcl + ' concluído(s), ' + totalPend + ' pendente(s)\n';
+    if (currentMonthlyReportEntries.length) {
+      text += '\nDetalhamento:\n';
+      currentMonthlyReportEntries.slice().sort(function (a, b) { return a.data.localeCompare(b.data); }).forEach(function (t) {
+        var cat = categoryById(t.categoria);
+        text += '- [' + formatBR(t.data) + '] ' + (cat ? cat.label : t.categoria) + ' | Processo ' + t.numeroProcesso +
+          (t.porto ? ' | Porto: ' + t.porto : '') + ' | ' + t.status +
+          (t.observacoes ? ' | Obs: ' + t.observacoes : '') + '\n';
+      });
+    } else {
+      text += '\nNenhum registro neste mês.\n';
+    }
+    return text;
+  }
+
+  function copyMonthlyEmailText() {
+    copyTextToClipboard(buildMonthlyEmailText());
   }
 
   // ---------------------------------------------------------------------
@@ -1611,6 +1801,7 @@
     renderDailyCards();
     renderYieldModule();
     renderWeeklyReport();
+    renderMonthlyReport();
     renderHistoryTable();
   }
 
@@ -1746,6 +1937,10 @@
   el.reportCategoriaFilter.addEventListener('change', renderWeeklyReport);
   el.exportCsvBtn.addEventListener('click', exportCsv);
   el.copyEmailBtn.addEventListener('click', copyEmailText);
+  el.monthSelect.addEventListener('change', renderMonthlyReport);
+  el.monthlyReportCategoriaFilter.addEventListener('change', renderMonthlyReport);
+  el.exportMonthlyCsvBtn.addEventListener('click', exportMonthlyCsv);
+  el.copyMonthlyEmailBtn.addEventListener('click', copyMonthlyEmailText);
 
   el.filterCategoria.addEventListener('change', function () { filters.categoria = this.value; renderHistoryTable(); });
   el.filterStatus.addEventListener('change', function () { filters.status = this.value; renderHistoryTable(); });
