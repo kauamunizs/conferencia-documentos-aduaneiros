@@ -377,6 +377,15 @@
     font-variant-numeric: tabular-nums; margin: 0;
   }
 
+  .tutorial-topic { margin-bottom: 30px; }
+  .tutorial-topic:last-child { margin-bottom: 0; }
+  .tutorial-topic h3 { font-size: 15px; font-weight: 600; color: var(--ink); margin: 0 0 4px; letter-spacing: -0.01em; }
+  .tutorial-source { font-size: 12px; color: var(--muted-2); margin: 0 0 10px; font-style: italic; }
+  .tutorial-topic ol, .tutorial-topic ul { margin: 0; padding-left: 20px; font-size: 13.5px; line-height: 1.7; color: var(--ink); }
+  .tutorial-topic li { margin-bottom: 5px; }
+  .tutorial-topic a { color: var(--accent); }
+  .tutorial-tip { font-size: 12.5px; color: var(--muted); background: var(--panel-muted); border-radius: var(--radius-sm); padding: 10px 12px; margin: 12px 0 0; }
+
   .sync-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .sync-status { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--muted); }
   .sync-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--muted-2); flex-shrink: 0; }
@@ -690,6 +699,109 @@
       </div>
     </section>
 
+    <!-- 5. Tutorial de processos -->
+    <section class="card">
+      <div class="card-head">
+        <button type="button" class="section-toggle" data-toggle="tutorial" aria-expanded="false">
+          <svg class="chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          <h2 class="section-title" style="margin:0;">Tutorial de processos</h2>
+        </button>
+      </div>
+      <div id="tutorialWrap" class="card-body-wrap">
+        <div class="card-body-inner">
+          <p class="sync-help" style="margin:0 0 20px;">Guia de referência dos fluxos operacionais. Atualizado em 27/08/2026 com base no manual interno e nas fontes oficiais citadas.</p>
+
+          <div class="tutorial-topic">
+            <h3>1. Desistência de embarque de container</h3>
+            <p class="tutorial-source">Ex.: Tecon Salvador (Wilson Sons), Intermarítima</p>
+            <ol>
+              <li>Acesse o portal do cliente do terminal com seu login.</li>
+              <li>Vá em "Agendamento de Container" → "Novo Agendamento".</li>
+              <li>Selecione a modalidade "Desistência de exportação" (retirada por desistência de embarque).</li>
+              <li>O terminal solicita internamente a liberação SAVIG (sistema da Receita Federal) antes de autorizar a retirada.</li>
+              <li>Emita a nota fiscal de entrada referente à devolução do container vazio.</li>
+              <li>Preencha o formulário de agendamento com os dados obrigatórios: CNPJ da transportadora, CPF do motorista e placa do veículo.</li>
+              <li>Confirme o agendamento e guarde o comprovante — é sua referência para controle de estadia (demurrage/detention).</li>
+            </ol>
+            <p class="tutorial-tip"><strong>Atenção:</strong> confirme a necessidade de PO (Purchase Order) ou FOR antes de agendar a coleta.</p>
+          </div>
+
+          <div class="tutorial-topic">
+            <h3>2. Documentos de granel (CO, Fito, Fumigação)</h3>
+            <p class="tutorial-source">Fluxo típico para embarques de granel (ex.: soja, pellets)</p>
+            <ol>
+              <li>Receba e valide os drafts (Origem, Fito, Fumigação, Certificado da Supervisora) enviados pelo cliente/trading.</li>
+              <li>No <a href="https://portalunico.siscomex.gov.br/portal/" target="_blank" rel="noopener">Portal Único Siscomex</a> (com Certificado Digital), abra o módulo Exportação → LPCO → Inclusão de Pedido, selecione o órgão anuente (Vigiagro/MAPA) e preencha NCM, CNPJ e demais dados do embarque.</li>
+              <li><strong>Certificado de Origem (CO):</strong> emitido pelo sistema COD Brasil (credenciado pela FIEP/FIESP/associação da praça) — cadastre a Declaração do Processo Produtivo (DPP) e a Fatura Comercial; o CO é gerado automaticamente a partir desses dados. Confirme o exportador correto antes de emitir.</li>
+              <li><strong>Certificado Fitossanitário:</strong> emitido pelo Vigiagro/MAPA via LPCO. Dependendo do produto, destino e histórico do exportador, pode haver inspeção física da carga antes da emissão.</li>
+              <li><strong>Fumigação:</strong> coordene com a empresa certificada a execução e a emissão do certificado conforme a norma fitossanitária do país de destino.</li>
+              <li>Finalize o envio dos documentos (CO físico, Fito eletrônico) conforme a instrução específica de cada embarque.</li>
+            </ol>
+          </div>
+
+          <div class="tutorial-topic">
+            <h3>3. Booking e vinculação de Outward Forwarder</h3>
+            <p class="tutorial-source">Ex.: Maersk, Hapag-Lloyd / INTTRA</p>
+            <ol>
+              <li>A vinculação manual (por e-mail ou telefone) não é mais aceita pela maioria dos armadores — deve ser feita pelo sistema oficial.</li>
+              <li><strong>Maersk:</strong> na criação do booking, aba "Detalhes Adicionais" → informe o ID da Pibernat no campo "Outward Forwarder". Em um booking já existente, use "Minha Conta" → rastrear reserva → "Amend" (retificar) → "Detalhes Adicionais". Alterações só podem ser feitas online — o atendimento não processa manualmente.</li>
+              <li><strong>Hapag-Lloyd / INTTRA:</strong> na Shipping Instruction (INTTRA ACT ou tela própria da Hapag), preencha o campo "Forwarding Agent" / "Outward Forwarder" com o ID e, se aplicável, o Tax ID do forwarder.</li>
+              <li>Prazo médio de processamento: até 8h úteis após o envio ou a retificação.</li>
+            </ol>
+          </div>
+
+          <div class="tutorial-topic">
+            <h3>4. Exportação temporária para reparo (peças/equipamentos)</h3>
+            <p class="tutorial-source">Regime aduaneiro especial — IN RFB nº 1.600/2015</p>
+            <ol>
+              <li>Enquadramento: "Exportação Temporária para Aperfeiçoamento Passivo".</li>
+              <li>Código de enquadramento na DUE: <strong>90055</strong>.</li>
+              <li>Operação sempre <strong>sem cobertura cambial</strong>.</li>
+              <li>Monte um dossiê digital com: contrato ou declaração da necessidade de reparo, descrição técnica do bem (número de série, NCM, marca, modelo), natureza da operação e prazo pretendido no exterior.</li>
+              <li>No retorno, registre a Declaração de Importação (DI) referenciando o número da DUE original — isso evita tributação sobre o bem que já saiu do país, incidindo imposto apenas sobre peças novas eventualmente agregadas no reparo.</li>
+            </ol>
+          </div>
+
+          <div class="tutorial-topic">
+            <h3>5. Resolução de dúvidas comuns</h3>
+            <div class="table-wrap">
+              <table class="ledger">
+                <thead>
+                  <tr>
+                    <th>Problema</th>
+                    <th>Causa provável</th>
+                    <th>Ação recomendada</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Sistema sobrescreve dados</td>
+                    <td>Bug no sistema do armador (ex.: Hapag)</td>
+                    <td>Não confiar na prévia. Conferir o documento após a submissão e solicitar ajuste por e-mail se necessário.</td>
+                  </tr>
+                  <tr>
+                    <td>Deadline expirado</td>
+                    <td>Atraso na aprovação da DUE</td>
+                    <td>Antecipar a conferência documental para 48h antes da janela de embarque.</td>
+                  </tr>
+                  <tr>
+                    <td>ID não vinculado</td>
+                    <td>Tentativa de vinculação manual</td>
+                    <td>Seguir o procedimento de "Booking Amend" no portal oficial do armador.</td>
+                  </tr>
+                  <tr>
+                    <td>Peça enviada para reparo</td>
+                    <td>Dúvida sobre troca ou conserto</td>
+                    <td>Extinguir o regime temporário via exportação definitiva, caso uma peça nova seja enviada em substituição.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <div id="settingsOverlay" class="modal-overlay hidden">
@@ -759,7 +871,7 @@
   var SECTIONS_STORAGE_KEY = 'comex_dashboard_sections_v1';
   var REPORT_PERIOD_STORAGE_KEY = 'comex_dashboard_report_period_v1';
   var REPORT_VIEW_STORAGE_KEY = 'comex_dashboard_report_view_v1';
-  var SECTION_DEFAULTS = { entry: true, yield: false, weekly: false, history: true };
+  var SECTION_DEFAULTS = { entry: true, yield: false, weekly: false, history: true, tutorial: false };
   var AUTO_SYNC_INTERVAL_MS = 2 * 60 * 1000;
   var NOTIFY_THROTTLE_MS = 2 * 60 * 60 * 1000;
   var GIST_FILENAME = 'comex-dashboard-data.json';
