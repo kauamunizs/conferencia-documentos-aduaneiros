@@ -891,6 +891,12 @@
     return new Date(parts[0], parts[1] - 1, parts[2]);
   }
 
+  function daysOpenFor(t) {
+    if (t.status !== 'Pendente') return '';
+    var diff = Math.round((parseISO(todayISO()) - parseISO(t.data)) / 86400000);
+    return String(Math.max(diff, 0));
+  }
+
   function formatBR(iso) {
     if (!iso) return '';
     var p = iso.split('-');
@@ -1365,27 +1371,60 @@
     currentReportRange = range;
   }
 
-  function exportCsv() {
-    if (!currentReportRange) return;
-    var header = ['Categoria', 'Numero do Processo', 'Porto', 'Data', 'Status', 'Observacoes'];
-    var lines = [header.join(';')];
-    currentReportEntries.slice().sort(function (a, b) { return a.data.localeCompare(b.data); }).forEach(function (t) {
+  function buildReportCsvLines(titulo, range, categoriaFiltroValue, rows, entries) {
+    var lines = [];
+    lines.push(titulo);
+    lines.push(['Período', formatBR(toISO(range.start)) + ' a ' + formatBR(toISO(range.end))].map(csvEscape).join(';'));
+    var catLabel = 'Todas as categorias';
+    if (categoriaFiltroValue !== 'all') {
+      var filterCat = categoryById(categoriaFiltroValue);
+      catLabel = filterCat ? filterCat.label : categoriaFiltroValue;
+    }
+    lines.push(['Categoria', catLabel].map(csvEscape).join(';'));
+    lines.push(['Gerado em', new Date().toLocaleString('pt-BR')].map(csvEscape).join(';'));
+    lines.push('');
+
+    lines.push('Resumo por categoria');
+    lines.push(['Categoria', 'Concluídos', 'Pendentes', 'Total'].map(csvEscape).join(';'));
+    var totalConcl = 0, totalPend = 0, totalGeral = 0;
+    rows.forEach(function (r) {
+      totalConcl += r.concluidos;
+      totalPend += r.pendentes;
+      totalGeral += r.total;
+      lines.push([r.cat.label, r.concluidos, r.pendentes, r.total].map(csvEscape).join(';'));
+    });
+    lines.push(['Total', totalConcl, totalPend, totalGeral].map(csvEscape).join(';'));
+    lines.push('');
+
+    lines.push('Detalhamento');
+    lines.push(['Categoria', 'Numero do Processo', 'Porto', 'Data', 'Status', 'Dias em aberto', 'Observacoes'].map(csvEscape).join(';'));
+    entries.slice().sort(function (a, b) { return a.data.localeCompare(b.data); }).forEach(function (t) {
       var cat = categoryById(t.categoria);
       var obs = (t.observacoes || '').replace(/\n/g, ' ');
-      lines.push([cat ? cat.label : t.categoria, t.numeroProcesso, t.porto || '', formatBR(t.data), t.status, obs].map(csvEscape).join(';'));
+      lines.push([cat ? cat.label : t.categoria, t.numeroProcesso, t.porto || '', formatBR(t.data), t.status, daysOpenFor(t), obs].map(csvEscape).join(';'));
     });
+    return lines;
+  }
+
+  function downloadCsv(lines, filename) {
     var csvContent = '﻿' + lines.join('\r\n');
     var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    var catSuffix = el.reportCategoriaFilter.value !== 'all' ? '_' + el.reportCategoriaFilter.value : '';
-    a.download = 'relatorio-semanal' + catSuffix + '_' + toISO(currentReportRange.start) + '_a_' + toISO(currentReportRange.end) + '.csv';
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
     toast('CSV exportado com sucesso!');
+  }
+
+  function exportCsv() {
+    if (!currentReportRange) return;
+    var lines = buildReportCsvLines('RELATÓRIO SEMANAL – ROTINA COMEX', currentReportRange, el.reportCategoriaFilter.value, currentReportRows, currentReportEntries);
+    var catSuffix = el.reportCategoriaFilter.value !== 'all' ? '_' + el.reportCategoriaFilter.value : '';
+    downloadCsv(lines, 'relatorio-semanal' + catSuffix + '_' + toISO(currentReportRange.start) + '_a_' + toISO(currentReportRange.end) + '.csv');
   }
 
   function buildEmailText() {
@@ -1499,25 +1538,9 @@
 
   function exportMonthlyCsv() {
     if (!currentMonthlyReportRange) return;
-    var header = ['Categoria', 'Numero do Processo', 'Porto', 'Data', 'Status', 'Observacoes'];
-    var lines = [header.join(';')];
-    currentMonthlyReportEntries.slice().sort(function (a, b) { return a.data.localeCompare(b.data); }).forEach(function (t) {
-      var cat = categoryById(t.categoria);
-      var obs = (t.observacoes || '').replace(/\n/g, ' ');
-      lines.push([cat ? cat.label : t.categoria, t.numeroProcesso, t.porto || '', formatBR(t.data), t.status, obs].map(csvEscape).join(';'));
-    });
-    var csvContent = '﻿' + lines.join('\r\n');
-    var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
+    var lines = buildReportCsvLines('RELATÓRIO MENSAL – ROTINA COMEX', currentMonthlyReportRange, el.monthlyReportCategoriaFilter.value, currentMonthlyReportRows, currentMonthlyReportEntries);
     var catSuffix = el.monthlyReportCategoriaFilter.value !== 'all' ? '_' + el.monthlyReportCategoriaFilter.value : '';
-    a.download = 'relatorio-mensal' + catSuffix + '_' + toISO(currentMonthlyReportRange.start) + '_a_' + toISO(currentMonthlyReportRange.end) + '.csv';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    toast('CSV exportado com sucesso!');
+    downloadCsv(lines, 'relatorio-mensal' + catSuffix + '_' + toISO(currentMonthlyReportRange.start) + '_a_' + toISO(currentMonthlyReportRange.end) + '.csv');
   }
 
   function buildMonthlyEmailText() {
