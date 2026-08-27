@@ -379,7 +379,8 @@
 
   .tutorial-topic { margin-bottom: 30px; }
   .tutorial-topic:last-child { margin-bottom: 0; }
-  .tutorial-topic h3 { font-size: 15px; font-weight: 600; color: var(--ink); margin: 0 0 4px; letter-spacing: -0.01em; }
+  .tutorial-topic h3 { font-size: 15px; font-weight: 600; color: var(--ink); margin: 0 0 4px; letter-spacing: -0.01em; display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+  .tutorial-topic h3 .badge { font-size: 11px; font-weight: 600; padding: 3px 9px; }
   .tutorial-source { font-size: 12px; color: var(--muted-2); margin: 0 0 10px; font-style: italic; }
   .tutorial-topic ol, .tutorial-topic ul { margin: 0; padding-left: 20px; font-size: 13.5px; line-height: 1.7; color: var(--ink); }
   .tutorial-topic li { margin-bottom: 5px; }
@@ -723,58 +724,69 @@
           </div>
 
           <div class="tutorial-topic">
-            <h3>2. Desistência de embarque de container</h3>
-            <p class="tutorial-source">Ex.: Tecon Salvador (Wilson Sons), Intermarítima</p>
-            <ol>
-              <li>Acesse o portal do cliente do terminal com seu login.</li>
-              <li>Vá em "Agendamento de Container" → "Novo Agendamento".</li>
-              <li>Selecione a modalidade "Desistência de exportação" (retirada por desistência de embarque).</li>
-              <li>O terminal solicita internamente a liberação SAVIG (sistema da Receita Federal) antes de autorizar a retirada.</li>
-              <li>Emita a nota fiscal de entrada referente à devolução do container vazio.</li>
-              <li>Preencha o formulário de agendamento com os dados obrigatórios: CNPJ da transportadora, CPF do motorista e placa do veículo.</li>
-              <li>Confirme o agendamento e guarde o comprovante — é sua referência para controle de estadia (demurrage/detention).</li>
-            </ol>
-            <p class="tutorial-tip"><strong>Atenção:</strong> confirme a necessidade de PO (Purchase Order) ou FOR antes de agendar a coleta.</p>
-          </div>
-
-          <div class="tutorial-topic">
-            <h3>3. Documentos de granel (CO, Fito, Fumigação)</h3>
-            <p class="tutorial-source">Fluxo típico para embarques de granel (ex.: soja, pellets)</p>
+            <h3>2. Abertura de processos granel <span class="badge badge-granel">Granel</span></h3>
+            <p class="tutorial-source">Embarques de granel (soja, pellets) — abertura e documentação</p>
             <ol>
               <li>Receba e valide os drafts (Origem, Fito, Fumigação, Certificado da Supervisora) enviados pelo cliente/trading.</li>
               <li>No <a href="https://portalunico.siscomex.gov.br/portal/" target="_blank" rel="noopener">Portal Único Siscomex</a> (com Certificado Digital), abra o módulo Exportação → LPCO → Inclusão de Pedido, selecione o órgão anuente (Vigiagro/MAPA) e preencha NCM, CNPJ e demais dados do embarque.</li>
               <li><strong>Certificado de Origem (CO):</strong> emitido pelo sistema COD Brasil (credenciado pela FIEP/FIESP/associação da praça) — cadastre a Declaração do Processo Produtivo (DPP) e a Fatura Comercial; o CO é gerado automaticamente a partir desses dados. Confirme o exportador correto antes de emitir.</li>
               <li><strong>Certificado Fitossanitário:</strong> emitido pelo Vigiagro/MAPA via LPCO. Dependendo do produto, destino e histórico do exportador, pode haver inspeção física da carga antes da emissão.</li>
               <li><strong>Fumigação:</strong> coordene com a empresa certificada a execução e a emissão do certificado conforme a norma fitossanitária do país de destino.</li>
-              <li>Finalize o envio dos documentos (CO físico, Fito eletrônico) conforme a instrução específica de cada embarque.</li>
+              <li>Envie os documentos (CO físico, Fito eletrônico) conforme a instrução específica de cada embarque.</li>
             </ol>
+            <p class="tutorial-tip"><strong>No dashboard:</strong> categoria <em>Abertura de processos granel</em>, número do processo e data da abertura. Marque Concluído quando a documentação do embarque estiver fechada.</p>
           </div>
 
           <div class="tutorial-topic">
-            <h3>4. Booking e vinculação de Outward Forwarder</h3>
-            <p class="tutorial-source">Ex.: Maersk, Hapag-Lloyd / INTTRA</p>
+            <h3>3. Envio México <span class="badge badge-mexico">México</span></h3>
+            <p class="tutorial-source">Envio por e-mail, dependente das invoices do navio</p>
             <ol>
-              <li>A vinculação manual (por e-mail ou telefone) não é mais aceita pela maioria dos armadores — deve ser feita pelo sistema oficial.</li>
-              <li><strong>Maersk:</strong> na criação do booking, aba "Detalhes Adicionais" → informe o ID da Pibernat no campo "Outward Forwarder". Em um booking já existente, use "Minha Conta" → rastrear reserva → "Amend" (retificar) → "Detalhes Adicionais". Alterações só podem ser feitas online — o atendimento não processa manualmente.</li>
-              <li><strong>Hapag-Lloyd / INTTRA:</strong> na Shipping Instruction (INTTRA ACT ou tela própria da Hapag), preencha o campo "Forwarding Agent" / "Outward Forwarder" com o ID e, se aplicável, o Tax ID do forwarder.</li>
-              <li>Prazo médio de processamento: até 8h úteis após o envio ou a retificação.</li>
+              <li>As invoices chegam por e-mail no formato <em>"ENC: CTC0029776 - FECHAMENTO DE CÂMBIO TOTAL - RIO GRANDE - MV PEARL ETERNITY - CHINA - SOJA - E-36144 ... - valor"</em>.</li>
+              <li>O envio só pode ser feito quando <strong>todas as DUEs e invoices daquele navio estiverem juntas</strong> — por isso o controle é por navio, não por processo individual.</li>
+              <li>Enquanto faltar invoice: registre como <strong>Pendente</strong>, com os RGDEs/DUEs nas observações e a marcação <strong>"Falta INV"</strong>.</li>
+              <li>Quando todas as invoices chegarem, faça o envio por e-mail e marque o registro como <strong>Concluído</strong>.</li>
             </ol>
+            <p class="tutorial-tip"><strong>No dashboard:</strong> categoria <em>Envio México no e-mail</em>, o <strong>nome do navio</strong> como número do processo, e os RGDEs/DUEs nas observações. Ao marcar Concluído, a nota "Falta INV" é removida automaticamente das observações.</p>
           </div>
 
           <div class="tutorial-topic">
-            <h3>5. Exportação temporária para reparo (peças/equipamentos)</h3>
-            <p class="tutorial-source">Regime aduaneiro especial — IN RFB nº 1.600/2015</p>
+            <h3>4. Faturamento no FComex <span class="badge badge-fcomex">FComex</span></h3>
+            <p class="tutorial-source">Faturamento dos processos por porto</p>
             <ol>
-              <li>Enquadramento: "Exportação Temporária para Aperfeiçoamento Passivo".</li>
-              <li>Código de enquadramento na DUE: <strong>90055</strong>.</li>
-              <li>Operação sempre <strong>sem cobertura cambial</strong>.</li>
-              <li>Monte um dossiê digital com: contrato ou declaração da necessidade de reparo, descrição técnica do bem (número de série, NCM, marca, modelo), natureza da operação e prazo pretendido no exterior.</li>
-              <li>No retorno, registre a Declaração de Importação (DI) referenciando o número da DUE original — isso evita tributação sobre o bem que já saiu do país, incidindo imposto apenas sobre peças novas eventualmente agregadas no reparo.</li>
+              <li>Os processos chegam agrupados por porto (Itaqui, Santarém, Rio Grande, Barcarena, Tubarão), com a indicação de <em>"serviços já quantificados"</em> ou <em>"serviços já quantificados e boy pago"</em>.</li>
+              <li>Confira se o processo está realmente pronto para faturar — serviços quantificados e, quando for o caso, boy já pago.</li>
+              <li>Fature o processo no FComex.</li>
+              <li>Marque o registro como Concluído no dashboard.</li>
             </ol>
+            <p class="tutorial-tip"><strong>No dashboard:</strong> categoria <em>Faturamento de processos no FComex</em> — esta é a única categoria que pede o campo <strong>Porto</strong>, que aparece automaticamente ao selecioná-la. Use o RGDE ou o nome do navio como referência, conforme o lote.</p>
           </div>
 
           <div class="tutorial-topic">
-            <h3>6. Resolução de dúvidas comuns</h3>
+            <h3>5. Docs averbados <span class="badge badge-averbados">Averbados</span></h3>
+            <p class="tutorial-source">Confirmação de saída da mercadoria do país</p>
+            <ol>
+              <li>A averbação é o ato final do despacho de exportação: confirma o embarque efetivo. Só uma DU-E averbada comprova, para fins fiscais, cambiais e comerciais, que a mercadoria foi realmente exportada.</li>
+              <li>A averbação ocorre no Siscomex depois que o transportador internacional registra os dados de embarque e a DU-E está sem pendências.</li>
+              <li>Os avisos chegam por e-mail no formato <em>"DOCS AVERBADOS | 3654 - AGILITY DIVA - SAO LUIS - SOJA"</em> ou <em>"DOCS AVERBADOS | CEA-3703 / 3704 - BOLD VOYAGER - RIO GRANDE - PELLETS - CASA/CNH"</em>.</li>
+              <li>Processe o aviso e registre o processo como concluído.</li>
+            </ol>
+            <p class="tutorial-tip"><strong>No dashboard:</strong> categoria <em>Docs averbados</em>. Após a averbação, o Portal Único envia automaticamente ao SPED o evento eletrônico com número da DU-E, data da averbação e quantidades efetivamente exportadas.</p>
+          </div>
+
+          <div class="tutorial-topic">
+            <h3>6. Retificação de processos <span class="badge badge-retificacao">Retificação</span></h3>
+            <p class="tutorial-source">Correção de dados da DU-E</p>
+            <ol>
+              <li>A retificação é registrada por funcionalidade própria no <a href="https://portalunico.siscomex.gov.br/portal/" target="_blank" rel="noopener">Portal Único Siscomex</a> (login com e-CNPJ) — não é necessário abrir processo digital.</li>
+              <li>Depois da apresentação para despacho — inclusive após a averbação — a alteração vira uma <strong>solicitação de retificação</strong>, que a Receita analisa: pode ser deferida automaticamente ou cair em análise de um Auditor-Fiscal, conforme o risco.</li>
+              <li>O indeferimento é sempre manual e vem com a motivação registrada.</li>
+              <li>Retificações em DU-E já averbada são especialmente relevantes para <strong>drawback</strong> e <strong>fechamento de câmbio</strong> — confira o impacto antes de solicitar.</li>
+            </ol>
+            <p class="tutorial-tip"><strong>No dashboard:</strong> categoria <em>Retificação de processos</em>. Mantenha como Pendente enquanto a solicitação estiver em análise pela Receita e marque Concluído após o deferimento.</p>
+          </div>
+
+          <div class="tutorial-topic">
+            <h3>7. Resolução de dúvidas comuns</h3>
             <div class="table-wrap">
               <table class="ledger">
                 <thead>
@@ -786,24 +798,29 @@
                 </thead>
                 <tbody>
                   <tr>
-                    <td>Sistema sobrescreve dados</td>
-                    <td>Bug no sistema do armador (ex.: Hapag)</td>
-                    <td>Não confiar na prévia. Conferir o documento após a submissão e solicitar ajuste por e-mail se necessário.</td>
-                  </tr>
-                  <tr>
                     <td>Deadline expirado</td>
-                    <td>Atraso na aprovação da DUE</td>
+                    <td>Atraso na aprovação da DU-E</td>
                     <td>Antecipar a conferência documental para 48h antes da janela de embarque.</td>
                   </tr>
                   <tr>
-                    <td>ID não vinculado</td>
-                    <td>Tentativa de vinculação manual</td>
-                    <td>Seguir o procedimento de "Booking Amend" no portal oficial do armador.</td>
+                    <td>Sistema sobrescreve dados</td>
+                    <td>Falha na prévia do sistema</td>
+                    <td>Não confiar na prévia: conferir o documento depois de submetido e pedir ajuste por e-mail se necessário.</td>
                   </tr>
                   <tr>
-                    <td>Peça enviada para reparo</td>
-                    <td>Dúvida sobre troca ou conserto</td>
-                    <td>Extinguir o regime temporário via exportação definitiva, caso uma peça nova seja enviada em substituição.</td>
+                    <td>Envio México travado</td>
+                    <td>Falta invoice de algum processo do navio</td>
+                    <td>Manter Pendente com "Falta INV" nas observações — o envio só sai com todas as DUEs e invoices do navio juntas.</td>
+                  </tr>
+                  <tr>
+                    <td>DU-E não averba</td>
+                    <td>Transportador ainda não registrou os dados de embarque, ou há pendência na DU-E</td>
+                    <td>Conferir a situação da DU-E no Portal Único e cobrar o registro de embarque do transportador.</td>
+                  </tr>
+                  <tr>
+                    <td>Retificação parada</td>
+                    <td>Solicitação caiu em análise de Auditor-Fiscal</td>
+                    <td>Acompanhar pelo Portal Único. O indeferimento sempre vem com motivação registrada — corrigir e reenviar conforme a justificativa.</td>
                   </tr>
                 </tbody>
               </table>
