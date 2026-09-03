@@ -916,6 +916,7 @@
               <label class="mx-check"><input id="mxOnlyNovas" type="checkbox" /> Só novas</label>
               <label class="mx-check"><input id="mxOnlyAlerts" type="checkbox" /> Só com alerta</label>
               <button id="mxUpdateBtn" type="button" class="btn btn-primary">Atualizar com novo follow-up</button>
+              <button id="mxXlsxBtn" type="button" class="btn btn-secondary">Gerar planilha (Excel)</button>
               <button id="mxExportBtn" type="button" class="btn btn-text">Exportar CSV</button>
             </div>
 
@@ -1505,6 +1506,7 @@
     mxUpdateCancelBtn: document.getElementById('mxUpdateCancelBtn'),
     mxPreview: document.getElementById('mxPreview'),
     mxExportBtn: document.getElementById('mxExportBtn'),
+    mxXlsxBtn: document.getElementById('mxXlsxBtn'),
     exportMonthlyCsvBtn: document.getElementById('exportMonthlyCsvBtn'),
     copyMonthlyEmailBtn: document.getElementById('copyMonthlyEmailBtn'),
     historyCount: document.getElementById('historyCount'),
@@ -2492,6 +2494,337 @@
   }
 
   // ---------------------------------------------------------------------
+  // Geração do .xlsx no mesmo formato da planilha original
+  //
+  // Um .xlsx é só um ZIP de XMLs. Como o dashboard é um arquivo único e roda
+  // direto do GitHub Pages, o ZIP é montado aqui na mão (método "store", sem
+  // compressão) em vez de puxar uma biblioteca de CDN.
+  // ---------------------------------------------------------------------
+  var CRC_TABLE = (function () {
+    var table = new Uint32Array(256);
+    for (var n = 0; n < 256; n++) {
+      var c = n;
+      for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      table[n] = c >>> 0;
+    }
+    return table;
+  })();
+
+  function crc32(bytes) {
+    var c = 0xFFFFFFFF;
+    for (var i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  function utf8Bytes(str) {
+    if (window.TextEncoder) return new TextEncoder().encode(str);
+    var utf8 = unescape(encodeURIComponent(str));
+    var out = new Uint8Array(utf8.length);
+    for (var i = 0; i < utf8.length; i++) out[i] = utf8.charCodeAt(i);
+    return out;
+  }
+
+  function zipBuild(files) {
+    var chunks = [];
+    var central = [];
+    var offset = 0;
+
+    function u16(v) { return [v & 0xFF, (v >>> 8) & 0xFF]; }
+    function u32(v) { return [v & 0xFF, (v >>> 8) & 0xFF, (v >>> 16) & 0xFF, (v >>> 24) & 0xFF]; }
+
+    files.forEach(function (f) {
+      var nameBytes = utf8Bytes(f.name);
+      var dataBytes = utf8Bytes(f.content);
+      var crc = crc32(dataBytes);
+      var header = [].concat(
+        u32(0x04034b50), u16(20), u16(0), u16(0), u16(0), u16(0),
+        u32(crc), u32(dataBytes.length), u32(dataBytes.length),
+        u16(nameBytes.length), u16(0)
+      );
+      chunks.push(new Uint8Array(header), nameBytes, dataBytes);
+      central.push({ name: nameBytes, crc: crc, size: dataBytes.length, offset: offset });
+      offset += header.length + nameBytes.length + dataBytes.length;
+    });
+
+    var centralStart = offset;
+    var centralSize = 0;
+    central.forEach(function (c) {
+      var header = [].concat(
+        u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), u16(0), u16(0),
+        u32(c.crc), u32(c.size), u32(c.size),
+        u16(c.name.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(c.offset)
+      );
+      chunks.push(new Uint8Array(header), c.name);
+      centralSize += header.length + c.name.length;
+    });
+
+    chunks.push(new Uint8Array([].concat(
+      u32(0x06054b50), u16(0), u16(0), u16(central.length), u16(central.length),
+      u32(centralSize), u32(centralStart), u16(0)
+    )));
+
+    return new Blob(chunks, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+
+  function xmlEscape(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&apos;')
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+  }
+
+  function colLetter(n) {
+    var s = '';
+    while (n > 0) {
+      var m = (n - 1) % 26;
+      s = String.fromCharCode(65 + m) + s;
+      n = Math.floor((n - m) / 26);
+    }
+    return s;
+  }
+
+  // style ids: 0 normal | 1 cabeçalho | 2 negrito | 3 fundo amarelo |
+  // 4 negrito+amarelo | 5 título | 6 subtítulo
+  function sheetXml(rows, opts) {
+    opts = opts || {};
+    var body = rows.map(function (row, ri) {
+      var cells = row.map(function (cell, ci) {
+        if (cell == null || cell === '') return '';
+        var ref = colLetter(ci + 1) + (ri + 1);
+        var style = cell.s ? ' s="' + cell.s + '"' : '';
+        var value = cell.v !== undefined ? cell.v : cell;
+        if (typeof value === 'number') {
+          return '<c r="' + ref + '"' + style + '><v>' + value + '</v></c>';
+        }
+        return '<c r="' + ref + '"' + style + ' t="inlineStr"><is><t xml:space="preserve">' + xmlEscape(value) + '</t></is></c>';
+      }).join('');
+      return '<row r="' + (ri + 1) + '">' + cells + '</row>';
+    }).join('');
+
+    var cols = opts.widths ? '<cols>' + opts.widths.map(function (w, i) {
+      return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>';
+    }).join('') + '</cols>' : '';
+
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+      '<sheetViews><sheetView workbookViewId="0"' + (opts.freeze ? '><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView>' : '/>') +
+      '</sheetViews>' + cols +
+      '<sheetData>' + body + '</sheetData>' +
+      (opts.autoFilter ? '<autoFilter ref="' + opts.autoFilter + '"/>' : '') +
+      (opts.conditional || '') +
+      (opts.validation || '') +
+      '</worksheet>';
+  }
+
+  function mxBuildWorkbook() {
+    var navios = mxSortedNavios();
+    var counts = mxCountByNavio(mxNavios());
+    var enviados = mxEnviados().slice().sort(function (a, b) {
+      return String(a.saiuEm || '').localeCompare(String(b.saiuEm || '')) || a.navio.localeCompare(b.navio, 'pt-BR');
+    });
+    var lastRow = Math.max(navios.length + 1, 2);
+
+    // --- Navios ---
+    var naviosRows = [['NAVIO', 'REF. PIBERNAT', 'DUE', 'STATUS', 'OBS', 'QTD DUES'].map(function (h) { return { v: h, s: 1 }; })];
+    var lastNavio = null;
+    navios.forEach(function (r) {
+      var first = r.navio !== lastNavio;
+      lastNavio = r.navio;
+      var base = r.nova ? 3 : 0;
+      var navioStyle = r.nova ? 4 : 2;
+      naviosRows.push([
+        { v: first ? r.navio : '', s: navioStyle },
+        { v: r.ref, s: base },
+        { v: r.due, s: base },
+        { v: r.status, s: base },
+        { v: r.obs || '', s: base },
+        first ? { v: counts[r.navio], s: base } : { v: '', s: base },
+      ]);
+    });
+
+    var cond =
+      '<conditionalFormatting sqref="D2:D' + lastRow + '">' +
+        '<cfRule type="expression" dxfId="0" priority="1"><formula>ISNUMBER(SEARCH("FALTA",$D2))</formula></cfRule>' +
+        '<cfRule type="cellIs" dxfId="1" priority="2" operator="equal"><formula>"TEM INV"</formula></cfRule>' +
+        '<cfRule type="cellIs" dxfId="1" priority="3" operator="equal"><formula>"OK / COMPLETO"</formula></cfRule>' +
+      '</conditionalFormatting>' +
+      '<conditionalFormatting sqref="C2:C' + lastRow + '">' +
+        '<cfRule type="expression" dxfId="2" priority="4"><formula>AND($C2&lt;&gt;"",NOT(AND(LEN($C2)=14,LEFT($C2,2)+0&gt;=20,MID($C2,3,2)="BR")))</formula></cfRule>' +
+      '</conditionalFormatting>' +
+      '<conditionalFormatting sqref="B2:B' + lastRow + '">' +
+        '<cfRule type="expression" dxfId="3" priority="5"><formula>AND($B2&lt;&gt;"",COUNTIF($B$2:$B$' + lastRow + ',$B2)&gt;1)</formula></cfRule>' +
+      '</conditionalFormatting>';
+
+    var validation = '<dataValidations count="1"><dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" sqref="D2:D' + lastRow + '">' +
+      '<formula1>"' + MX_STATUS_OPTIONS.join(',') + '"</formula1></dataValidation></dataValidations>';
+
+    // --- Enviados ---
+    var enviadosRows = [['NAVIO', 'REF. PIBERNAT', 'DUE', 'ULTIMO STATUS', 'SAIU DO FOLLOW-UP EM', 'OBS'].map(function (h) { return { v: h, s: 1 }; })];
+    enviados.forEach(function (r) {
+      enviadosRows.push([r.navio, r.ref, r.due, r.status, r.saiuEm ? formatBR(r.saiuEm) : '', r.obs || '']);
+    });
+
+    // --- Divergencias ---
+    var divRows = [['TIPO', 'CHAVE', 'DETALHE', 'ACAO SUGERIDA', 'SITUACAO'].map(function (h) { return { v: h, s: 1 }; })];
+    mexico.divergencias.forEach(function (d) {
+      divRows.push([d.tipo, d.chave, d.detalhe, d.acao, d.situacao || 'ABERTA']);
+    });
+
+    // --- Dashboard ---
+    var statusCounts = {};
+    MX_STATUS_OPTIONS.forEach(function (s) { statusCounts[s] = 0; });
+    mxNavios().forEach(function (r) { statusCounts[r.status] = (statusCounts[r.status] || 0) + 1; });
+    var qtdCounts = {};
+    Object.keys(counts).forEach(function (navio) {
+      qtdCounts[counts[navio]] = (qtdCounts[counts[navio]] || 0) + 1;
+    });
+
+    var painelRows = [
+      [{ v: 'PAINEL DE CONTROLE - DUEs CARGILL GRANEL', s: 5 }],
+      [{ v: 'Atualizado em ' + formatBR(todayISO()) + ' a partir do dashboard COMEX', s: 6 }],
+      [],
+      [{ v: 'VOLUME', s: 2 }],
+      ['Total de DUEs em aberto', mxNavios().length],
+      ['Navios distintos', Object.keys(counts).length],
+      ['DUEs incluidas nesta atualizacao (amarelas)', mxNavios().filter(function (r) { return r.nova; }).length],
+      ['DUEs enviadas (sairam do follow-up)', enviados.length],
+      ['Divergencias a checar', mexico.divergencias.filter(function (d) { return d.situacao !== 'RESOLVIDA'; }).length],
+      [],
+      [{ v: 'POR STATUS', s: 2 }],
+    ];
+    MX_STATUS_OPTIONS.forEach(function (s) {
+      if (statusCounts[s]) painelRows.push([s, statusCounts[s]]);
+    });
+    painelRows.push([]);
+    painelRows.push([{ v: 'CONCENTRACAO POR NAVIO', s: 2 }]);
+    Object.keys(qtdCounts).sort(function (a, b) { return b - a; }).forEach(function (q) {
+      painelRows.push(['Navios com ' + q + ' DUE(s)', qtdCounts[q]]);
+    });
+
+    // --- Como usar ---
+    var ajudaRows = [
+      [{ v: 'COMO USAR E COMO ATUALIZAR', s: 5 }],
+      ["1. Amarelo em 'Navios' = DUE incluida nesta rodada. Confira o STATUS antes de repassar."],
+      ["2. Coluna STATUS tem lista suspensa - evita variacao de escrita ('TEM  INV' vs 'TEM INV')."],
+      ['3. Vermelho = documento pendente. Verde = invoice ja em maos.'],
+      ['4. DUE em vermelho negrito = numero fora do padrao AABR + 10 digitos.'],
+      ['5. REF em roxo negrito = a mesma REF aparece em mais de uma DUE.'],
+      ['6. Coluna QTD DUES define a ordem: navios com mais DUEs ficam no topo.'],
+      ["7. Aba 'Enviados' = navios que sairam do follow-up, ou seja, ja foram enviados."],
+      ["8. Aba 'Divergencias' = itens que precisam de confirmacao manual."],
+      [],
+      [{ v: 'ATUALIZACAO AUTOMATICA', s: 2 }],
+      ['Esta planilha e gerada pelo dashboard COMEX (pagina Mexico).'],
+      ['A atualizacao e feita colando o follow-up novo no dashboard, em "Atualizar com novo follow-up":'],
+      ['o cruzamento e refeito, as novas sao marcadas, as enviadas saem e a ordem e refeita sozinha.'],
+      [],
+      [{ v: 'PREMISSAS', s: 2 }],
+      ["- 'Saiu do follow-up' e interpretado como 'documentacao enviada'."],
+      ["- Status 'OK / COMPLETO' tambem conta como enviada e sai da aba Navios."],
+      ['- Mesma REF. PIBERNAT com DUE diferente NAO conta como envio: e tratada como correcao de numero.'],
+      ['- DUE nova de navio que ja existia herda o status predominante do navio - precisa de confirmacao.'],
+      ["- DUE nova de navio inedito entra como 'A VERIFICAR'."],
+      ['- A marcacao NOVA da rodada anterior e limpa a cada atualizacao.'],
+      ['- As colunas de embarque, averbacao e farol do follow-up nao entram aqui de proposito:'],
+      ['  este controle cuida so da documentacao.'],
+    ];
+
+    var sheets = [
+      { name: 'Navios', xml: sheetXml(naviosRows, { widths: [26, 16, 18, 24, 44, 11], freeze: true, autoFilter: 'A1:F' + lastRow, conditional: cond, validation: validation }) },
+      { name: 'Enviados', xml: sheetXml(enviadosRows, { widths: [26, 16, 18, 20, 22, 46], freeze: true }) },
+      { name: 'Divergencias', xml: sheetXml(divRows, { widths: [28, 16, 70, 50, 14], freeze: true }) },
+      { name: 'Dashboard', xml: sheetXml(painelRows, { widths: [44, 12] }) },
+      { name: 'Como usar', xml: sheetXml(ajudaRows, { widths: [110] }) },
+    ];
+
+    var styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+      '<fonts count="5">' +
+        '<font><sz val="11"/><name val="Calibri"/></font>' +
+        '<font><b/><color rgb="FFFFFFFF"/><sz val="11"/><name val="Calibri"/></font>' +
+        '<font><b/><sz val="11"/><name val="Calibri"/></font>' +
+        '<font><b/><sz val="14"/><name val="Calibri"/></font>' +
+        '<font><i/><color rgb="FF595959"/><sz val="11"/><name val="Calibri"/></font>' +
+      '</fonts>' +
+      '<fills count="3">' +
+        '<fill><patternFill patternType="none"/></fill>' +
+        '<fill><patternFill patternType="gray125"/></fill>' +
+        '<fill><patternFill patternType="solid"><fgColor rgb="FFFFF2CC"/><bgColor indexed="64"/></patternFill></fill>' +
+      '</fills>' +
+      '<fills2/>' +
+      '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
+      '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+      '<cellXfs count="7">' +
+        '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+        '<xf numFmtId="0" fontId="1" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1"/>' +
+        '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+        '<xf numFmtId="0" fontId="0" fillId="2" borderId="0" xfId="0" applyFill="1"/>' +
+        '<xf numFmtId="0" fontId="2" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>' +
+        '<xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+        '<xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+      '</cellXfs>' +
+      '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
+      '<dxfs count="4">' +
+        '<dxf><font><color rgb="FF9C0006"/></font></dxf>' +
+        '<dxf><font><color rgb="FF006100"/></font></dxf>' +
+        '<dxf><font><b/><color rgb="FFC00000"/></font></dxf>' +
+        '<dxf><font><b/><color rgb="FF7030A0"/></font></dxf>' +
+      '</dxfs>' +
+      '</styleSheet>';
+
+    // O cabeçalho azul da planilha original vira o fill de índice 3.
+    styles = styles.replace('<fills2/>', '').replace('<fills count="3">',
+      '<fills count="4">').replace('</fills>',
+      '<fill><patternFill patternType="solid"><fgColor rgb="FF1F3864"/><bgColor indexed="64"/></patternFill></fill></fills>');
+
+    var files = [
+      { name: '[Content_Types].xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+        '<Default Extension="xml" ContentType="application/xml"/>' +
+        '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+        sheets.map(function (s, i) { return '<Override PartName="/xl/worksheets/sheet' + (i + 1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'; }).join('') +
+        '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+        '</Types>' },
+      { name: '_rels/.rels', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+        '</Relationships>' },
+      { name: 'xl/workbook.xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+        '<sheets>' + sheets.map(function (s, i) {
+          return '<sheet name="' + xmlEscape(s.name) + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>';
+        }).join('') + '</sheets></workbook>' },
+      { name: 'xl/_rels/workbook.xml.rels', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        sheets.map(function (s, i) {
+          return '<Relationship Id="rId' + (i + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>';
+        }).join('') +
+        '<Relationship Id="rId' + (sheets.length + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+        '</Relationships>' },
+      { name: 'xl/styles.xml', content: styles },
+    ];
+    sheets.forEach(function (s, i) {
+      files.push({ name: 'xl/worksheets/sheet' + (i + 1) + '.xml', content: s.xml });
+    });
+
+    return zipBuild(files);
+  }
+
+  function mxExportXlsx() {
+    var blob = mxBuildWorkbook();
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'Mexico_Atualizado_' + todayISO().slice(8, 10) + todayISO().slice(5, 7) + '.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast('Planilha gerada com sucesso!');
+  }
+
+  // ---------------------------------------------------------------------
   // Sincronização entre dispositivos (GitHub Gist)
   // ---------------------------------------------------------------------
   var lastSyncAt = null;
@@ -2966,6 +3299,7 @@
   el.mxOnlyNovas.addEventListener('change', function () { mxFilters.onlyNovas = this.checked; renderMxNavios(); });
   el.mxOnlyAlerts.addEventListener('change', function () { mxFilters.onlyAlerts = this.checked; renderMxNavios(); });
   el.mxExportBtn.addEventListener('click', mxExportCsv);
+  el.mxXlsxBtn.addEventListener('click', mxExportXlsx);
 
   el.mxUpdateBtn.addEventListener('click', function () {
     el.mxUpdatePanel.classList.toggle('hidden');
