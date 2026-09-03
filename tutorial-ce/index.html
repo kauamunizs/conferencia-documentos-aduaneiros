@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light dark" />
+<title>Cadastro de conhecimento (BL) no OSGT — Tutorial</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%A2%3C/text%3E%3C/svg%3E" />
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f5f5f7; --panel: #ffffff; --panel-muted: #f5f5f7;
+    --border: rgba(0,0,0,.09); --border-strong: rgba(0,0,0,.14);
+    --ink: #1d1d1f; --muted: #6e6e73; --muted-2: #98989d;
+    --accent: #0071e3; --accent-soft: rgba(0,113,227,.1); --focus-ring: rgba(0,113,227,.35);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+    --radius: 18px; --radius-sm: 12px; --radius-pill: 980px;
+    --ease: cubic-bezier(.28,.1,.25,1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #000000; --panel: #1c1c1e; --panel-muted: #2c2c2e;
+      --border: rgba(255,255,255,.1); --border-strong: rgba(255,255,255,.16);
+      --ink: #f5f5f7; --muted: #98989d; --muted-2: #6e6e73;
+      --accent: #0a84ff; --accent-soft: rgba(10,132,255,.18); --focus-ring: rgba(10,132,255,.4);
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+  header.top {
+    background: var(--panel); border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10; backdrop-filter: saturate(180%) blur(20px);
+  }
+  .top-inner { padding: 14px 0; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .back {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500;
+    color: var(--accent); text-decoration: none; padding: 6px 12px 6px 8px;
+    border-radius: var(--radius-pill); transition: background .15s var(--ease);
+  }
+  .back:hover { background: var(--accent-soft); }
+  .top-title { font-size: 14px; font-weight: 600; margin: 0; }
+  main { padding: 32px 0 64px; }
+  .hero h1 { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 6px; text-wrap: balance; }
+  .hero p { font-size: 14px; color: var(--muted); margin: 0 0 4px; line-height: 1.6; }
+  .hero .meta { font-size: 12.5px; color: var(--muted-2); margin-top: 10px; }
+  .note {
+    font-size: 12.5px; color: var(--muted); background: var(--panel-muted);
+    border-radius: var(--radius-sm); padding: 12px 14px; margin: 20px 0 0; line-height: 1.6;
+  }
+  .idx { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin: 26px 0 40px; }
+  .idx-item {
+    display: flex; align-items: center; gap: 12px; background: var(--panel); padding: 14px 16px;
+    text-decoration: none; color: var(--ink); transition: background .15s var(--ease); flex-wrap: wrap;
+  }
+  .idx-item:hover { background: var(--panel-muted); }
+  .idx-n { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 3px 9px; border-radius: var(--radius-pill); white-space: nowrap; }
+  .idx-t { font-size: 13.5px; font-weight: 500; }
+  .idx-c { margin-left: auto; font-size: 12px; color: var(--muted-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .etapa { margin-bottom: 48px; scroll-margin-top: 72px; }
+  .etapa h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .etapa-n { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 3px 9px; border-radius: var(--radius-pill); }
+  .etapa-desc { font-size: 13.5px; color: var(--muted); margin: 0 0 20px; line-height: 1.6; }
+  .passo { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; box-shadow: var(--shadow-sm); }
+  .passo h3 { font-size: 15px; font-weight: 600; margin: 0 0 8px; display: flex; align-items: baseline; gap: 9px; text-wrap: balance; }
+  .passo-n { font-size: 12px; font-weight: 700; color: var(--muted-2); font-variant-numeric: tabular-nums; }
+  .passo p { font-size: 13.5px; color: var(--muted); line-height: 1.65; margin: 0 0 14px; }
+  .shot { display: block; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+  .shot img { display: block; width: 100%; }
+  .shot:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  footer { border-top: 1px solid var(--border); padding: 24px 0 40px; font-size: 12.5px; color: var(--muted-2); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="container top-inner">
+    <a class="back" href="../comex-dashboard.html">&larr; Voltar ao dashboard</a>
+    <p class="top-title">Cadastro de conhecimento (BL) no OSGT</p>
+  </div>
+</header>
+
+<main class="container">
+  <div class="hero">
+    <h1>Cadastro de conhecimento (BL) no OSGT</h1>
+    <p>Do e-mail de docs averbados até a finalização do processo.</p>
+    <p class="meta">Sistema: ONESOURCE Global Trade (OSGT) &ndash; Export &middot; 25 passos ilustrados</p>
+  </div>
+
+  <p class="note">As telas deste tutorial foram capturadas em um embarque real (exemplo: 3811 &ndash; FEDERAL SW &ndash; Rio Grande &ndash; Soja). Os dados (navio, CE, invoice, datas) mudam a cada processo &mdash; o caminho e a sequência dos cliques permanecem os mesmos. Clique em qualquer imagem para vê-la em tamanho real.</p>
+
+  <nav class="idx">
+    <a class="idx-item" href="#etapa-1"><span class="idx-n">Etapa 1</span><span class="idx-t">Recebimento dos documentos</span><span class="idx-c">1 passo</span></a>
+    <a class="idx-item" href="#etapa-2"><span class="idx-n">Etapa 2</span><span class="idx-t">Gerar a tabela INV no Controle de Embarque Antecipado</span><span class="idx-c">9 passos</span></a>
+    <a class="idx-item" href="#etapa-3"><span class="idx-n">Etapa 3</span><span class="idx-t">Cadastro do conhecimento (BL)</span><span class="idx-c">11 passos</span></a>
+    <a class="idx-item" href="#etapa-4"><span class="idx-n">Etapa 4</span><span class="idx-t">Check points e finalização</span><span class="idx-c">4 passos</span></a>
+  </nav>
+
+  <section class="etapa" id="etapa-1">
+    <h2><span class="etapa-n">Etapa 1</span> Recebimento dos documentos</h2>
+    <p class="etapa-desc">Ponto de partida do processo: o e-mail com os documentos finais averbados.</p>
+    <article class="passo">
+      <h3><span class="passo-n">01</span> Receber o e-mail “DOCS AVERBADOS”</h3>
+      <p>O processo começa com o e-mail de DOCS AVERBADOS, que traz em anexo os documentos finais do embarque. No assunto estão o número do navio, o nome, o porto e o produto (no exemplo: 3811 – FEDERAL SW – RIO GRANDE – SOJA).</p>
+      <a class="shot" href="passo-01.webp" target="_blank" rel="noopener"><img src="passo-01.webp" alt="Passo 01 — Receber o e-mail “DOCS AVERBADOS”" loading="lazy" /></a>
+    </article>
+  </section>
+
+  <section class="etapa" id="etapa-2">
+    <h2><span class="etapa-n">Etapa 2</span> Gerar a tabela INV no Controle de Embarque Antecipado</h2>
+    <p class="etapa-desc">Extração, a partir do OSGT, da tabela com os números de invoice usados no cadastro do conhecimento.</p>
+    <article class="passo">
+      <h3><span class="passo-n">02</span> Página inicial do OSGT</h3>
+      <p>Abrir o OSGT (ONESOURCE Global Trade – Export). Esta é a tela inicial do sistema, de onde partem todos os menus utilizados no processo.</p>
+      <a class="shot" href="passo-02.webp" target="_blank" rel="noopener"><img src="passo-02.webp" alt="Passo 02 — Página inicial do OSGT" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">03</span> Acessar a aba “Operações”</h3>
+      <p>Na página inicial do OSGT, clicar no menu Operações e seguir até Embarque Antecipado → Controle de Embarque Antecipado.</p>
+      <a class="shot" href="passo-03.webp" target="_blank" rel="noopener"><img src="passo-03.webp" alt="Passo 03 — Acessar a aba “Operações”" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">04</span> Informar o nome do navio em “Ref. de Embarque”</h3>
+      <p>Na tela de consulta, digitar o nome do navio no campo Ref. de Embarque para localizar o embarque desejado.</p>
+      <a class="shot" href="passo-04.webp" target="_blank" rel="noopener"><img src="passo-04.webp" alt="Passo 04 — Informar o nome do navio em “Ref. de Embarque”" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">05</span> Selecionar o navio correto</h3>
+      <p>Clicar no navio correspondente ao número do embarque (no exemplo, 3811) e ao porto correto. Atenção: pode haver registros com nomes parecidos — conferir sempre o número e o porto.</p>
+      <a class="shot" href="passo-05.webp" target="_blank" rel="noopener"><img src="passo-05.webp" alt="Passo 05 — Selecionar o navio correto" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">06</span> Clicar em “Detalhes”</h3>
+      <p>Com o navio selecionado, clicar em Detalhes para abrir as informações completas do embarque.</p>
+      <a class="shot" href="passo-06.webp" target="_blank" rel="noopener"><img src="passo-06.webp" alt="Passo 06 — Clicar em “Detalhes”" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">07</span> Copiar o conteúdo da tabela</h3>
+      <p>Clicar com o botão direito sobre a tabela e escolher a opção de copiar o conteúdo da tabela.</p>
+      <a class="shot" href="passo-07.webp" target="_blank" rel="noopener"><img src="passo-07.webp" alt="Passo 07 — Copiar o conteúdo da tabela" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">08</span> Clicar em “Conversão automática”</h3>
+      <p>Selecionar a opção Conversão automática para que o sistema gere o arquivo já formatado em planilha.</p>
+      <a class="shot" href="passo-08.webp" target="_blank" rel="noopener"><img src="passo-08.webp" alt="Passo 08 — Clicar em “Conversão automática”" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">09</span> Salvar a planilha na pasta do navio</h3>
+      <p>Colar o caminho da pasta em que o navio está situado e nomear o arquivo como INV.</p>
+      <a class="shot" href="passo-09.webp" target="_blank" rel="noopener"><img src="passo-09.webp" alt="Passo 09 — Salvar a planilha na pasta do navio" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">10</span> Conferir a tabela INV na pasta</h3>
+      <p>A tabela INV é salva na pasta do navio. É dela que serão retiradas as informações (números de invoice) utilizadas nos próximos passos.</p>
+      <a class="shot" href="passo-10.webp" target="_blank" rel="noopener"><img src="passo-10.webp" alt="Passo 10 — Conferir a tabela INV na pasta" loading="lazy" /></a>
+    </article>
+  </section>
+
+  <section class="etapa" id="etapa-3">
+    <h2><span class="etapa-n">Etapa 3</span> Cadastro do conhecimento (BL)</h2>
+    <p class="etapa-desc">Com a tabela INV em mãos, cadastra-se o conhecimento de embarque no OSGT com os dados do BL ALF.</p>
+    <article class="passo">
+      <h3><span class="passo-n">11</span> Voltar ao OSGT e acessar “Conhecimentos”</h3>
+      <p>Retornar à aba principal do OSGT e clicar em Conhecimentos.</p>
+      <a class="shot" href="passo-11.webp" target="_blank" rel="noopener"><img src="passo-11.webp" alt="Passo 11 — Voltar ao OSGT e acessar “Conhecimentos”" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">12</span> Clicar no “+” para incluir um conhecimento</h3>
+      <p>Dentro da tela de Conhecimento, clicar no botão + para iniciar um novo cadastro.</p>
+      <a class="shot" href="passo-12.webp" target="_blank" rel="noopener"><img src="passo-12.webp" alt="Passo 12 — Clicar no “+” para incluir um conhecimento" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">13</span> Tela de cadastro do BL ALF</h3>
+      <p>Será aberta esta tela — é nela que são inseridas as informações do BL ALF.</p>
+      <a class="shot" href="passo-13.webp" target="_blank" rel="noopener"><img src="passo-13.webp" alt="Passo 13 — Tela de cadastro do BL ALF" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">14</span> Pegar o número do CE no BL ALF</h3>
+      <p>Localizar no BL ALF o número do CE, que será utilizado no preenchimento do conhecimento.</p>
+      <a class="shot" href="passo-14.webp" target="_blank" rel="noopener"><img src="passo-14.webp" alt="Passo 14 — Pegar o número do CE no BL ALF" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">15</span> Preencher número, data e tipo de conhecimento</h3>
+      <p>Inserir o número de conhecimento, a data do BL e o tipo de conhecimento — sempre (10 BL).</p>
+      <a class="shot" href="passo-15.webp" target="_blank" rel="noopener"><img src="passo-15.webp" alt="Passo 15 — Preencher número, data e tipo de conhecimento" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">16</span> Pegar o número da INV referente à DUE</h3>
+      <p>Abrir a planilha INV gerada anteriormente e pegar o número da invoice referente à DUE. No exemplo, havia apenas uma invoice.</p>
+      <a class="shot" href="passo-16.webp" target="_blank" rel="noopener"><img src="passo-16.webp" alt="Passo 16 — Pegar o número da INV referente à DUE" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">17</span> Botão direito → Incluir item</h3>
+      <p>Clicar com o botão direito na área de itens e escolher Incluir item.</p>
+      <a class="shot" href="passo-17.webp" target="_blank" rel="noopener"><img src="passo-17.webp" alt="Passo 17 — Botão direito → Incluir item" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">18</span> Inserir o número da invoice</h3>
+      <p>Inserir o número da invoice. Neste caso, como era apenas uma, ela vai sozinha nesse campo. Se forem mais de uma, devem ser informadas na aba Número de Invoice em Lote.</p>
+      <a class="shot" href="passo-18.webp" target="_blank" rel="noopener"><img src="passo-18.webp" alt="Passo 18 — Inserir o número da invoice" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">19</span> Clicar em “Executar consulta”</h3>
+      <p>Acionar Executar consulta para o sistema trazer os itens vinculados à invoice informada.</p>
+      <a class="shot" href="passo-19.webp" target="_blank" rel="noopener"><img src="passo-19.webp" alt="Passo 19 — Clicar em “Executar consulta”" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">20</span> Clicar em “Selecionar todos os itens”</h3>
+      <p>Marcar a opção Selecionar todos os itens para vincular todos os registros retornados pela consulta.</p>
+      <a class="shot" href="passo-20.webp" target="_blank" rel="noopener"><img src="passo-20.webp" alt="Passo 20 — Clicar em “Selecionar todos os itens”" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">21</span> Salvar, fechar as abas e gravar</h3>
+      <p>Após clicar em Salvar, fechar as abas abertas e clicar em Gravar.</p>
+      <a class="shot" href="passo-21.webp" target="_blank" rel="noopener"><img src="passo-21.webp" alt="Passo 21 — Salvar, fechar as abas e gravar" loading="lazy" /></a>
+    </article>
+  </section>
+
+  <section class="etapa" id="etapa-4">
+    <h2><span class="etapa-n">Etapa 4</span> Check points e finalização</h2>
+    <p class="etapa-desc">Atualização dos check points e encerramento do processo.</p>
+    <article class="passo">
+      <h3><span class="passo-n">22</span> Ir em “Check Points”</h3>
+      <p>Acessar a aba Check Points do conhecimento.</p>
+      <a class="shot" href="passo-22.webp" target="_blank" rel="noopener"><img src="passo-22.webp" alt="Passo 22 — Ir em “Check Points”" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">23</span> Inserir as datas</h3>
+      <p>Preencher as datas nos dois campos indicados.</p>
+      <a class="shot" href="passo-23.webp" target="_blank" rel="noopener"><img src="passo-23.webp" alt="Passo 23 — Inserir as datas" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">24</span> Selecionar “Finalizado”</h3>
+      <p>Clicar na seta e selecionar a situação Finalizado.</p>
+      <a class="shot" href="passo-24.webp" target="_blank" rel="noopener"><img src="passo-24.webp" alt="Passo 24 — Selecionar “Finalizado”" loading="lazy" /></a>
+    </article>
+    <article class="passo">
+      <h3><span class="passo-n">25</span> Gravar e concluir</h3>
+      <p>Ao clicar em Gravar, o processo está finalizado.</p>
+      <a class="shot" href="passo-25.webp" target="_blank" rel="noopener"><img src="passo-25.webp" alt="Passo 25 — Gravar e concluir" loading="lazy" /></a>
+    </article>
+  </section>
+</main>
+
+<footer class="container">
+  Tutorial interno &middot; Pibernat Logística
+</footer>
+
+</body>
+</html>

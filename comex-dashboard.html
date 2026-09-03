@@ -439,26 +439,10 @@
   .tutorial-topic a { color: var(--accent); }
   .tutorial-tip { font-size: 12.5px; color: var(--muted); background: var(--panel-muted); border-radius: var(--radius-sm); padding: 10px 12px; margin: 12px 0 0; }
 
-  .tut-guia { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 18px; }
-  .tut-guia-titulo { font-size: 14px; font-weight: 600; color: var(--ink); margin: 0 0 4px; }
-  .tut-guia-sub { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; line-height: 1.6; }
-  .tut-etapa { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; background: var(--panel); }
-  .tut-etapa > summary {
-    cursor: pointer; padding: 12px 14px; font-size: 13.5px; font-weight: 500; color: var(--ink);
-    display: flex; align-items: center; gap: 9px; flex-wrap: wrap; list-style: none;
-  }
-  .tut-etapa > summary::-webkit-details-marker { display: none; }
-  .tut-etapa > summary::before { content: "›"; font-size: 17px; color: var(--muted-2); transition: transform .2s var(--ease); display: inline-block; }
-  .tut-etapa[open] > summary::before { transform: rotate(90deg); }
-  .tut-etapa > summary:hover { background: var(--panel-muted); }
-  .tut-etapa-n { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 3px 8px; border-radius: var(--radius-pill); }
-  .tut-etapa-count { margin-left: auto; font-size: 12px; color: var(--muted-2); font-variant-numeric: tabular-nums; }
-  .tut-passo { padding: 4px 16px 20px; border-top: 1px solid var(--border); }
-  .tut-passo h4 { font-size: 13.5px; font-weight: 600; color: var(--ink); margin: 16px 0 6px; display: flex; align-items: baseline; gap: 8px; }
-  .tut-passo-n { font-size: 11.5px; font-weight: 700; color: var(--muted-2); font-variant-numeric: tabular-nums; }
-  .tut-passo p { font-size: 13px; line-height: 1.65; color: var(--muted); margin: 0 0 10px; }
-  .tut-passo img { display: block; width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); }
-  .tut-passo a:focus-visible img { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .tutorial-link { margin: 14px 0 0; display: flex; flex-direction: column; gap: 3px; }
+  .tutorial-link a { font-size: 13.5px; font-weight: 600; color: var(--accent); text-decoration: none; }
+  .tutorial-link a:hover { text-decoration: underline; }
+  .tutorial-link span { font-size: 12.5px; color: var(--muted); }
 
   .sync-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .sync-status { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--muted); }
@@ -849,152 +833,14 @@
               <li>A averbação é o ato final do despacho de exportação: confirma o embarque efetivo. Só uma DU-E averbada comprova, para fins fiscais, cambiais e comerciais, que a mercadoria foi realmente exportada.</li>
               <li>A averbação ocorre no Siscomex depois que o transportador internacional registra os dados de embarque e a DU-E está sem pendências.</li>
               <li>Os avisos chegam por e-mail no formato <em>"DOCS AVERBADOS | 3654 - AGILITY DIVA - SAO LUIS - SOJA"</em> ou <em>"DOCS AVERBADOS | CEA-3703 / 3704 - BOLD VOYAGER - RIO GRANDE - PELLETS - CASA/CNH"</em>.</li>
-              <li>De posse dos documentos, cadastre o conhecimento (BL) no OSGT — o passo a passo ilustrado está abaixo.</li>
+              <li>De posse dos documentos, cadastre o conhecimento (BL) no OSGT — o passo a passo ilustrado está no link abaixo.</li>
             </ol>
             <p class="tutorial-tip"><strong>No dashboard:</strong> categoria <em>Docs averbados</em>. Após a averbação, o Portal Único envia automaticamente ao SPED o evento eletrônico com número da DU-E, data da averbação e quantidades efetivamente exportadas.</p>
 
-            <div class="tut-guia">
-              <h4 class="tut-guia-titulo">Cadastro de conhecimento (BL) no OSGT — 25 passos ilustrados</h4>
-              <p class="tut-guia-sub">Do e-mail de docs averbados até a finalização do processo. Sistema: ONESOURCE Global Trade (OSGT) – Export. Clique em cada etapa para abrir; clique na imagem para vê-la em tamanho real.</p>
-              <p class="tutorial-tip" style="margin-bottom:14px;">As telas foram capturadas em um embarque real (exemplo: 3811 – FEDERAL SW – Rio Grande – Soja). Os dados mudam a cada processo — o caminho e a sequência dos cliques permanecem os mesmos.</p>
-              <details class="tut-etapa">
-                <summary><span class="tut-etapa-n">Etapa 1</span> Recebimento dos documentos <span class="tut-etapa-count">1 passo</span></summary>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">01</span> Receber o e-mail “DOCS AVERBADOS”</h4>
-                  <p>O processo começa com o e-mail de DOCS AVERBADOS, que traz em anexo os documentos finais do embarque. No assunto estão o número do navio, o nome, o porto e o produto (no exemplo: 3811 – FEDERAL SW – RIO GRANDE – SOJA).</p>
-                  <a href="tutorial-ce/passo-01.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-01.webp" alt="Passo 01 — Receber o e-mail “DOCS AVERBADOS”" loading="lazy" /></a>
-                </div>
-              </details>
-              <details class="tut-etapa">
-                <summary><span class="tut-etapa-n">Etapa 2</span> Gerar a tabela INV no Controle de Embarque Antecipado <span class="tut-etapa-count">9 passos</span></summary>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">02</span> Página inicial do OSGT</h4>
-                  <p>Abrir o OSGT (ONESOURCE Global Trade – Export). Esta é a tela inicial do sistema, de onde partem todos os menus utilizados no processo.</p>
-                  <a href="tutorial-ce/passo-02.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-02.webp" alt="Passo 02 — Página inicial do OSGT" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">03</span> Acessar a aba “Operações”</h4>
-                  <p>Na página inicial do OSGT, clicar no menu Operações e seguir até Embarque Antecipado → Controle de Embarque Antecipado.</p>
-                  <a href="tutorial-ce/passo-03.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-03.webp" alt="Passo 03 — Acessar a aba “Operações”" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">04</span> Informar o nome do navio em “Ref. de Embarque”</h4>
-                  <p>Na tela de consulta, digitar o nome do navio no campo Ref. de Embarque para localizar o embarque desejado.</p>
-                  <a href="tutorial-ce/passo-04.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-04.webp" alt="Passo 04 — Informar o nome do navio em “Ref. de Embarque”" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">05</span> Selecionar o navio correto</h4>
-                  <p>Clicar no navio correspondente ao número do embarque (no exemplo, 3811) e ao porto correto. Atenção: pode haver registros com nomes parecidos — conferir sempre o número e o porto.</p>
-                  <a href="tutorial-ce/passo-05.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-05.webp" alt="Passo 05 — Selecionar o navio correto" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">06</span> Clicar em “Detalhes”</h4>
-                  <p>Com o navio selecionado, clicar em Detalhes para abrir as informações completas do embarque.</p>
-                  <a href="tutorial-ce/passo-06.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-06.webp" alt="Passo 06 — Clicar em “Detalhes”" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">07</span> Copiar o conteúdo da tabela</h4>
-                  <p>Clicar com o botão direito sobre a tabela e escolher a opção de copiar o conteúdo da tabela.</p>
-                  <a href="tutorial-ce/passo-07.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-07.webp" alt="Passo 07 — Copiar o conteúdo da tabela" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">08</span> Clicar em “Conversão automática”</h4>
-                  <p>Selecionar a opção Conversão automática para que o sistema gere o arquivo já formatado em planilha.</p>
-                  <a href="tutorial-ce/passo-08.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-08.webp" alt="Passo 08 — Clicar em “Conversão automática”" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">09</span> Salvar a planilha na pasta do navio</h4>
-                  <p>Colar o caminho da pasta em que o navio está situado e nomear o arquivo como INV.</p>
-                  <a href="tutorial-ce/passo-09.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-09.webp" alt="Passo 09 — Salvar a planilha na pasta do navio" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">10</span> Conferir a tabela INV na pasta</h4>
-                  <p>A tabela INV é salva na pasta do navio. É dela que serão retiradas as informações (números de invoice) utilizadas nos próximos passos.</p>
-                  <a href="tutorial-ce/passo-10.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-10.webp" alt="Passo 10 — Conferir a tabela INV na pasta" loading="lazy" /></a>
-                </div>
-              </details>
-              <details class="tut-etapa">
-                <summary><span class="tut-etapa-n">Etapa 3</span> Cadastro do conhecimento (BL) <span class="tut-etapa-count">11 passos</span></summary>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">11</span> Voltar ao OSGT e acessar “Conhecimentos”</h4>
-                  <p>Retornar à aba principal do OSGT e clicar em Conhecimentos.</p>
-                  <a href="tutorial-ce/passo-11.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-11.webp" alt="Passo 11 — Voltar ao OSGT e acessar “Conhecimentos”" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">12</span> Clicar no “+” para incluir um conhecimento</h4>
-                  <p>Dentro da tela de Conhecimento, clicar no botão + para iniciar um novo cadastro.</p>
-                  <a href="tutorial-ce/passo-12.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-12.webp" alt="Passo 12 — Clicar no “+” para incluir um conhecimento" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">13</span> Tela de cadastro do BL ALF</h4>
-                  <p>Será aberta esta tela — é nela que são inseridas as informações do BL ALF.</p>
-                  <a href="tutorial-ce/passo-13.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-13.webp" alt="Passo 13 — Tela de cadastro do BL ALF" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">14</span> Pegar o número do CE no BL ALF</h4>
-                  <p>Localizar no BL ALF o número do CE, que será utilizado no preenchimento do conhecimento.</p>
-                  <a href="tutorial-ce/passo-14.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-14.webp" alt="Passo 14 — Pegar o número do CE no BL ALF" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">15</span> Preencher número, data e tipo de conhecimento</h4>
-                  <p>Inserir o número de conhecimento, a data do BL e o tipo de conhecimento — sempre (10 BL).</p>
-                  <a href="tutorial-ce/passo-15.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-15.webp" alt="Passo 15 — Preencher número, data e tipo de conhecimento" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">16</span> Pegar o número da INV referente à DUE</h4>
-                  <p>Abrir a planilha INV gerada anteriormente e pegar o número da invoice referente à DUE. No exemplo, havia apenas uma invoice.</p>
-                  <a href="tutorial-ce/passo-16.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-16.webp" alt="Passo 16 — Pegar o número da INV referente à DUE" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">17</span> Botão direito → Incluir item</h4>
-                  <p>Clicar com o botão direito na área de itens e escolher Incluir item.</p>
-                  <a href="tutorial-ce/passo-17.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-17.webp" alt="Passo 17 — Botão direito → Incluir item" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">18</span> Inserir o número da invoice</h4>
-                  <p>Inserir o número da invoice. Neste caso, como era apenas uma, ela vai sozinha nesse campo. Se forem mais de uma, devem ser informadas na aba Número de Invoice em Lote.</p>
-                  <a href="tutorial-ce/passo-18.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-18.webp" alt="Passo 18 — Inserir o número da invoice" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">19</span> Clicar em “Executar consulta”</h4>
-                  <p>Acionar Executar consulta para o sistema trazer os itens vinculados à invoice informada.</p>
-                  <a href="tutorial-ce/passo-19.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-19.webp" alt="Passo 19 — Clicar em “Executar consulta”" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">20</span> Clicar em “Selecionar todos os itens”</h4>
-                  <p>Marcar a opção Selecionar todos os itens para vincular todos os registros retornados pela consulta.</p>
-                  <a href="tutorial-ce/passo-20.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-20.webp" alt="Passo 20 — Clicar em “Selecionar todos os itens”" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">21</span> Salvar, fechar as abas e gravar</h4>
-                  <p>Após clicar em Salvar, fechar as abas abertas e clicar em Gravar.</p>
-                  <a href="tutorial-ce/passo-21.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-21.webp" alt="Passo 21 — Salvar, fechar as abas e gravar" loading="lazy" /></a>
-                </div>
-              </details>
-              <details class="tut-etapa">
-                <summary><span class="tut-etapa-n">Etapa 4</span> Check points e finalização <span class="tut-etapa-count">4 passos</span></summary>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">22</span> Ir em “Check Points”</h4>
-                  <p>Acessar a aba Check Points do conhecimento.</p>
-                  <a href="tutorial-ce/passo-22.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-22.webp" alt="Passo 22 — Ir em “Check Points”" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">23</span> Inserir as datas</h4>
-                  <p>Preencher as datas nos dois campos indicados.</p>
-                  <a href="tutorial-ce/passo-23.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-23.webp" alt="Passo 23 — Inserir as datas" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">24</span> Selecionar “Finalizado”</h4>
-                  <p>Clicar na seta e selecionar a situação Finalizado.</p>
-                  <a href="tutorial-ce/passo-24.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-24.webp" alt="Passo 24 — Selecionar “Finalizado”" loading="lazy" /></a>
-                </div>
-                <div class="tut-passo">
-                  <h4><span class="tut-passo-n">25</span> Gravar e concluir</h4>
-                  <p>Ao clicar em Gravar, o processo está finalizado.</p>
-                  <a href="tutorial-ce/passo-25.webp" target="_blank" rel="noopener"><img src="tutorial-ce/passo-25.webp" alt="Passo 25 — Gravar e concluir" loading="lazy" /></a>
-                </div>
-              </details>
-            </div>
+            <p class="tutorial-link">
+              <a href="tutorial-ce/" target="_blank" rel="noopener">Tutorial: cadastro de conhecimento (BL) no OSGT &rarr;</a>
+              <span>Passo a passo ilustrado, do e-mail de docs averbados até a finalização — 25 telas.</span>
+            </p>
           </div>
 
           <div class="tutorial-topic">
