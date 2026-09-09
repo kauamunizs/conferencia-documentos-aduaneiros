@@ -1,0 +1,208 @@
+{
+  "id": "2026-09-09-faturamento",
+  "titulo": "Faturamento FComex — 25 processos concluídos",
+  "descricao": "Rio Grande (2), Itaqui (9), Barcarena (1), Tubarão (1) e Santarém (12).",
+  "criadoEm": "2026-09-09",
+  "registros": [
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617491",
+      "porto": "RIO GRANDE",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV FEDERAL SW"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618024",
+      "porto": "RIO GRANDE",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV SDM HUBEI"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617352",
+      "porto": "ITAQUI",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV ROSANNA"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617353",
+      "porto": "ITAQUI",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV ROSANNA"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617354",
+      "porto": "ITAQUI",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV ROSANNA"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618071",
+      "porto": "ITAQUI",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV ROSANNA"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617612",
+      "porto": "ITAQUI",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV GUO REN HAI"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617703",
+      "porto": "ITAQUI",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV STAR BETTY"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617880",
+      "porto": "ITAQUI",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV NORA SCHULTE"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617964",
+      "porto": "BARCARENA",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV LOWLANDS BLOSSOM"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617141",
+      "porto": "TUBARÃO",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV YARRA"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617670",
+      "porto": "SANTARÉM",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV THOR CONFIDENCE"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617671",
+      "porto": "SANTARÉM",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV THOR CONFIDENCE"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617672",
+      "porto": "SANTARÉM",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV THOR CONFIDENCE"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617674",
+      "porto": "SANTARÉM",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV MEDI CAPALBIO"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617675",
+      "porto": "SANTARÉM",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV MEDI CAPALBIO"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617958",
+      "porto": "SANTARÉM",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV PAC ALCOR"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617959",
+      "porto": "SANTARÉM",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV PAC ALCOR"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617960",
+      "porto": "SANTARÉM",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV PAC ALCOR"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617422",
+      "porto": "SANTARÉM",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV IVORY GULL"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617421",
+      "porto": "SANTARÉM",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV IVORY GULL"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617591",
+      "porto": "SANTARÉM",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV CORINTHIAN SPIRE"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617592",
+      "porto": "SANTARÉM",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV CORINTHIAN SPIRE"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617577",
+      "porto": "ITAQUI",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV TRANS ASIA"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617956",
+      "porto": "ITAQUI",
+      "data": "2026-09-09",
+      "status": "Concluído",
+      "observacoes": "MV DAISY GLORY"
+    }
+  ]
+}

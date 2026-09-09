@@ -439,6 +439,20 @@
   .tutorial-topic a { color: var(--accent); }
   .tutorial-tip { font-size: 12.5px; color: var(--muted); background: var(--panel-muted); border-radius: var(--radius-sm); padding: 10px 12px; margin: 12px 0 0; }
 
+  .alert-banner-info { background: var(--accent-soft); color: var(--accent); }
+  .lotes-bloco { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .lotes-titulo { font-size: 13.5px; font-weight: 600; color: var(--ink); margin: 0 0 2px; }
+  .lote-item {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 12px 14px; margin-bottom: 8px; background: var(--panel);
+  }
+  .lote-item:last-child { margin-bottom: 0; }
+  .lote-info { flex: 1; min-width: 200px; }
+  .lote-nome { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .lote-meta { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+  .lote-item.lote-feito { opacity: .62; }
+
   .tutorial-link { margin: 14px 0 0; display: flex; flex-direction: column; gap: 3px; }
   .tutorial-link a { font-size: 13.5px; font-weight: 600; color: var(--accent); text-decoration: none; }
   .tutorial-link a:hover { text-decoration: underline; }
@@ -518,6 +532,10 @@
 
     <!-- 1. Indicadores diários -->
     <section>
+      <div id="loteAlert" class="alert-banner alert-banner-info hidden">
+        <span><strong id="loteAlertCount"></strong> lote(s) de registros prontos para importar.</span>
+        <button id="loteAlertBtn" type="button" class="btn btn-text">Ver lotes</button>
+      </div>
       <div id="pendingAlert" class="alert-banner hidden">
         <span><strong id="pendingAlertCount"></strong> processo(s) pendente(s) há mais de um dia.</span>
         <button id="pendingAlertBtn" type="button" class="btn btn-text">Ver pendências</button>
@@ -573,6 +591,11 @@
                 <button id="cancelEditBtn" type="button" class="btn btn-text hidden">Cancelar</button>
               </div>
             </form>
+            <div id="lotesBloco" class="lotes-bloco hidden">
+              <p class="lotes-titulo">Lotes prontos</p>
+              <p class="sync-help" style="margin:0 0 12px;">Registros já preparados e publicados junto com o dashboard. Basta importar.</p>
+              <div id="lotesLista"></div>
+            </div>
             <button id="importToggleBtn" type="button" class="btn btn-text" style="margin-top:12px;padding-left:0;">Importar em lote (JSON)</button>
             <div id="importPanel" class="import-panel hidden">
               <p class="sync-help">Cole abaixo uma lista de registros em formato JSON (cada item com categoria, número do processo, porto — quando for FComex —, data, status e observações) para adicionar vários de uma vez.</p>
@@ -1110,6 +1133,7 @@
   var MEXICO_TAB_STORAGE_KEY = 'comex_dashboard_mexico_tab_v1';
   var VIEW_STORAGE_KEY = 'comex_dashboard_view_v1';
   var VIEWS = ['dashboard', 'historico', 'mexico', 'tutorial'];
+  var LOTES_STORAGE_KEY = 'comex_dashboard_lotes_v1';
 
   var MX_STATUS_OPTIONS = [
     'FALTA SO INV', 'FALTA SO INV/CO', 'FALTA SO INV/LPCO/CS', 'FALTA SO INV/LPCO/CS/NF',
@@ -1153,6 +1177,7 @@
   var mexico = loadMexico();
   var mxFilters = { status: 'all', busca: '', buscaEnviados: '', onlyNovas: false, onlyAlerts: false };
   var mxPendingUpdate = null;
+  var lotesDisponiveis = [];
 
   // ---------------------------------------------------------------------
   // Persistência
@@ -1463,6 +1488,11 @@
     pendingAlert: document.getElementById('pendingAlert'),
     pendingAlertCount: document.getElementById('pendingAlertCount'),
     pendingAlertBtn: document.getElementById('pendingAlertBtn'),
+    loteAlert: document.getElementById('loteAlert'),
+    loteAlertCount: document.getElementById('loteAlertCount'),
+    loteAlertBtn: document.getElementById('loteAlertBtn'),
+    lotesBloco: document.getElementById('lotesBloco'),
+    lotesLista: document.getElementById('lotesLista'),
     historySection: document.getElementById('historySection'),
     entryForm: document.getElementById('entryForm'),
     fCategoria: document.getElementById('fCategoria'),
@@ -3179,18 +3209,7 @@
     el.importText.value = '';
   });
 
-  el.importBtn.addEventListener('click', function () {
-    var raw = el.importText.value.trim();
-    if (!raw) { toast('Cole o JSON antes de importar.', true); return; }
-    var items;
-    try {
-      items = JSON.parse(raw);
-    } catch (e) {
-      toast('JSON inválido. Confira a formatação.', true);
-      return;
-    }
-    if (!Array.isArray(items)) { toast('O JSON precisa ser uma lista de registros.', true); return; }
-
+  function importarRegistros(items) {
     var added = 0;
     var updated = 0;
     items.forEach(function (item) {
@@ -3227,11 +3246,129 @@
       if (added) parts.push(added + ' novo(s)');
       if (updated) parts.push(updated + ' atualizado(s)');
       toast('Importação concluída: ' + parts.join(', ') + '.');
+    } else {
+      toast('Nenhum registro válido encontrado.', true);
+    }
+    return added || updated;
+  }
+
+  el.importBtn.addEventListener('click', function () {
+    var raw = el.importText.value.trim();
+    if (!raw) { toast('Cole o JSON antes de importar.', true); return; }
+    var items;
+    try {
+      items = JSON.parse(raw);
+    } catch (e) {
+      toast('JSON inválido. Confira a formatação.', true);
+      return;
+    }
+    if (!Array.isArray(items)) { toast('O JSON precisa ser uma lista de registros.', true); return; }
+    if (importarRegistros(items)) {
       el.importText.value = '';
       el.importPanel.classList.add('hidden');
-    } else {
-      toast('Nenhum registro válido encontrado no JSON.', true);
     }
+  });
+
+
+  // ---------------------------------------------------------------------
+  // Lotes prontos
+  //
+  // Registros já preparados e publicados junto com o dashboard (pasta
+  // /lotes). Evita ter que copiar e colar JSON: o índice é lido do próprio
+  // site e cada lote entra com um clique. O que já foi importado fica
+  // registrado aqui no navegador só para não repetir sem querer — a
+  // importação em si é upsert, então reimportar não duplica nada.
+  // ---------------------------------------------------------------------
+  function loadLotesFeitos() {
+    try { return JSON.parse(localStorage.getItem(LOTES_STORAGE_KEY)) || {}; } catch (e) { return {}; }
+  }
+
+  function marcarLoteFeito(id) {
+    var feitos = loadLotesFeitos();
+    feitos[id] = todayISO();
+    try { localStorage.setItem(LOTES_STORAGE_KEY, JSON.stringify(feitos)); } catch (e) {}
+  }
+
+  function renderLotes() {
+    var feitos = loadLotesFeitos();
+    if (!lotesDisponiveis.length) {
+      el.lotesBloco.classList.add('hidden');
+      el.loteAlert.classList.add('hidden');
+      return;
+    }
+    el.lotesBloco.classList.remove('hidden');
+
+    el.lotesLista.innerHTML = lotesDisponiveis.map(function (l) {
+      var feito = feitos[l.id];
+      return '<div class="lote-item' + (feito ? ' lote-feito' : '') + '">' +
+        '<div class="lote-info">' +
+          '<div class="lote-nome">' + escapeHtml(l.titulo) + '</div>' +
+          '<div class="lote-meta">' + escapeHtml(l.descricao || '') +
+            (l.descricao ? ' · ' : '') + l.qtd + ' registro(s) · ' + formatBR(l.criadoEm) +
+            (feito ? ' · <strong>importado em ' + formatBR(feito) + '</strong>' : '') +
+          '</div>' +
+        '</div>' +
+        '<button data-lote="' + escapeHtml(l.id) + '" type="button" class="btn ' + (feito ? 'btn-text' : 'btn-primary') + '">' +
+          (feito ? 'Importar de novo' : 'Importar') + '</button>' +
+      '</div>';
+    }).join('');
+
+    var pendentes = lotesDisponiveis.filter(function (l) { return !feitos[l.id]; }).length;
+    if (pendentes) {
+      el.loteAlertCount.textContent = pendentes;
+      el.loteAlert.classList.remove('hidden');
+    } else {
+      el.loteAlert.classList.add('hidden');
+    }
+  }
+
+  function initLotes() {
+    // Só faz sentido servido pelo site: aberto direto do arquivo, o fetch
+    // é barrado por CORS e não há lote nenhum para buscar.
+    if (location.protocol.indexOf('http') !== 0) return;
+    // cache-buster: o GitHub Pages guarda o índice, e um lote novo precisa
+    // aparecer na hora.
+    fetch('lotes/index.json?t=' + Date.now())
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (lista) {
+        lotesDisponiveis = Array.isArray(lista) ? lista : [];
+        renderLotes();
+      })
+      .catch(function () { /* sem lotes publicados, ou aberto fora do site */ });
+  }
+
+  el.lotesLista.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-lote]');
+    if (!btn) return;
+    var id = btn.getAttribute('data-lote');
+    var lote = lotesDisponiveis.filter(function (l) { return l.id === id; })[0];
+    if (!lote) return;
+    btn.disabled = true;
+    btn.textContent = 'Importando...';
+    fetch('lotes/' + lote.arquivo + '?t=' + Date.now())
+      .then(function (r) {
+        if (!r.ok) throw new Error('não foi possível baixar o lote');
+        return r.json();
+      })
+      .then(function (data) {
+        var registros = data && data.registros ? data.registros : data;
+        if (!Array.isArray(registros)) throw new Error('formato inesperado');
+        importarRegistros(registros);
+        marcarLoteFeito(id);
+        renderLotes();
+      })
+      .catch(function (err) {
+        toast('Erro ao importar o lote: ' + err.message, true);
+        renderLotes();
+      });
+  });
+
+  el.loteAlertBtn.addEventListener('click', function () {
+    setView('dashboard');
+    setSectionExpanded('entry', true);
+    setTimeout(function () {
+      el.lotesBloco.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 80);
   });
 
   el.historyBody.addEventListener('click', function (e) {
@@ -3508,6 +3645,7 @@
   initReportViewTabs();
   initMexico();
   initViews();
+  initLotes();
   updatePortoFieldVisibility();
   el.fData.value = todayISO();
   updateClock();
