@@ -1,0 +1,152 @@
+{
+  "id": "2026-09-11-faturamento",
+  "titulo": "Faturamento FComex — 18 processos concluídos",
+  "descricao": "Rio Grande (3), Itaqui (6), Barcarena (3), Santarém (6).",
+  "criadoEm": "2026-09-11",
+  "registros": [
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617663",
+      "porto": "RIO GRANDE",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV STAR TOPAZ"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617937",
+      "porto": "RIO GRANDE",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV BBG YONGJIANG"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618025",
+      "porto": "RIO GRANDE",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV SDM HUBEI"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617846",
+      "porto": "ITAQUI",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV OCEAN TIME"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617847",
+      "porto": "ITAQUI",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV OCEAN TIME"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617848",
+      "porto": "ITAQUI",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV OCEAN TIME"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618219",
+      "porto": "ITAQUI",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV OCEAN TIME"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617963",
+      "porto": "ITAQUI",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV NORD TITAN"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618067",
+      "porto": "ITAQUI",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV IOLE R"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617887",
+      "porto": "BARCARENA",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV ANYA"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618036",
+      "porto": "BARCARENA",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV ANYA"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618063",
+      "porto": "BARCARENA",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV ANYA"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617707",
+      "porto": "SANTARÉM",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV SEAMELODY"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617708",
+      "porto": "SANTARÉM",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV SEAMELODY"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617804",
+      "porto": "SANTARÉM",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV CLARABELLE"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617805",
+      "porto": "SANTARÉM",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV CLARABELLE"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618048",
+      "porto": "SANTARÉM",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV STELLAR TRADER"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618049",
+      "porto": "SANTARÉM",
+      "data": "2026-09-11",
+      "status": "Concluído",
+      "observacoes": "MV STELLAR TRADER"
+    }
+  ]
+}
