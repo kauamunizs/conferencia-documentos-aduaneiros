@@ -1,0 +1,162 @@
+{
+  "id": "2026-09-24-faturamento-container",
+  "titulo": "Faturamento FComex (container) — 22 processos concluídos",
+  "descricao": "Container: CBI (3), COCOA (5), CTS (3), GEOS (2), SSSA (9).",
+  "criadoEm": "2026-09-24",
+  "registros": [
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617168",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "CTS · 11083407"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618278",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "GEOS · 11432644"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617667",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "CTS · 4800144393 / 4800144539 / 4800144540"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617242",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "GEOS · 11150040 / 11150043 / 11150045 / 11150049"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617159",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "SSSA · 11421770"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2616763",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "COCOA · 11231505"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618206",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "COCOA · 11456646"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617479",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "CBI · 11446611"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617893",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "SSSA · 11288420"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617449",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "SSSA · 11322326"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617649",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "SSSA · 11443425"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618174",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "SSSA · 11322326B"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617945",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "SSSA · 11489928"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617947",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "CTS · 4800143125"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618651",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "COCOA · 11628255"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617888",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "COCOA · 11538430"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617889",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "COCOA · 11538583"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617237",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "CBI · 4800143931 / 4800144214 / 4800144216 / 4800144217 / 4800144218 / 4800144219 / 4800144220 / 4800144221 / 4800144223 / 4800144224 / 4800144225 / 4800144226 / 4800144227 / 4800144228 / 4800144229"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617894",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "SSSA · 4800134053"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617896",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "SSSA · 11517072"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617480",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "SSSA · 11001515"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617529",
+      "data": "2026-09-24",
+      "status": "Concluído",
+      "observacoes": "CBI · 11513202"
+    }
+  ]
+}
