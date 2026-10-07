@@ -1220,7 +1220,13 @@
 
   function saveAndRenderMexico() {
     saveMexico();
-    renderMexico();
+    if (sincronizarFeitosMexico()) {
+      setLocalUpdatedAt(Date.now());
+      saveData();
+      renderAll();
+    } else {
+      renderMexico();
+    }
     pushIfConfigured();
   }
 
@@ -2109,6 +2115,71 @@
     return mexico.rows.filter(function (r) { return r.lista !== 'enviados'; });
   }
 
+
+  // ---------------------------------------------------------------------
+  // Envios do México viram processos concluídos
+  //
+  // A aba México controla a documentação DUE a DUE, mas o trabalho que conta
+  // como feito é o envio do navio. Toda vez que o follow-up muda, os envios
+  // são reespelhados no histórico: um registro por navio e por data de envio,
+  // com as REFs daquele envio nas observações.
+  //
+  // É uma reconstrução completa, não um acréscimo — assim desmarcar um envio
+  // (botão "Voltar") desfaz o registro correspondente sozinho. Só mexe no que
+  // nasceu daqui (origem 'mexico'); o que você lançou à mão fica intocado.
+  // ---------------------------------------------------------------------
+  function sincronizarFeitosMexico() {
+    var grupos = {};
+    mxEnviados().forEach(function (r) {
+      if (!r.saiuEm) return;
+      var chave = r.navio + '|' + r.saiuEm;
+      grupos[chave] = grupos[chave] || { navio: r.navio, data: r.saiuEm, refs: [] };
+      grupos[chave].refs.push(r.ref);
+    });
+
+    var mudou = false;
+    var agora = Date.now();
+
+    // Remove os que deixaram de existir (envio desfeito).
+    var antes = tasks.length;
+    tasks = tasks.filter(function (t) {
+      return t.origem !== 'mexico' || grupos[t.mxChave];
+    });
+    if (tasks.length !== antes) mudou = true;
+
+    Object.keys(grupos).forEach(function (chave) {
+      var g = grupos[chave];
+      g.refs.sort();
+      var obs = g.refs.join(' / ');
+      var existente = tasks.filter(function (t) { return t.origem === 'mexico' && t.mxChave === chave; })[0];
+      if (existente) {
+        if (existente.observacoes !== obs || existente.numeroProcesso !== g.navio || existente.data !== g.data) {
+          existente.observacoes = obs;
+          existente.numeroProcesso = g.navio;
+          existente.data = g.data;
+          existente.updatedAt = agora;
+          mudou = true;
+        }
+        return;
+      }
+      tasks.push({
+        id: generateId(),
+        origem: 'mexico',
+        mxChave: chave,
+        categoria: 'mexico',
+        numeroProcesso: g.navio,
+        data: g.data,
+        status: 'Concluído',
+        observacoes: obs,
+        createdAt: agora,
+        updatedAt: agora,
+      });
+      mudou = true;
+    });
+
+    return mudou;
+  }
+
   function mxEnviados() {
     return mexico.rows.filter(function (r) { return r.lista === 'enviados'; });
   }
@@ -2990,6 +3061,7 @@
           JSON.stringify(mergedMexico) !== JSON.stringify(mexico);
         tasks = merged;
         mexico = mergedMexico;
+        if (sincronizarFeitosMexico()) changedLocally = true;
         if (changedLocally) {
           saveData();
           localStorage.setItem(MEXICO_STORAGE_KEY, JSON.stringify(mexico));
@@ -3613,6 +3685,7 @@
   initMexico();
   initViews();
   initLotes();
+  if (sincronizarFeitosMexico()) saveData();
   el.fData.value = todayISO();
   updateClock();
   setInterval(updateClock, 60000);

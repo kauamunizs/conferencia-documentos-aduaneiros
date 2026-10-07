@@ -1,5 +1,13 @@
 [
   {
+    "id": "2026-10-07-faturamento",
+    "titulo": "Faturamento FComex — 29 processos concluídos",
+    "descricao": "Rio Grande (7), Itaqui (9), Tubarão (7), Santarém (6).",
+    "criadoEm": "2026-10-07",
+    "qtd": 29,
+    "arquivo": "2026-10-07-faturamento.json"
+  },
+  {
     "id": "2026-09-24-faturamento-container",
     "titulo": "Faturamento FComex (container) — 22 processos concluídos",
     "descricao": "Container: CBI (3), COCOA (5), CTS (3), GEOS (2), SSSA (9).",
