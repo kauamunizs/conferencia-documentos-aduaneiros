@@ -37,6 +37,10 @@
     --cat-averbados-bg: rgba(138, 75, 163, .1);
     --cat-retificacao: #1a7a5e;
     --cat-retificacao-bg: rgba(26, 122, 94, .1);
+    --cat-fito: #5f8a14;
+    --cat-fito-bg: rgba(95, 138, 20, .1);
+    --cat-co: #0b7490;
+    --cat-co-bg: rgba(11, 116, 144, .1);
     --mx-nova-bg: rgba(255, 214, 102, .22);
     --mx-dup: #7030a0;
 
@@ -86,6 +90,10 @@
       --cat-averbados-bg: rgba(211, 162, 227, .16);
       --cat-retificacao: #63d9b7;
       --cat-retificacao-bg: rgba(99, 217, 183, .16);
+      --cat-fito: #b6d96a;
+      --cat-fito-bg: rgba(182, 217, 106, .16);
+      --cat-co: #6ccbe3;
+      --cat-co-bg: rgba(108, 203, 227, .16);
       --mx-nova-bg: rgba(255, 214, 102, .13);
       --mx-dup: #c9a3e8;
 
@@ -111,6 +119,8 @@
     --cat-fcomex: #9db0f2; --cat-fcomex-bg: rgba(157, 176, 242, .16);
     --cat-averbados: #d3a2e3; --cat-averbados-bg: rgba(211, 162, 227, .16);
     --cat-retificacao: #63d9b7; --cat-retificacao-bg: rgba(99, 217, 183, .16);
+    --cat-fito: #b6d96a; --cat-fito-bg: rgba(182, 217, 106, .16);
+    --cat-co: #6ccbe3; --cat-co-bg: rgba(108, 203, 227, .16);
     --mx-nova-bg: rgba(255, 214, 102, .13); --mx-dup: #c9a3e8;
     --ok: #30d158; --ok-bg: rgba(48, 209, 88, .16);
     --warn: #ff9f0a; --warn-bg: rgba(255, 159, 10, .16);
@@ -129,6 +139,8 @@
     --cat-fcomex: #3f57b5; --cat-fcomex-bg: rgba(63, 87, 181, .1);
     --cat-averbados: #8a4ba3; --cat-averbados-bg: rgba(138, 75, 163, .1);
     --cat-retificacao: #1a7a5e; --cat-retificacao-bg: rgba(26, 122, 94, .1);
+    --cat-fito: #5f8a14; --cat-fito-bg: rgba(95, 138, 20, .1);
+    --cat-co: #0b7490; --cat-co-bg: rgba(11, 116, 144, .1);
     --mx-nova-bg: rgba(255, 214, 102, .22); --mx-dup: #7030a0;
     --ok: #248a3d; --ok-bg: rgba(52, 199, 89, .12);
     --warn: #c1690a; --warn-bg: rgba(255, 149, 0, .12);
@@ -231,7 +243,8 @@
 
   .cards-row { display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
   @media (min-width: 560px) { .cards-row { grid-template-columns: 1fr 1fr; } }
-  @media (min-width: 1024px) { .cards-row { grid-template-columns: repeat(5, 1fr); } }
+  @media (min-width: 1024px) { .cards-row { grid-template-columns: repeat(4, 1fr); } }
+  @media (min-width: 1360px) { .cards-row { grid-template-columns: repeat(7, 1fr); } }
 
   .stat-card { background: var(--panel); padding: 18px; animation: fade-up .35s var(--ease) both; }
   .stat-card .cat-name { font-size: 13px; font-weight: 500; color: var(--muted); display: flex; align-items: center; gap: 7px; margin-bottom: 14px; }
@@ -312,6 +325,13 @@
   .badge-fcomex { background: var(--cat-fcomex-bg); color: var(--cat-fcomex); }
   .badge-averbados { background: var(--cat-averbados-bg); color: var(--cat-averbados); }
   .badge-retificacao { background: var(--cat-retificacao-bg); color: var(--cat-retificacao); }
+  .badge-fito { background: var(--cat-fito-bg); color: var(--cat-fito); }
+  .badge-co { background: var(--cat-co-bg); color: var(--cat-co); }
+  .chip-emissor {
+    display: inline-block; margin-left: 7px; padding: 1px 7px; border-radius: var(--radius-pill);
+    font-size: 11px; font-weight: 700; letter-spacing: .03em;
+    background: var(--cat-co-bg); color: var(--cat-co); vertical-align: middle;
+  }
   .badge-ok { background: var(--ok-bg); color: var(--ok); }
   .badge-warn { background: var(--warn-bg); color: var(--warn); }
   .badge-neutral { background: var(--panel-muted); color: var(--muted); }
@@ -611,6 +631,10 @@
                 <label for="fCategoria">Categoria</label>
                 <select id="fCategoria" required></select>
               </div>
+              <div class="field hidden" id="fEmissorField">
+                <label for="fEmissor">Emissor do CO</label>
+                <select id="fEmissor"></select>
+              </div>
               <div class="field">
                 <label for="fProcesso">Número do processo</label>
                 <input id="fProcesso" type="text" placeholder="Ex: 2026/00123-4" required />
@@ -644,7 +668,7 @@
             </div>
             <button id="importToggleBtn" type="button" class="btn btn-text" style="margin-top:12px;padding-left:0;">Importar em lote (JSON)</button>
             <div id="importPanel" class="import-panel hidden">
-              <p class="sync-help">Cole abaixo uma lista de registros em formato JSON (cada item com categoria, número do processo, data, status e observações) para adicionar vários de uma vez.</p>
+              <p class="sync-help">Cole abaixo uma lista de registros em formato JSON (cada item com categoria, número do processo, data, status e observações — no CO, também o emissor ACS ou FIEP) para adicionar vários de uma vez.</p>
               <div class="field">
                 <label for="importText">Registros (JSON)</label>
                 <textarea id="importText" rows="6" placeholder='[{"categoria":"fcomex","numeroProcesso":"...","data":"2026-07-23","status":"Concluído","observacoes":"..."}]'></textarea>
@@ -941,7 +965,31 @@
           </div>
 
           <div class="tutorial-topic">
-            <h3>7. Resolução de dúvidas comuns</h3>
+            <h3>7. Documental Fito <span class="badge badge-fito">Fito</span></h3>
+            <p class="tutorial-source">Certificado fitossanitário de exportação (MAPA)</p>
+            <ol>
+              <li>Antes de tudo, consulte o produto, o país de destino e os requisitos fitossanitários no <a href="https://shiva.agro.gov.br/pub" target="_blank" rel="noopener">Shiva</a>. É de lá que saem os códigos de Produto Agropecuário, Requisito Agropecuário e ponto de ingresso (UN LOCODE) usados no pedido.</li>
+              <li>Registre o pedido no módulo <strong>LPCO</strong> do <a href="https://portalunico.siscomex.gov.br/portal/" target="_blank" rel="noopener">Portal Único Siscomex</a> — modelos <strong>E00104</strong> e <strong>E00105</strong>. Desde 13/01/2025 existe também o <strong>E00120 (e-Phyto)</strong>, usado quando o despacho é em recinto alfandegado habilitado pelo MAPA e o país importador não exige requisito específico.</li>
+              <li><strong>O LPCO tem que estar deferido antes do embarque.</strong> Se a carga sair sem a liberação do MAPA, a certificação fica impedida e o LPCO é indeferido.</li>
+              <li>Emitido, o certificado sai em PDF com QR Code e assinatura eletrônica; o número e a chave de acesso ficam no próprio LPCO.</li>
+            </ol>
+            <p class="tutorial-tip"><strong>No dashboard:</strong> categoria <em>Documental Fito</em>. Deixe como Pendente enquanto o LPCO estiver em análise e marque Concluído quando o certificado for emitido. Base: Portaria MAPA nº 779/2025 e Notícia Siscomex Exportação nº 1 de 10/01/2025.</p>
+          </div>
+
+          <div class="tutorial-topic">
+            <h3>8. Documental CO <span class="badge badge-co">CO</span></h3>
+            <p class="tutorial-source">Certificado de origem — emissor ACS ou FIEP</p>
+            <ol>
+              <li>O certificado de origem é emitido por entidade habilitada pela Secex. A relação oficial e o código de cada entidade estão no <strong>Anexo VI da Portaria SECEX</strong> vigente — vale conferir antes de mandar para um emissor novo.</li>
+              <li>Monte o pedido com os dados da exportação e a regra de origem do acordo aplicável (Mercosul, ALADI etc.).</li>
+              <li>Nos acordos preferenciais a emissão é digital (<strong>COD</strong>), feita pelo sistema on-line da entidade emissora.</li>
+              <li>Confira os dados antes de aprovar: correção depois da emissão costuma exigir nova via.</li>
+            </ol>
+            <p class="tutorial-tip"><strong>No dashboard:</strong> categoria <em>Documental CO</em> — é a única que pede o campo <strong>Emissor</strong>, que aparece sozinho ao selecioná-la. Escolha <strong>ACS</strong> ou <strong>FIEP</strong>; o relatório semanal e o mensal trazem a quebra por emissor, e o CSV ganha um bloco "CO por emissor".</p>
+          </div>
+
+          <div class="tutorial-topic">
+            <h3>9. Resolução de dúvidas comuns</h3>
             <div class="table-wrap">
               <table class="ledger">
                 <thead>
@@ -1236,7 +1284,13 @@
     { id: 'fcomex',    label: 'Faturamento de processos no FComex', short: 'FComex' },
     { id: 'averbados', label: 'Docs averbados',                     short: 'Averbados' },
     { id: 'retificacao', label: 'Retificação de processos',          short: 'Retificação' },
+    { id: 'fito',      label: 'Documental Fito',                    short: 'Fito' },
+    { id: 'co',        label: 'Documental CO',                      short: 'CO' },
   ];
+
+  // Entidade que emitiu o certificado de origem. Só o CO pergunta isso.
+  var EMISSORES = ['ACS', 'FIEP'];
+  var CATEGORIA_COM_EMISSOR = 'co';
 
   var WEEK_OPTIONS_COUNT = 12;
   var MONTH_OPTIONS_COUNT = 12;
@@ -1625,6 +1679,8 @@
     historySection: document.getElementById('historySection'),
     entryForm: document.getElementById('entryForm'),
     fCategoria: document.getElementById('fCategoria'),
+    fEmissorField: document.getElementById('fEmissorField'),
+    fEmissor: document.getElementById('fEmissor'),
     fProcesso: document.getElementById('fProcesso'),
     fData: document.getElementById('fData'),
     fStatus: document.getElementById('fStatus'),
@@ -1716,6 +1772,10 @@
     el.reportCategoriaFilter.innerHTML = '<option value="all">Todas as categorias</option>' + categoryOptions;
     el.monthlyReportCategoriaFilter.innerHTML = '<option value="all">Todas as categorias</option>' + categoryOptions;
 
+    el.fEmissor.innerHTML = '<option value="">Selecione o emissor</option>' + EMISSORES.map(function (e) {
+      return '<option value="' + e + '">' + e + '</option>';
+    }).join('');
+
     var weekOptions = [];
     for (var i = 0; i < WEEK_OPTIONS_COUNT; i++) {
       var range = weekRangeForOffset(i);
@@ -1729,6 +1789,14 @@
       monthOptions.push('<option value="' + j + '">' + escapeHtml(monthLabel(j, mRange.start)) + '</option>');
     }
     el.monthSelect.innerHTML = monthOptions.join('');
+  }
+
+  // O emissor só faz sentido no certificado de origem; nas outras categorias
+  // o campo some e o valor é zerado para não viajar junto no registro.
+  function updateEmissorFieldVisibility() {
+    var isCO = el.fCategoria.value === CATEGORIA_COM_EMISSOR;
+    el.fEmissorField.classList.toggle('hidden', !isCO);
+    if (!isCO) el.fEmissor.value = '';
   }
 
   function updateClock() {
@@ -2155,6 +2223,24 @@
     el.weeklyReportText.textContent = buildEmailText();
   }
 
+  // Quantos COs saíram por cada emissor no período. Volta vazio quando não
+  // houve CO, para o relatório não ganhar uma linha de zeros.
+  function contarEmissores(entries) {
+    var counts = {};
+    entries.forEach(function (t) {
+      if (t.categoria !== CATEGORIA_COM_EMISSOR) return;
+      var chave = t.emissor || 'sem emissor';
+      counts[chave] = (counts[chave] || 0) + 1;
+    });
+    return Object.keys(counts).sort().map(function (k) { return { emissor: k, qtd: counts[k] }; });
+  }
+
+  function resumoEmissores(entries) {
+    var lista = contarEmissores(entries);
+    if (!lista.length) return '';
+    return ' (' + lista.map(function (e) { return e.emissor + ' ' + e.qtd; }).join(', ') + ')';
+  }
+
   function buildReportCsvLines(titulo, range, categoriaFiltroValue, rows, entries) {
     var lines = [];
     lines.push(titulo);
@@ -2180,12 +2266,20 @@
     lines.push(['Total', totalConcl, totalPend, totalGeral].map(csvEscape).join(';'));
     lines.push('');
 
+    var emissores = contarEmissores(entries);
+    if (emissores.length) {
+      lines.push('CO por emissor');
+      lines.push(['Emissor', 'Quantidade'].map(csvEscape).join(';'));
+      emissores.forEach(function (e) { lines.push([e.emissor, e.qtd].map(csvEscape).join(';')); });
+      lines.push('');
+    }
+
     lines.push('Detalhamento');
-    lines.push(['Categoria', 'Numero do Processo', 'Data', 'Status', 'Dias em aberto', 'Observacoes'].map(csvEscape).join(';'));
+    lines.push(['Categoria', 'Numero do Processo', 'Emissor CO', 'Data', 'Status', 'Dias em aberto', 'Observacoes'].map(csvEscape).join(';'));
     entries.slice().sort(function (a, b) { return a.data.localeCompare(b.data); }).forEach(function (t) {
       var cat = categoryById(t.categoria);
       var obs = (t.observacoes || '').replace(/\n/g, ' ');
-      lines.push([cat ? cat.label : t.categoria, t.numeroProcesso, formatBR(t.data), t.status, daysOpenFor(t), obs].map(csvEscape).join(';'));
+      lines.push([cat ? cat.label : t.categoria, t.numeroProcesso, t.emissor || '', formatBR(t.data), t.status, daysOpenFor(t), obs].map(csvEscape).join(';'));
     });
     return lines;
   }
@@ -2221,7 +2315,8 @@
     }
     text += '\n';
     currentReportRows.forEach(function (r) {
-      text += r.cat.label + ': ' + r.concluidos + ' concluído(s), ' + r.pendentes + ' pendente(s)\n';
+      text += r.cat.label + ': ' + r.concluidos + ' concluído(s), ' + r.pendentes + ' pendente(s)' +
+        (r.cat.id === CATEGORIA_COM_EMISSOR ? resumoEmissores(currentReportEntries) : '') + '\n';
     });
     var totalConcl = currentReportRows.reduce(function (a, r) { return a + r.concluidos; }, 0);
     var totalPend = currentReportRows.reduce(function (a, r) { return a + r.pendentes; }, 0);
@@ -2231,6 +2326,7 @@
       currentReportEntries.slice().sort(function (a, b) { return a.data.localeCompare(b.data); }).forEach(function (t) {
         var cat = categoryById(t.categoria);
         text += '- [' + formatBR(t.data) + '] ' + (cat ? cat.label : t.categoria) + ' | Processo ' + t.numeroProcesso +
+          (t.emissor ? ' | Emissor: ' + t.emissor : '') +
           ' | ' + t.status +
           (t.observacoes ? ' | Obs: ' + t.observacoes : '') + '\n';
       });
@@ -2338,7 +2434,8 @@
     }
     text += '\n';
     currentMonthlyReportRows.forEach(function (r) {
-      text += r.cat.label + ': ' + r.concluidos + ' concluído(s), ' + r.pendentes + ' pendente(s)\n';
+      text += r.cat.label + ': ' + r.concluidos + ' concluído(s), ' + r.pendentes + ' pendente(s)' +
+        (r.cat.id === CATEGORIA_COM_EMISSOR ? resumoEmissores(currentMonthlyReportEntries) : '') + '\n';
     });
     var totalConcl = currentMonthlyReportRows.reduce(function (a, r) { return a + r.concluidos; }, 0);
     var totalPend = currentMonthlyReportRows.reduce(function (a, r) { return a + r.pendentes; }, 0);
@@ -2348,6 +2445,7 @@
       currentMonthlyReportEntries.slice().sort(function (a, b) { return a.data.localeCompare(b.data); }).forEach(function (t) {
         var cat = categoryById(t.categoria);
         text += '- [' + formatBR(t.data) + '] ' + (cat ? cat.label : t.categoria) + ' | Processo ' + t.numeroProcesso +
+          (t.emissor ? ' | Emissor: ' + t.emissor : '') +
           ' | ' + t.status +
           (t.observacoes ? ' | Obs: ' + t.observacoes : '') + '\n';
       });
@@ -3534,7 +3632,8 @@
     return (
       '<tr>' +
         '<td><span class="badge badge-' + (cat ? cat.id : 'granel') + '">' + escapeHtml(cat ? cat.label : t.categoria) + '</span></td>' +
-        '<td style="font-weight:600;">' + escapeHtml(t.numeroProcesso) + '</td>' +
+        '<td style="font-weight:600;">' + escapeHtml(t.numeroProcesso) +
+          (t.emissor ? '<span class="chip-emissor">' + escapeHtml(t.emissor) + '</span>' : '') + '</td>' +
         '<td style="white-space:nowrap;color:var(--muted);font-variant-numeric:tabular-nums;">' + formatBR(t.data) + '</td>' +
         '<td><button data-action="toggle" data-id="' + t.id + '" class="badge ' + statusClass + '">' + t.status + '</button></td>' +
         '<td class="truncate" title="' + escapeHtml(t.observacoes || '') + '" style="color:var(--muted);">' + (escapeHtml(t.observacoes || '') || '—') + '</td>' +
@@ -3575,6 +3674,8 @@
     if (!t) return;
     editingId = id;
     el.fCategoria.value = t.categoria;
+    el.fEmissor.value = t.emissor || '';
+    updateEmissorFieldVisibility();
     el.fProcesso.value = t.numeroProcesso;
     el.fData.value = t.data;
     el.fStatus.value = t.status;
@@ -3595,6 +3696,7 @@
     el.fCategoria.value = lastCategoria;
     el.fData.value = todayISO();
     el.fStatus.value = 'Pendente';
+    updateEmissorFieldVisibility();
     el.submitBtn.textContent = 'Adicionar registro';
     el.cancelEditBtn.classList.add('hidden');
   }
@@ -3632,6 +3734,7 @@
       var t = tasks.filter(function (x) { return x.id === editingId; })[0];
       if (t) {
         t.categoria = el.fCategoria.value;
+        t.emissor = t.categoria === CATEGORIA_COM_EMISSOR ? el.fEmissor.value : '';
         t.numeroProcesso = numeroProcesso;
         t.data = el.fData.value;
         t.status = el.fStatus.value;
@@ -3644,6 +3747,7 @@
       tasks.push({
         id: generateId(),
         categoria: el.fCategoria.value,
+        emissor: el.fCategoria.value === CATEGORIA_COM_EMISSOR ? el.fEmissor.value : '',
         numeroProcesso: numeroProcesso,
         data: el.fData.value,
         status: el.fStatus.value,
@@ -3656,6 +3760,8 @@
     cancelEdit();
     saveAndRenderAll();
   });
+
+  el.fCategoria.addEventListener('change', updateEmissorFieldVisibility);
 
   el.cancelEditBtn.addEventListener('click', cancelEdit);
 
@@ -3677,6 +3783,7 @@
       var existing = tasks.filter(function (t) { return t.numeroProcesso === numeroProcesso; })[0];
       if (existing) {
         existing.categoria = item.categoria;
+        existing.emissor = item.categoria === CATEGORIA_COM_EMISSOR ? (item.emissor || '') : '';
         existing.data = item.data || existing.data;
         existing.status = item.status === 'Concluído' ? 'Concluído' : 'Pendente';
         existing.observacoes = item.observacoes || '';
@@ -3686,6 +3793,7 @@
         tasks.push({
           id: generateId(),
           categoria: item.categoria,
+          emissor: item.categoria === CATEGORIA_COM_EMISSOR ? (item.emissor || '') : '',
           numeroProcesso: numeroProcesso,
           data: item.data || todayISO(),
           status: item.status === 'Concluído' ? 'Concluído' : 'Pendente',
@@ -4197,6 +4305,7 @@
   // Init
   // ---------------------------------------------------------------------
   initSelects();
+  updateEmissorFieldVisibility();
   initCollapsibleSections();
   initReportPeriodTabs();
   initReportViewTabs();
