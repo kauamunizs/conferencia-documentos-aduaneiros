@@ -412,13 +412,13 @@
   .history-pager button[disabled] { opacity: .35; cursor: default; }
 
   .open-panel {
-    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 20px; margin-bottom: 24px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow-sm); padding: 22px;
   }
   .open-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .open-count { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
   .open-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-  .open-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 18px; }
+  .open-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 18px; }
   .open-col-title {
     font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
     color: var(--muted); margin: 0 0 10px;
@@ -584,23 +584,13 @@
         <span><strong id="pendingAlertCount"></strong> processo(s) pendente(s) há mais de um dia.</span>
         <button id="pendingAlertBtn" type="button" class="btn btn-text">Ver pendências</button>
       </div>
-      <div class="open-panel">
-        <div class="open-head">
-          <div>
-            <h2 class="section-title" style="margin:0;">Em aberto agora</h2>
-            <p class="sync-help" style="margin:4px 0 0;">Tudo que ainda depende de você, do mais parado para o mais recente.</p>
-          </div>
-          <span id="openCount" class="open-count"></span>
-        </div>
-        <div id="openSummary" class="open-summary"></div>
-        <div id="openBody" class="open-body"></div>
-      </div>
-
       <h2 class="section-title">Indicadores de hoje</h2>
       <div id="dailyCards" class="cards-row"></div>
     </section>
 
     <div class="layout-grid">
+
+      <div class="stack">
 
       <!-- Formulário de entrada -->
       <section class="card">
@@ -663,6 +653,21 @@
           </div>
         </div>
       </section>
+
+      <!-- Em aberto agora: logo abaixo do cadastro -->
+      <div class="open-panel">
+        <div class="open-head">
+          <div>
+            <h2 class="section-title" style="margin:0;">Em aberto agora</h2>
+            <p class="sync-help" style="margin:4px 0 0;">Tudo que ainda depende de você, do mais parado para o mais recente.</p>
+          </div>
+          <span id="openCount" class="open-count"></span>
+        </div>
+        <div id="openSummary" class="open-summary"></div>
+        <div id="openBody" class="open-body"></div>
+      </div>
+
+      </div>
 
       <!-- Coluna direita: Rendimento + Relatório semanal -->
       <div class="stack">
