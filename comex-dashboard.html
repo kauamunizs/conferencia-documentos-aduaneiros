@@ -395,7 +395,8 @@
 
   .mx-head-count { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .mx-panel { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
-  @media (min-width: 720px) { .mx-panel { grid-template-columns: repeat(5, 1fr); } }
+  @media (min-width: 720px) { .mx-panel { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1100px) { .mx-panel { grid-template-columns: repeat(6, 1fr); } }
   .mx-stat { background: var(--panel); padding: 14px 16px; }
   .mx-stat .mx-stat-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
   .mx-stat .mx-stat-value { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1; }
@@ -403,6 +404,46 @@
   .mx-tab:hover { color: var(--ink); }
   .mx-tab.active { background: var(--panel); color: var(--ink); box-shadow: var(--shadow-sm); }
   .mx-tab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .history-pager {
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
+  }
+  .history-pager .pager-info { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .history-pager button[disabled] { opacity: .35; cursor: default; }
+
+  .open-panel {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 24px;
+  }
+  .open-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .open-count { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+  .open-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .open-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 18px; }
+  .open-col-title {
+    font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 10px;
+  }
+  .open-list { display: flex; flex-direction: column; gap: 6px; }
+  .open-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 11px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg);
+    border-left: 3px solid var(--cat, var(--border));
+  }
+  .open-item-main { min-width: 0; flex: 1; }
+  .open-item-name {
+    font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .open-item-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .open-days {
+    font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap;
+    padding: 2px 7px; border-radius: 999px; background: var(--border); color: var(--muted); font-weight: 600;
+  }
+  .open-days.open-days-1 { background: var(--warn-bg); color: var(--warn); }
+  .open-days.open-days-2 { background: var(--danger-bg); color: var(--danger); }
+  .open-empty { font-size: 13px; color: var(--muted); padding: 10px 0; }
+  .open-more { margin-top: 8px; }
+  @media (max-width: 560px) { .open-panel { padding: 16px; } }
+
   .mx-pane { margin-top: 16px; }
   .mx-check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); white-space: nowrap; }
   .mx-check input { margin: 0; }
@@ -416,6 +457,9 @@
   .mx-ref.mx-dup { color: var(--mx-dup); font-weight: 700; }
   .mx-status-sel { font-size: 12.5px; padding: 5px 8px; max-width: 210px; }
   .mx-status-falta { color: var(--danger); font-weight: 600; }
+  .mx-esp { white-space: nowrap; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .mx-esp.mx-esp-1 { color: var(--warn); font-weight: 600; }
+  .mx-esp.mx-esp-2 { color: var(--danger); font-weight: 700; }
   .mx-status-ok { color: var(--ok); font-weight: 600; }
   .mx-qtd { font-weight: 600; font-variant-numeric: tabular-nums; }
   .mx-legend { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 3px; }
@@ -540,6 +584,18 @@
         <span><strong id="pendingAlertCount"></strong> processo(s) pendente(s) há mais de um dia.</span>
         <button id="pendingAlertBtn" type="button" class="btn btn-text">Ver pendências</button>
       </div>
+      <div class="open-panel">
+        <div class="open-head">
+          <div>
+            <h2 class="section-title" style="margin:0;">Em aberto agora</h2>
+            <p class="sync-help" style="margin:4px 0 0;">Tudo que ainda depende de você, do mais parado para o mais recente.</p>
+          </div>
+          <span id="openCount" class="open-count"></span>
+        </div>
+        <div id="openSummary" class="open-summary"></div>
+        <div id="openBody" class="open-body"></div>
+      </div>
+
       <h2 class="section-title">Indicadores de hoje</h2>
       <div id="dailyCards" class="cards-row"></div>
     </section>
@@ -781,6 +837,8 @@
               <tbody id="historyBody"></tbody>
             </table>
           </div>
+
+          <div id="historyPager" class="history-pager hidden"></div>
       </section>
     </div>
 
@@ -961,13 +1019,14 @@
             </div>
 
             <div class="table-wrap">
-              <table class="ledger mx-table" style="min-width:860px;">
+              <table class="ledger mx-table" style="min-width:940px;">
                 <thead>
                   <tr>
                     <th>Navio</th>
                     <th>REF. Pibernat</th>
                     <th>DUE</th>
                     <th>Status</th>
+                    <th class="num" title="Dias corridos desde que a DUE entrou no follow-up">Esperando</th>
                     <th>Obs</th>
                     <th class="num">Qtd DUEs</th>
                     <th style="text-align:right;">Ações</th>
@@ -1136,8 +1195,15 @@
   ];
   var MX_STATUS_ENVIADO = 'OK / COMPLETO';
 
-  // Base extraída da planilha Mexico_Atualizado_0309.xlsx (03/09/2026).
-  var MEXICO_SEED = {"rows":[{"lista":"navios","navio":"MV AREOPAGUS","ref":"RGDE2616670","due":"26BR0012246776","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV AREOPAGUS","ref":"RGDE2616671","due":"26BR0012246784","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV AREOPAGUS","ref":"RGDE2616672","due":"26BR0012246806","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV AREOPAGUS","ref":"RGDE2616773","due":"26BR0012496748","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV GOLDEN SAKURA","ref":"RGDE2616579","due":"26BR0011973305","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV GOLDEN SAKURA","ref":"RGDE2616580","due":"26BR0011973330","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV GOLDEN SAKURA","ref":"RGDE2616581","due":"26BR0011973348","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV GOLDEN SAKURA","ref":"RGDE2616848","due":"26BR0012620759","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV LEMAN TRADER","ref":"RGDE2613974","due":"26BR0005425776","status":"TEM INV","obs":"","nova":0},{"lista":"navios","navio":"MV LEMAN TRADER","ref":"RGDE2614168","due":"26BR0005886110","status":"FALTA ESSA INV","obs":"","nova":0},{"lista":"navios","navio":"MV LEMAN TRADER","ref":"RGDE2614457","due":"26BR0006681270","status":"TEM INV","obs":"","nova":0},{"lista":"navios","navio":"MV LEMAN TRADER","ref":"RGDE2614458","due":"26BR0006681296","status":"TEM INV","obs":"","nova":0},{"lista":"navios","navio":"MV NAIAS","ref":"RGDE2617812","due":"26BR0014799608","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV NAIAS","ref":"RGDE2617813","due":"26BR0014799667","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV NAIAS","ref":"RGDE2617814","due":"26BR0014799691","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV NAIAS","ref":"RGDE2617815","due":"26BR0014799713","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV ROSANNA","ref":"RGDE2617352","due":"26BR0013766200","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV ROSANNA","ref":"RGDE2617353","due":"26BR0013766218","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV ROSANNA","ref":"RGDE2617354","due":"26BR0013766226","status":"A VERIFICAR","obs":"Confirmar status herdado","nova":0},{"lista":"navios","navio":"MV ROSANNA","ref":"RGDE2618071","due":"26BR0015347867","status":"A VERIFICAR","obs":"NOVA - herdou status predominante do navio, confirmar","nova":1},{"lista":"navios","navio":"MV ALI M","ref":"RGDE2617338","due":"26BR0013732763","status":"OK / COMPLETO","obs":"","nova":0},{"lista":"navios","navio":"MV ALI M","ref":"RGDE2617339","due":"26BR0013732828","status":"OK / COMPLETO","obs":"","nova":0},{"lista":"navios","navio":"MV ALI M","ref":"RGDE2617340","due":"26BR0013732844","status":"OK / COMPLETO","obs":"","nova":0},{"lista":"navios","navio":"MV ANYA","ref":"RGDE2617887","due":"26BR0015047855","status":"A VERIFICAR","obs":"NOVA - navio inedito, confirmar status","nova":1},{"lista":"navios","navio":"MV ANYA","ref":"RGDE2618036","due":"26BR0015410496","status":"A VERIFICAR","obs":"NOVA - navio inedito, confirmar status","nova":1},{"lista":"navios","navio":"MV ANYA","ref":"RGDE2618063","due":"26BR0015451168","status":"A VERIFICAR","obs":"NOVA - navio inedito, confirmar status","nova":1},{"lista":"navios","navio":"MV FJ BIANCA","ref":"RGDE2617550","due":"26BR0014230630","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV FJ BIANCA","ref":"RGDE2617552","due":"26BR0014230176","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV FJ BIANCA","ref":"RGDE2617553","due":"26BR0014230184","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV GOLDEN FORWARD","ref":"RGDE2617064","due":"26BR0013119654","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV GOLDEN FORWARD","ref":"RGDE2617065","due":"26BR0013119697","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV GOLDEN FORWARD","ref":"RGDE2617066","due":"26BR0013119735","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV INDIGO GARLAND","ref":"RGDE2617131","due":"26BR0013293247","status":"FALTA SO INV/LPCO/CS/NF","obs":"Sem NF, foi pedida no e-mail de BLI","nova":0},{"lista":"navios","navio":"MV INDIGO GARLAND","ref":"RGDE2617132","due":"26BR0013293301","status":"FALTA SO INV/LPCO/CS/NF","obs":"Sem NF, foi pedida no e-mail de BLI","nova":0},{"lista":"navios","navio":"MV INDIGO GARLAND","ref":"RGDE2617132","due":"26BR0013649726","status":"FALTA SO INV/LPCO/CS/NF","obs":"Sem NF, foi pedida no e-mail de BLI","nova":0},{"lista":"navios","navio":"MV MARCO","ref":"RGDE2616859","due":"26BR0012722535","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV MARCO","ref":"RGDE2616860","due":"26BR0012722578","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV MARCO","ref":"RGDE2616861","due":"26BR0012722594","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV NORD COVE","ref":"RGDE2617754","due":"26BR0014684410","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV NORD COVE","ref":"RGDE2617755","due":"26BR0014684495","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV NORD COVE","ref":"RGDE2617756","due":"26BR0014684550","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV PROSO","ref":"RGDE2616642","due":"26BR0012203180","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV PROSO","ref":"RGDE2616643","due":"26BR0012203210","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV PROSO","ref":"RGDE2616644","due":"26BR0012203252","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV RUTH","ref":"RGDE2616645","due":"26BR0012201772","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV RUTH","ref":"RGDE2616646","due":"26BR0012201802","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV RUTH","ref":"RGDE2616647","due":"26BR0012201829","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV THOR CONFIDENCE","ref":"RGDE2617670","due":"26BR0014571879","status":"A VERIFICAR","obs":"NOVA - navio inedito, confirmar status","nova":1},{"lista":"navios","navio":"MV THOR CONFIDENCE","ref":"RGDE2617671","due":"26BR0014571925","status":"A VERIFICAR","obs":"NOVA - navio inedito, confirmar status","nova":1},{"lista":"navios","navio":"MV THOR CONFIDENCE","ref":"RGDE2617672","due":"26BR0014571984","status":"A VERIFICAR","obs":"NOVA - navio inedito, confirmar status","nova":1},{"lista":"navios","navio":"MV 21 GLORY","ref":"RGDE2617877","due":"26BR0014979592","status":"A VERIFICAR","obs":"NOVA - navio inedito, confirmar status","nova":1},{"lista":"navios","navio":"MV 21 GLORY","ref":"RGDE2617878","due":"26BR0014979606","status":"A VERIFICAR","obs":"NOVA - navio inedito, confirmar status","nova":1},{"lista":"navios","navio":"MV ADASTAR","ref":"RGDE2616665","due":"26BR0012196353","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV ADASTAR","ref":"RGDE2616666","due":"26BR0012196370","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV BEGONIA","ref":"RGDE2616242","due":"26BR0011044703","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV BEGONIA","ref":"RGDE2616243","due":"26BR0011044711","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV BERGE RYSY","ref":"RGDE2616611","due":"26BR0012065518","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV BERGE RYSY","ref":"RGDE2616746","due":"26BR0012370183","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV BOLD VOYAGER","ref":"RGDE2616782","due":"26BR0012496217","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV BOLD VOYAGER","ref":"RGDE2616783","due":"26BR0012497493","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV CHAYANEE NAREE","ref":"RGDE2614153","due":"26BR0006007986","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV CHAYANEE NAREE","ref":"RGDE2614154","due":"26BR0006008001","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV CORINTHIAN SPIRE","ref":"RGDE2617591","due":"26BR0014396970","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV CORINTHIAN SPIRE","ref":"RGDE2617592","due":"26BR0014397003","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV FANEROMENI","ref":"RGDE2617133","due":"26BR0013299318","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV FANEROMENI","ref":"RGDE2617134","due":"26BR0013299342","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV IVORY GULL","ref":"RGDE2617421","due":"26BR0013996396","status":"FALTA SO INV/LPCO/CS","obs":"","nova":0},{"lista":"navios","navio":"MV IVORY GULL","ref":"RGDE2617422","due":"26BR0013996450","status":"FALTA SO INV/LPCO/CS","obs":"NOVA - herdou status predominante do navio, confirmar","nova":1},{"lista":"navios","navio":"MV JNS RIVER","ref":"RGDE2617557","due":"26BR0014268564","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV JNS RIVER","ref":"RGDE2617558","due":"26BR0014268602","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV KOSMAN","ref":"RGDE2617128","due":"26BR0013288294","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV KOSMAN","ref":"RGDE2617130","due":"26BR0013288367","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV LMZ CERES","ref":"RGDE2614522","due":"26BR0006848182","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV LMZ CERES","ref":"RGDE2614524","due":"26BR0006849944","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV MEDI CAPALBIO","ref":"RGDE2617674","due":"26BR0014581114","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV MEDI CAPALBIO","ref":"RGDE2617675","due":"26BR0014581149","status":"A VERIFICAR","obs":"Confirmar status - navio inedito","nova":0},{"lista":"navios","navio":"MV UBC STADE","ref":"RGDE2616854","due":"26BR0012712726","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV UBC STADE","ref":"RGDE2616855","due":"26BR0012712750","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV WHITBY","ref":"RGDE2616735","due":"26BR0012396271","status":"OK / COMPLETO","obs":"","nova":0},{"lista":"navios","navio":"MV WHITBY","ref":"RGDE2616736","due":"26BR0012396280","status":"OK / COMPLETO","obs":"","nova":0},{"lista":"navios","navio":"MV AGILITY DIVA","ref":"RGDE2616573","due":"26BR0011954025","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV COMMON VENTURE","ref":"RGDE2616858","due":"26BR0012714486","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV ECO COLONEL","ref":"RGDE2616596","due":"26BR0011975120","status":"FALTA SO INV/LPCO/CS","obs":"","nova":0},{"lista":"navios","navio":"MV EVER RELIANCE","ref":"RGDE2617971","due":"26BR0015227730","status":"A VERIFICAR","obs":"NOVA - navio inedito, confirmar status","nova":1},{"lista":"navios","navio":"MV FEDERAL SW","ref":"RGDE2617491","due":"26BR0014142242","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV GREAT BLOSSOM","ref":"RGDE2616457","due":"26BR0011594967","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV GUO REN HAI","ref":"RGDE2617612","due":"26BR0014467893","status":"FALTA SO INV/LPCO/CS","obs":"","nova":0},{"lista":"navios","navio":"MV LEMESSOS CASTLE","ref":"RGDE2617417","due":"26BR0013960839","status":"OK / COMPLETO","obs":"","nova":0},{"lista":"navios","navio":"MV LOWLANDS BLOSSOM","ref":"RGDE2617964","due":"26BR0015163600","status":"FALTA SO INV/CO","obs":"","nova":0},{"lista":"navios","navio":"MV MANDARIN GLORY","ref":"RGDE2617549","due":"26BR0014230303","status":"OK / COMPLETO","obs":"","nova":0},{"lista":"navios","navio":"MV NIKOLAOS","ref":"RGDE2616719","due":"26BR0012366291","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV NORA SCHULTE","ref":"RGDE2617880","due":"26BR0014980094","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV RANGAKU","ref":"RGDE2616732","due":"26BR0012383137","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV SAKIZAYA DIAMOND","ref":"RGDE2616976","due":"26BR0012849101","status":"OK / COMPLETO","obs":"","nova":0},{"lista":"navios","navio":"MV STAR ASTRID","ref":"RGDE2616733","due":"26BR0012390095","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV THEODORE JR","ref":"RGDE2616722","due":"26BR0012374006","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV UBON NAREE","ref":"RGDE2616787","due":"26BR0012486238","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV YASA EAGLE","ref":"RGDE2616734","due":"26BR0012393256","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV YM PIONEER","ref":"RGDE2616608","due":"26BR0012065887","status":"FALTA SO INV","obs":"","nova":0},{"lista":"navios","navio":"MV YM THERESA","ref":"RGDE2614700","due":"26BR0007271733","status":"FALTA SO INV","obs":"","nova":0},{"lista":"enviados","navio":"MV CRIMSON ARK","ref":"RGDE2616849","due":"26BR0012604630","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-21"},{"lista":"enviados","navio":"MV CRIMSON ARK","ref":"RGDE2616850","due":"26BR0012604877","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-21"},{"lista":"enviados","navio":"MV KIMOLOS","ref":"RGDE2616948","due":"26BR0012812330","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-21"},{"lista":"enviados","navio":"MV KIMOLOS","ref":"RGDE2616949","due":"26BR0012812356","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-21"},{"lista":"enviados","navio":"MV LAOURA","ref":"RGDE2617060","due":"26BR0013123996","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-21"},{"lista":"enviados","navio":"MV AURORA BOREALIS","ref":"RGDE2617540","due":"26BR0014218940","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV AURORA BOREALIS","ref":"RGDE2617541","due":"26BR0014218974","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV AURORA BOREALIS","ref":"RGDE2617542","due":"26BR0014219032","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV OLIVIA C","ref":"RGDE2616978","due":"26BR0012849306","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV OLIVIA C","ref":"RGDE2616979","due":"26BR0012849322","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV OLIVIA C","ref":"RGDE2616980","due":"26BR0012849349","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV AMIS LEADER","ref":"RGDE2617358","due":"26BR0013830277","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV AMIS LEADER","ref":"RGDE2617359","due":"26BR0013830331","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV ANDREAS PETRAKIS","ref":"RGDE2617112","due":"26BR0013219136","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV ANDREAS PETRAKIS","ref":"RGDE2617113","due":"26BR0013219187","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV KEY SONORITY","ref":"RGDE2616846","due":"26BR0012664268","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV KEY SONORITY","ref":"RGDE2616847","due":"26BR0012664276","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV OSLO TRADER","ref":"RGDE2616792","due":"26BR0012536839","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV OSLO TRADER","ref":"RGDE2616793","due":"26BR0012536898","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV APPLEPIE","ref":"RGDE2617216","due":"26BR0013503896","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV BBG MUARA","ref":"RGDE2616950","due":"26BR0012813689","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV GLEAMSTAR","ref":"RGDE2617143","due":"26BR0013305180","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV GOLDEN JAKE","ref":"RGDE2617351","due":"26BR0013773753","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV HAMIT K","ref":"RGDE2617285","due":"26BR0013679218","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV JY RIVER","ref":"RGDE2617118","due":"26BR0013267564","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV TREASURE STAR","ref":"RGDE2617109","due":"26BR0013208290","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV YARRA","ref":"RGDE2617141","due":"26BR0013302793","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-08-31"},{"lista":"enviados","navio":"MV DIAMANTI","ref":"RGDE2617468","due":"26BR0014111169","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-09-02"},{"lista":"enviados","navio":"MV IONIC KIZUNA","ref":"RGDE2617357","due":"26BR0013775047","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-09-02"},{"lista":"enviados","navio":"MV SIFNOS","ref":"RGDE2617191","due":"26BR0013402852","status":"OK / COMPLETO","obs":"Status OK / COMPLETO = documentacao enviada (ainda constava no follow-up)","saiuEm":"2026-09-02"},{"lista":"enviados","navio":"MV SIFNOS","ref":"RGDE2617192","due":"26BR0013402895","status":"OK / COMPLETO","obs":"Status OK / COMPLETO = documentacao enviada (ainda constava no follow-up)","saiuEm":"2026-09-02"},{"lista":"enviados","navio":"MV SIFNOS","ref":"RGDE2617193","due":"26BR0013402933","status":"OK / COMPLETO","obs":"Status OK / COMPLETO = documentacao enviada (ainda constava no follow-up)","saiuEm":"2026-09-02"},{"lista":"enviados","navio":"MV STAR EXPLORER","ref":"RGDE2617555","due":"26BR0014231466","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-09-02"},{"lista":"enviados","navio":"MV TRANS ASIA","ref":"RGDE2617577","due":"26BR0014326262","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-09-02"},{"lista":"enviados","navio":"MV UNITY MOON","ref":"RGDE2617280","due":"26BR0013670865","status":"OK / COMPLETO","obs":"Status OK / COMPLETO = documentacao enviada (ainda constava no follow-up)","saiuEm":"2026-09-02"},{"lista":"enviados","navio":"MV UNITY MOON","ref":"RGDE2617281","due":"26BR0013670903","status":"OK / COMPLETO","obs":"Status OK / COMPLETO = documentacao enviada (ainda constava no follow-up)","saiuEm":"2026-09-02"},{"lista":"enviados","navio":"MV XIN QI XING","ref":"RGDE2617493","due":"26BR0014171501","status":"OK / COMPLETO","obs":"Saiu do follow-up = documentacao enviada/encerrada","saiuEm":"2026-09-02"},{"lista":"enviados","navio":"YANGZE 17 (EX: NONDAS)","ref":"RGDE2617410","due":"26BR0013947832","status":"OK / COMPLETO","obs":"Status OK / COMPLETO = documentacao enviada (ainda constava no follow-up)","saiuEm":"2026-09-02"},{"lista":"enviados","navio":"YANGZE 17 (EX: NONDAS)","ref":"RGDE2617411","due":"26BR0013947859","status":"OK / COMPLETO","obs":"Status OK / COMPLETO = documentacao enviada (ainda constava no follow-up)","saiuEm":"2026-09-02"},{"lista":"enviados","navio":"YANGZE 17 (EX: NONDAS)","ref":"RGDE2617412","due":"26BR0013947883","status":"OK / COMPLETO","obs":"Status OK / COMPLETO = documentacao enviada (ainda constava no follow-up)","saiuEm":"2026-09-02"},{"lista":"enviados","navio":"YANGZE 17 (EX: NONDAS)","ref":"RGDE2617413","due":"26BR0013947913","status":"OK / COMPLETO","obs":"Status OK / COMPLETO = documentacao enviada (ainda constava no follow-up)","saiuEm":"2026-09-02"},{"lista":"enviados","navio":"MV BH SHIJIAZHUANG","ref":"RGDE2617619","due":"26BR0014494491","status":"OK / COMPLETO","obs":"Saiu do follow-up e estava OK / COMPLETO","saiuEm":"2026-09-03"},{"lista":"enviados","navio":"MV BH SHIJIAZHUANG","ref":"RGDE2617620","due":"26BR0014494521","status":"OK / COMPLETO","obs":"Saiu do follow-up e estava OK / COMPLETO","saiuEm":"2026-09-03"},{"lista":"enviados","navio":"MV BH SHIJIAZHUANG","ref":"RGDE2617621","due":"26BR0014494530","status":"OK / COMPLETO","obs":"Saiu do follow-up e estava OK / COMPLETO","saiuEm":"2026-09-03"},{"lista":"enviados","navio":"MV MATHRAKI","ref":"RGDE2617569","due":"26BR0014290004","status":"OK / COMPLETO","obs":"Saiu do follow-up e estava OK / COMPLETO","saiuEm":"2026-09-03"},{"lista":"enviados","navio":"MV ROYAL MIDORI","ref":"RGDE2617646","due":"26BR0014505019","status":"OK / COMPLETO","obs":"Saiu do follow-up e estava OK / COMPLETO","saiuEm":"2026-09-03"},{"lista":"enviados","navio":"MV ROYAL MIDORI","ref":"RGDE2617647","due":"26BR0014505043","status":"OK / COMPLETO","obs":"Saiu do follow-up e estava OK / COMPLETO","saiuEm":"2026-09-03"},{"lista":"enviados","navio":"MV STAR BETTY","ref":"RGDE2617703","due":"26BR0014661720","status":"OK / COMPLETO","obs":"Saiu do follow-up e estava OK / COMPLETO","saiuEm":"2026-09-03"},{"lista":"enviados","navio":"TOLMI (EX: EXPLORER K)","ref":"RGDE2617405","due":"26BR0013940323","status":"OK / COMPLETO","obs":"Saiu do follow-up e estava OK / COMPLETO","saiuEm":"2026-09-03"},{"lista":"enviados","navio":"TOLMI (EX: EXPLORER K)","ref":"RGDE2617406","due":"26BR0013940382","status":"OK / COMPLETO","obs":"Saiu do follow-up e estava OK / COMPLETO","saiuEm":"2026-09-03"},{"lista":"enviados","navio":"TOLMI (EX: EXPLORER K)","ref":"RGDE2617407","due":"26BR0013940412","status":"OK / COMPLETO","obs":"Saiu do follow-up e estava OK / COMPLETO","saiuEm":"2026-09-03"},{"lista":"enviados","navio":"TOLMI (EX: EXPLORER K)","ref":"RGDE2617408","due":"26BR0013940471","status":"OK / COMPLETO","obs":"Saiu do follow-up e estava OK / COMPLETO","saiuEm":"2026-09-03"}],"divergencias":[{"tipo":"DUE alterada p/ mesma REF","chave":"RGDE2616596","detalhe":"MV ECO COLONEL: versao anterior tinha 26BR0011975720; o follow-up trouxe 26BR0011975120 em 21/08 e 25/08","acao":"Adotado 26BR0011975120 (confirmado em 2 rodadas). O navio tinha sumido da planilha e voltou como A VERIFICAR","situacao":"RESOLVIDA"},{"tipo":"REF repetida no follow-up","chave":"RGDE2617132","detalhe":"Mesma REF em 2 DUEs: 26BR0013293301, 26BR0013649726","acao":"Checar se e erro de digitacao no follow-up","situacao":"ABERTA"}]};
+  // Base inicial do follow-up (planilha Mexico_Atualizado_0309.xlsx, 03/09/2026).
+  // Mora em mexico-seed.json e só é buscada no primeiro acesso, quando ainda
+  // não há nada salvo nem vindo da sincronização. Depois disso o arquivo nunca
+  // mais é lido, então não faz sentido carregar 24 KB em toda visita.
+  var MEXICO_SEED_URL = 'mexico-seed.json';
+  // Data em que as linhas da base inicial comprovadamente já estavam no
+  // follow-up: é o ponto de partida da contagem de "esperando desde" para
+  // tudo que foi criado antes desse campo existir.
+  var MEXICO_SEED_DATE = '2026-09-03';
   var SECTION_DEFAULTS = { entry: true, yield: false, weekly: false };
   var AUTO_SYNC_INTERVAL_MS = 2 * 60 * 1000;
   var NOTIFY_THROTTLE_MS = 2 * 60 * 60 * 1000;
@@ -1171,6 +1237,7 @@
   var mxFilters = { status: 'all', busca: '', buscaEnviados: '', onlyNovas: false, onlyAlerts: false };
   var mxPendingUpdate = null;
   var lotesDisponiveis = [];
+  var mxSeedIndisponivel = false;
 
   // ---------------------------------------------------------------------
   // Persistência
@@ -1202,15 +1269,54 @@
       var raw = localStorage.getItem(MEXICO_STORAGE_KEY);
       if (raw) stored = JSON.parse(raw);
     } catch (e) {}
-    if (!stored || !stored.rows || !stored.rows.length) {
-      stored = { rows: JSON.parse(JSON.stringify(MEXICO_SEED.rows)), divergencias: JSON.parse(JSON.stringify(MEXICO_SEED.divergencias)), updatedAt: 0 };
-      stored.rows.forEach(function (r) { r.updatedAt = 0; });
-      stored.divergencias.forEach(function (d) { d.updatedAt = 0; });
-    }
+    if (!stored) stored = { rows: [], divergencias: [], updatedAt: 0 };
     stored.rows = stored.rows || [];
-    stored.rows.forEach(function (r) { if (!r.id) r.id = mxRowId(r.ref, r.due); });
     stored.divergencias = stored.divergencias || [];
+    normalizeMexicoRows(stored.rows);
     return stored;
+  }
+
+  function normalizeMexicoRows(rows) {
+    rows.forEach(function (r) {
+      if (!r.id) r.id = mxRowId(r.ref, r.due);
+      if (r.lista !== 'enviados' && !r.desde) r.desde = MEXICO_SEED_DATE;
+    });
+  }
+
+  // Primeiro acesso: busca a base inicial num arquivo separado. Só aplica se,
+  // quando a resposta chegar, ainda não houver nenhuma linha — assim a
+  // sincronização, que roda em paralelo, sempre ganha e nenhuma DUE apagada
+  // volta do passado. Em file:// o fetch nem é tentado.
+  function carregarSeedMexico() {
+    if (mexico.rows.length) return;
+    if (location.protocol.indexOf('http') !== 0) {
+      mxSeedIndisponivel = true;
+      renderMexico();
+      return;
+    }
+    fetch(MEXICO_SEED_URL + '?t=' + Date.now()).then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(function (seed) {
+      if (mexico.rows.length) return;
+      mexico.rows = seed.rows || [];
+      mexico.divergencias = seed.divergencias || [];
+      mexico.rows.forEach(function (r) { r.updatedAt = 0; });
+      mexico.divergencias.forEach(function (d) { d.updatedAt = 0; });
+      normalizeMexicoRows(mexico.rows);
+      saveMexico();
+      if (sincronizarFeitosMexico()) saveData();
+      renderAll();
+    }).catch(function () {});
+  }
+
+  // Dias corridos entre uma data ISO e hoje. Null quando não há data.
+  function diasDesde(iso) {
+    if (!iso) return null;
+    var inicio = new Date(iso + 'T00:00:00');
+    if (isNaN(inicio.getTime())) return null;
+    var hoje = new Date(todayISO() + 'T00:00:00');
+    return Math.max(0, Math.round((hoje - inicio) / 86400000));
   }
 
   function saveMexico() {
@@ -1484,6 +1590,9 @@
   var el = {
     clockDate: document.getElementById('clockDate'),
     dailyCards: document.getElementById('dailyCards'),
+    openCount: document.getElementById('openCount'),
+    openSummary: document.getElementById('openSummary'),
+    openBody: document.getElementById('openBody'),
     pendingAlert: document.getElementById('pendingAlert'),
     pendingAlertCount: document.getElementById('pendingAlertCount'),
     pendingAlertBtn: document.getElementById('pendingAlertBtn'),
@@ -1546,6 +1655,7 @@
     copyMonthlyEmailBtn: document.getElementById('copyMonthlyEmailBtn'),
     historyCount: document.getElementById('historyCount'),
     historyBody: document.getElementById('historyBody'),
+    historyPager: document.getElementById('historyPager'),
     filterCategoria: document.getElementById('filterCategoria'),
     filterStatus: document.getElementById('filterStatus'),
     filterDe: document.getElementById('filterDe'),
@@ -1735,6 +1845,124 @@
     } else {
       el.pendingAlert.classList.add('hidden');
     }
+  }
+
+  // ---------------------------------------------------------------------
+  // Em aberto agora
+  //
+  // O dashboard registrava quase só trabalho concluído: as DUEs à espera de
+  // documentação viviam apenas na página México e os processos pendentes só no
+  // histórico, então abrir o dashboard de manhã não dizia o que falta fazer.
+  // Este bloco junta as duas pontas e ordena pelo que está parado há mais
+  // tempo — a informação que o chefe pergunta.
+  // ---------------------------------------------------------------------
+  var OPEN_LIST_LIMIT = 6;
+  var openShowAllMx = false;
+  var openShowAllPend = false;
+
+  function openMexicoGroups() {
+    var grupos = {};
+    var ordem = [];
+    mxNavios().forEach(function (r) {
+      var g = grupos[r.navio];
+      if (!g) {
+        g = grupos[r.navio] = { navio: r.navio, dues: 0, desde: r.desde || '', status: {} };
+        ordem.push(r.navio);
+      }
+      g.dues++;
+      if (r.desde && (!g.desde || r.desde < g.desde)) g.desde = r.desde;
+      g.status[r.status] = (g.status[r.status] || 0) + 1;
+    });
+    return ordem.map(function (nome) {
+      var g = grupos[nome];
+      var statusKeys = Object.keys(g.status);
+      statusKeys.sort(function (a, b) { return g.status[b] - g.status[a]; });
+      g.statusLabel = statusKeys[0] || '—';
+      g.dias = diasDesde(g.desde);
+      return g;
+    }).sort(function (a, b) {
+      return (b.dias === null ? -1 : b.dias) - (a.dias === null ? -1 : a.dias) ||
+        b.dues - a.dues ||
+        a.navio.localeCompare(b.navio, 'pt-BR');
+    });
+  }
+
+  function openPendingTasks() {
+    return tasks.filter(function (t) { return t.status === 'Pendente'; }).sort(function (a, b) {
+      return String(a.data).localeCompare(String(b.data)) ||
+        a.numeroProcesso.localeCompare(b.numeroProcesso, 'pt-BR');
+    });
+  }
+
+  function openDaysChip(dias) {
+    var cls = 'open-days';
+    if (dias !== null && dias >= 30) cls += ' open-days-2';
+    else if (dias !== null && dias >= 15) cls += ' open-days-1';
+    return '<span class="' + cls + '">' + (dias === null ? '—' : dias + 'd') + '</span>';
+  }
+
+  function renderOpenPanel() {
+    var grupos = openMexicoGroups();
+    var pendentes = openPendingTasks();
+    var dues = grupos.reduce(function (n, g) { return n + g.dues; }, 0);
+    var travadas = grupos.filter(function (g) { return g.dias !== null && g.dias >= 15; }).length;
+    var total = dues + pendentes.length;
+
+    el.openCount.textContent = total ? total + ' item(ns) em aberto' : 'nada em aberto';
+
+    var chips = [];
+    chips.push('<span class="badge badge-mexico">' + dues + ' DUE(s) do México em ' + grupos.length + ' navio(s)</span>');
+    if (pendentes.length) chips.push('<span class="badge badge-warn">' + pendentes.length + ' processo(s) pendente(s)</span>');
+    if (travadas) chips.push('<span class="badge badge-warn">' + travadas + ' navio(s) parado(s) há 15 dias ou mais</span>');
+    if (!total) chips = ['<span class="badge badge-ok">Tudo que entrou já foi enviado</span>'];
+    el.openSummary.innerHTML = chips.join('');
+
+    var colMx;
+    if (!grupos.length) {
+      colMx = '<p class="open-empty">Nenhuma DUE aguardando documentação.</p>';
+    } else {
+      var visiveis = openShowAllMx ? grupos : grupos.slice(0, OPEN_LIST_LIMIT);
+      colMx = '<div class="open-list">' + visiveis.map(function (g) {
+        return '<div class="open-item" style="--cat: var(--cat-mexico)">' +
+          '<div class="open-item-main">' +
+            '<div class="open-item-name">' + escapeHtml(g.navio) + '</div>' +
+            '<div class="open-item-sub">' + g.dues + ' DUE(s) · ' + escapeHtml(g.statusLabel) + '</div>' +
+          '</div>' +
+          openDaysChip(g.dias) +
+          '<button type="button" class="btn btn-text" style="padding:4px 8px;font-size:12px;" data-opennavio="' + escapeHtml(g.navio) + '">Abrir</button>' +
+        '</div>';
+      }).join('') + '</div>';
+      if (grupos.length > OPEN_LIST_LIMIT) {
+        colMx += '<div class="open-more"><button type="button" class="btn btn-text" data-openmore="mx">' +
+          (openShowAllMx ? 'Mostrar menos' : 'Ver todos os ' + grupos.length + ' navios') + '</button></div>';
+      }
+    }
+
+    var colPend;
+    if (!pendentes.length) {
+      colPend = '<p class="open-empty">Nenhum processo pendente no histórico.</p>';
+    } else {
+      var visP = openShowAllPend ? pendentes : pendentes.slice(0, OPEN_LIST_LIMIT);
+      colPend = '<div class="open-list">' + visP.map(function (t) {
+        var cat = categoryById(t.categoria);
+        return '<div class="open-item" style="--cat: var(--cat-' + (cat ? cat.id : 'granel') + ')">' +
+          '<div class="open-item-main">' +
+            '<div class="open-item-name">' + escapeHtml(t.numeroProcesso) + '</div>' +
+            '<div class="open-item-sub">' + escapeHtml(cat ? cat.short : t.categoria) + ' · ' + formatBR(t.data) + '</div>' +
+          '</div>' +
+          openDaysChip(diasDesde(t.data)) +
+          '<button type="button" class="btn btn-text" style="padding:4px 8px;font-size:12px;" data-openconcluir="' + escapeHtml(t.id) + '">Concluir</button>' +
+        '</div>';
+      }).join('') + '</div>';
+      if (pendentes.length > OPEN_LIST_LIMIT) {
+        colPend += '<div class="open-more"><button type="button" class="btn btn-text" data-openmore="pend">' +
+          (openShowAllPend ? 'Mostrar menos' : 'Ver todos os ' + pendentes.length + ' pendentes') + '</button></div>';
+      }
+    }
+
+    el.openBody.innerHTML =
+      '<div><p class="open-col-title">México · aguardando documentação</p>' + colMx + '</div>' +
+      '<div><p class="open-col-title">Histórico · processos pendentes</p>' + colPend + '</div>';
   }
 
   // ---------------------------------------------------------------------
@@ -2248,6 +2476,7 @@
       { label: 'Navios distintos', value: Object.keys(counts).length },
       { label: 'Novas nesta rodada', value: navios.filter(function (r) { return r.nova; }).length },
       { label: 'Já enviadas', value: mxEnviados().length },
+      { label: 'Paradas +15 dias', value: navios.filter(function (r) { var d = diasDesde(r.desde); return d !== null && d >= 15; }).length },
       { label: 'Divergências abertas', value: mexico.divergencias.filter(function (d) { return d.situacao !== 'RESOLVIDA'; }).length },
     ];
     el.mxPanel.innerHTML = stats.map(function (s) {
@@ -2264,12 +2493,27 @@
     return '<select class="mx-status-sel ' + mxStatusClass(row.status) + '" data-mxstatus="' + escapeHtml(row.id) + '">' + opts + '</select>';
   }
 
+  // "Esperando": há quantos dias a DUE está no follow-up sem ser enviada.
+  // Acima de 15 dias fica em laranja, acima de 30 em vermelho — é o que
+  // responde "o que está travado" sem precisar abrir a planilha.
+  function mxEsperandoCell(r) {
+    var dias = diasDesde(r.desde);
+    var cls = 'mx-esp';
+    if (dias !== null && dias >= 30) cls += ' mx-esp-2';
+    else if (dias !== null && dias >= 15) cls += ' mx-esp-1';
+    var titulo = r.desde ? 'No follow-up desde ' + formatBR(r.desde) : 'Sem data de entrada registrada';
+    return '<td class="' + cls + '" title="' + escapeHtml(titulo) + '">' + (dias === null ? '—' : dias + 'd') + '</td>';
+  }
+
   function renderMxNavios() {
     var rows = mxFilteredNavios();
     var counts = mxCountByNavio(mxNavios());
     var refCounts = mxCountByRef(mxNavios());
     if (!rows.length) {
-      el.mxNaviosBody.innerHTML = '<tr><td colspan="7" class="empty-row">Nenhuma DUE encontrada.</td></tr>';
+      var vazio = mxSeedIndisponivel && !mexico.rows.length
+        ? 'Base inicial não carregada — abra o dashboard pelo endereço publicado, não como arquivo local.'
+        : 'Nenhuma DUE encontrada.';
+      el.mxNaviosBody.innerHTML = '<tr><td colspan="8" class="empty-row">' + escapeHtml(vazio) + '</td></tr>';
       return;
     }
     var lastNavio = null;
@@ -2284,6 +2528,7 @@
         '<td class="mx-ref' + (refCounts[r.ref] > 1 ? ' mx-dup' : '') + '" title="' + (refCounts[r.ref] > 1 ? 'REF repetida em mais de uma DUE' : '') + '">' + escapeHtml(r.ref) + '</td>' +
         '<td class="mx-due' + (mxDueValida(r.due) ? '' : ' mx-invalid') + '" title="' + (mxDueValida(r.due) ? '' : 'DUE fora do padrão AABR + 10 dígitos') + '">' + escapeHtml(r.due) + '</td>' +
         '<td>' + mxStatusSelectHtml(r) + '</td>' +
+        mxEsperandoCell(r) +
         '<td class="truncate" title="' + escapeHtml(r.obs || '') + '" style="color:var(--muted);">' + (escapeHtml(r.obs || '') || '—') + '</td>' +
         '<td class="num mx-qtd">' + (first ? counts[r.navio] : '') + '</td>' +
         '<td><div class="row-actions">' +
@@ -2509,10 +2754,10 @@
     });
 
     plan.novasNavioExistente.forEach(function (n) {
-      mexico.rows.push({ id: mxRowId(n.ref, n.due), lista: 'navios', navio: n.navio, ref: n.ref, due: n.due, status: n.status, obs: 'NOVA - herdou status predominante do navio, confirmar', nova: 1, updatedAt: stamp });
+      mexico.rows.push({ id: mxRowId(n.ref, n.due), lista: 'navios', navio: n.navio, ref: n.ref, due: n.due, status: n.status, obs: 'NOVA - herdou status predominante do navio, confirmar', nova: 1, desde: todayISO(), updatedAt: stamp });
     });
     plan.novasNavioInedito.forEach(function (n) {
-      mexico.rows.push({ id: mxRowId(n.ref, n.due), lista: 'navios', navio: n.navio, ref: n.ref, due: n.due, status: n.status, obs: 'NOVA - navio inedito, confirmar status', nova: 1, updatedAt: stamp });
+      mexico.rows.push({ id: mxRowId(n.ref, n.due), lista: 'navios', navio: n.navio, ref: n.ref, due: n.due, status: n.status, obs: 'NOVA - navio inedito, confirmar status', nova: 1, desde: todayISO(), updatedAt: stamp });
     });
 
     saveAndRenderMexico();
@@ -2573,12 +2818,14 @@
   function mxExportCsv() {
     var rows = mxSortedNavios();
     var counts = mxCountByNavio(mxNavios());
-    var lines = [['NAVIO', 'REF. PIBERNAT', 'DUE', 'STATUS', 'OBS', 'QTD DUES'].map(csvEscape).join(';')];
+    var lines = [['NAVIO', 'REF. PIBERNAT', 'DUE', 'STATUS', 'ESPERANDO DESDE', 'DIAS ESPERANDO', 'OBS', 'QTD DUES'].map(csvEscape).join(';')];
     var lastNavio = null;
     rows.forEach(function (r) {
       var first = r.navio !== lastNavio;
       lastNavio = r.navio;
-      lines.push([first ? r.navio : '', r.ref, r.due, r.status, r.obs || '', first ? counts[r.navio] : ''].map(csvEscape).join(';'));
+      var dias = diasDesde(r.desde);
+      lines.push([first ? r.navio : '', r.ref, r.due, r.status, r.desde ? formatBR(r.desde) : '',
+        dias === null ? '' : dias, r.obs || '', first ? counts[r.navio] : ''].map(csvEscape).join(';'));
     });
     downloadCsv(lines, 'mexico-followup_' + todayISO() + '.csv');
   }
@@ -3061,6 +3308,7 @@
           JSON.stringify(mergedMexico) !== JSON.stringify(mexico);
         tasks = merged;
         mexico = mergedMexico;
+        normalizeMexicoRows(mexico.rows);
         if (sincronizarFeitosMexico()) changedLocally = true;
         if (changedLocally) {
           saveData();
@@ -3104,11 +3352,40 @@
     });
   }
 
+  // O histórico cresce ~30 registros por semana. Renderizar tudo de uma vez
+  // só funciona enquanto são poucas centenas de linhas, então a tabela mostra
+  // uma página por vez. A ordem continua a mesma: do maior número de processo
+  // para o menor.
+  var HISTORY_PAGE_SIZE = 50;
+  var historyPage = 1;
+
+  function resetHistoryPage() {
+    historyPage = 1;
+  }
+
   function renderHistoryTable() {
     var rows = getFilteredTasks();
-    el.historyCount.textContent = rows.length + ' registro(s)';
-    el.historyBody.innerHTML = rows.length ? rows.map(rowHtml).join('') :
+    var totalPages = Math.max(1, Math.ceil(rows.length / HISTORY_PAGE_SIZE));
+    if (historyPage > totalPages) historyPage = totalPages;
+    if (historyPage < 1) historyPage = 1;
+    var start = (historyPage - 1) * HISTORY_PAGE_SIZE;
+    var pageRows = rows.slice(start, start + HISTORY_PAGE_SIZE);
+
+    el.historyCount.textContent = rows.length + ' registro(s)' +
+      (totalPages > 1 ? ' · mostrando ' + (start + 1) + '–' + (start + pageRows.length) : '');
+    el.historyBody.innerHTML = pageRows.length ? pageRows.map(rowHtml).join('') :
       '<tr><td colspan="6" class="empty-row">Nenhum registro encontrado.</td></tr>';
+
+    if (totalPages <= 1) {
+      el.historyPager.classList.add('hidden');
+      el.historyPager.innerHTML = '';
+      return;
+    }
+    el.historyPager.classList.remove('hidden');
+    el.historyPager.innerHTML =
+      '<button type="button" class="btn btn-text" data-page="prev"' + (historyPage === 1 ? ' disabled' : '') + '>← Anteriores</button>' +
+      '<span class="pager-info">Página ' + historyPage + ' de ' + totalPages + '</span>' +
+      '<button type="button" class="btn btn-text" data-page="next"' + (historyPage === totalPages ? ' disabled' : '') + '>Próximas →</button>';
   }
 
   function rowHtml(t) {
@@ -3186,6 +3463,7 @@
   // Render geral
   // ---------------------------------------------------------------------
   function renderAll() {
+    renderOpenPanel();
     renderPendingAlert();
     renderDailyCards();
     renderYieldModule();
@@ -3556,6 +3834,7 @@
     row.lista = 'navios';
     row.saiuEm = '';
     row.obs = '';
+    row.desde = todayISO();
     row.updatedAt = Date.now();
     saveAndRenderMexico();
     toast('DUE devolvida para o follow-up.');
@@ -3577,11 +3856,19 @@
   el.exportMonthlyCsvBtn.addEventListener('click', exportMonthlyCsv);
   el.copyMonthlyEmailBtn.addEventListener('click', copyMonthlyEmailText);
 
-  el.filterCategoria.addEventListener('change', function () { filters.categoria = this.value; renderHistoryTable(); });
-  el.filterStatus.addEventListener('change', function () { filters.status = this.value; renderHistoryTable(); });
-  el.filterDe.addEventListener('change', function () { filters.de = this.value; renderHistoryTable(); });
-  el.filterAte.addEventListener('change', function () { filters.ate = this.value; renderHistoryTable(); });
-  el.filterBusca.addEventListener('input', function () { filters.busca = this.value; renderHistoryTable(); });
+  el.filterCategoria.addEventListener('change', function () { filters.categoria = this.value; resetHistoryPage(); renderHistoryTable(); });
+  el.filterStatus.addEventListener('change', function () { filters.status = this.value; resetHistoryPage(); renderHistoryTable(); });
+  el.filterDe.addEventListener('change', function () { filters.de = this.value; resetHistoryPage(); renderHistoryTable(); });
+  el.filterAte.addEventListener('change', function () { filters.ate = this.value; resetHistoryPage(); renderHistoryTable(); });
+  el.filterBusca.addEventListener('input', function () { filters.busca = this.value; resetHistoryPage(); renderHistoryTable(); });
+
+  el.historyPager.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-page]');
+    if (!btn || btn.disabled) return;
+    historyPage += btn.getAttribute('data-page') === 'next' ? 1 : -1;
+    renderHistoryTable();
+    el.historyPager.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  });
   el.clearFiltersBtn.addEventListener('click', function () {
     filters = { categoria: 'all', status: 'all', busca: '', de: '', ate: '' };
     el.filterCategoria.value = 'all';
@@ -3589,12 +3876,36 @@
     el.filterDe.value = '';
     el.filterAte.value = '';
     el.filterBusca.value = '';
+    resetHistoryPage();
     renderHistoryTable();
+  });
+
+  el.openBody.addEventListener('click', function (e) {
+    var more = e.target.closest('[data-openmore]');
+    if (more) {
+      if (more.getAttribute('data-openmore') === 'mx') openShowAllMx = !openShowAllMx;
+      else openShowAllPend = !openShowAllPend;
+      renderOpenPanel();
+      return;
+    }
+    var abrir = e.target.closest('[data-opennavio]');
+    if (abrir) {
+      var navio = abrir.getAttribute('data-opennavio');
+      mxFilters.busca = navio.toLowerCase();
+      el.mxBusca.value = navio;
+      setMxTab('navios');
+      renderMxNavios();
+      setView('mexico');
+      return;
+    }
+    var concluir = e.target.closest('[data-openconcluir]');
+    if (concluir) toggleStatus(concluir.getAttribute('data-openconcluir'));
   });
 
   el.pendingAlertBtn.addEventListener('click', function () {
     filters.status = 'Pendente';
     el.filterStatus.value = 'Pendente';
+    resetHistoryPage();
     renderHistoryTable();
     setView('historico');
   });
@@ -3690,6 +4001,7 @@
   updateClock();
   setInterval(updateClock, 60000);
   renderAll();
+  carregarSeedMexico();
 
   (function initSync() {
     var cfg = loadSyncConfig();

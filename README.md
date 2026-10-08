@@ -1,38 +1,37 @@
-# Conferência de Documentos Aduaneiros
+# Dashboard COMEX
 
-Compara um documento de "Referência" (ex: Invoice) com um "Doc Produzido"
-(ex: Certificado de Origem) e cruza os dados vitais (CNPJ, Razão Social,
-Endereço, Peso Bruto/Líquido, Valor Total) com tolerância de erro zero.
+Painel de rotina de trabalho para exportação (granel), em arquivo único:
+`comex-dashboard.html`. Publicado por GitHub Pages a cada push nesta branch.
 
-Projeto 100% Node.js/Next.js — front-end e back-end no mesmo app, pronto
-para deploy na Vercel. Veja [`architecture.md`](architecture.md) para os
-detalhes do pipeline.
+## Páginas
 
-## Rodando localmente
+- **Dashboard** — o que está em aberto agora, indicadores do dia, lançamento
+  de novos registros, lotes prontos para importar, rendimento da semana e
+  relatório (semanal/mensal, em tabela, resumo escrito, CSV ou e-mail).
+- **Histórico** — todos os processos registrados, do maior número para o
+  menor, com filtros e paginação.
+- **México** — follow-up de DUEs à espera de documentação, com cruzamento
+  automático de um follow-up novo, exportação em CSV e geração do `.xlsx` no
+  mesmo formato da planilha enviada ao chefe.
+- **Tutorial** — referência dos fluxos operacionais, com link para o
+  [passo a passo de lançamento de CE](tutorial-ce/).
 
-```sh
-cd frontend
-npm install
-npm run dev
-```
+## Dados
 
-Abra `http://localhost:3000`.
+Tudo fica no `localStorage` do navegador. A sincronização opcional por Gist
+replica os dados entre computadores, mesclando registro por registro (quem
+editou mais recentemente ganha), então nenhum PC sobrescreve o outro.
 
-Por padrão o app roda em **modo mock** (`MOCK_MODE=true` em
-`frontend/.env.local`) — nenhuma chamada à API da Anthropic é feita, zero
-custo. Os valores extraídos são fixos/de exemplo, mas OCR, comparação e
-bounding boxes rodam de verdade.
+`mexico-seed.json` é a base inicial do follow-up (planilha de 03/09/2026).
+Só é buscada no primeiro acesso, quando ainda não há nada salvo.
 
-Para ligar a extração real (paga), edite `frontend/.env.local`:
+## Lotes
 
-```
-MOCK_MODE=false
-ANTHROPIC_API_KEY=sk-ant-sua-chave-real
-```
+`lotes/index.json` lista lotes de registros prontos; cada um aponta para um
+`lotes/<id>.json`. O dashboard mostra os lotes disponíveis e importa com um
+clique, sem copiar e colar.
 
-## Outros arquivos
+---
 
-- [`demo.html`](demo.html) — demo estático standalone (HTML/JS puro, sem
-  dependências), com dados sintéticos. Só para referência visual.
-- [`architecture.md`](architecture.md) — pipeline completo, por que cada
-  lib foi escolhida, contrato JSON, instruções de deploy na Vercel.
+O projeto original deste repositório (conferência de documentos aduaneiros,
+app Next.js) está na branch `master`.
