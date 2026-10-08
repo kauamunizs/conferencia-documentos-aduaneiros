@@ -460,6 +460,10 @@
   .mx-esp { white-space: nowrap; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
   .mx-esp.mx-esp-1 { color: var(--warn); font-weight: 600; }
   .mx-esp.mx-esp-2 { color: var(--danger); font-weight: 700; }
+  .mx-concl { white-space: nowrap; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .mx-concl.mx-concl-ok { color: var(--ink); }
+  .mx-sumiram { display: flex; margin-top: 14px; font-weight: 600; }
+  .mx-preview-resto { color: var(--muted); font-style: italic; list-style: none; margin-left: -1em; }
   .mx-status-ok { color: var(--ok); font-weight: 600; }
   .mx-qtd { font-weight: 600; font-variant-numeric: tabular-nums; }
   .mx-legend { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 3px; }
@@ -1005,6 +1009,7 @@
               <input id="mxBusca" type="text" placeholder="Buscar navio, REF ou DUE..." />
               <label class="mx-check"><input id="mxOnlyNovas" type="checkbox" /> Só novas</label>
               <label class="mx-check"><input id="mxOnlyAlerts" type="checkbox" /> Só com alerta</label>
+              <label class="mx-check"><input id="mxOnlyFarol" type="checkbox" /> Só farol vermelho</label>
               <button id="mxUpdateBtn" type="button" class="btn btn-primary">Atualizar com novo follow-up</button>
               <button id="mxXlsxBtn" type="button" class="btn btn-secondary">Gerar planilha (Excel)</button>
               <button id="mxExportBtn" type="button" class="btn btn-text">Exportar CSV</button>
@@ -1012,6 +1017,11 @@
 
             <div id="mxUpdatePanel" class="import-panel hidden">
               <p class="sync-help">Cole abaixo o follow-up novo (CSV ou colado direto do Excel). O cruzamento é refeito automaticamente: marca as novas, move as enviadas, registra divergências e reordena. Só é aplicado depois que você conferir a prévia.</p>
+              <div id="mxFollowupsBloco" class="lotes-bloco hidden">
+                <p class="lotes-titulo">Follow-ups prontos</p>
+                <p class="sync-help" style="margin:0 0 12px;">Publicados junto com o dashboard. Carregam a planilha aqui para você conferir a prévia.</p>
+                <div id="mxFollowupsLista"></div>
+              </div>
               <div class="field">
                 <label for="mxUpdateText">Follow-up novo</label>
                 <textarea id="mxUpdateText" rows="6" placeholder="NAVIO;REF. PIBERNAT;DUE&#10;MV AREOPAGUS;RGDE2616670;26BR0012246776&#10;..."></textarea>
@@ -1024,14 +1034,15 @@
             </div>
 
             <div class="table-wrap">
-              <table class="ledger mx-table" style="min-width:940px;">
+              <table class="ledger mx-table" style="min-width:1050px;">
                 <thead>
                   <tr>
                     <th>Navio</th>
                     <th>REF. Pibernat</th>
                     <th>DUE</th>
                     <th>Status</th>
-                    <th class="num" title="Dias corridos desde que a DUE entrou no follow-up">Esperando</th>
+                    <th class="num" title="Dias desde a averbação; farol vermelho a partir de 7 dias">Esperando</th>
+                    <th title="Fim do processo da DUE — não quer dizer que foi enviado: a invoice ainda não chegou">Conclusão</th>
                     <th>Obs</th>
                     <th class="num">Qtd DUEs</th>
                     <th style="text-align:right;">Ações</th>
@@ -1091,14 +1102,16 @@
                 <li><span class="mx-legend mx-legend-falta"></span> <strong>Status em vermelho</strong> = documento pendente. <span class="mx-legend mx-legend-ok"></span> <strong>Verde</strong> = invoice já em mãos.</li>
                 <li><strong>DUE em vermelho negrito</strong> = número fora do padrão AABR + 10 dígitos.</li>
                 <li><strong>REF em roxo negrito</strong> = a mesma REF aparece em mais de uma DUE.</li>
-                <li>A ordem segue a <strong>quantidade de DUEs por navio</strong>: navios com mais DUEs ficam no topo (4-3-2-1).</li>
+                <li><strong>Esperando</strong> = dias desde a averbação, com o mesmo farol da planilha: 🔴 a partir de 7 dias, 🟢 abaixo disso. Sem data de averbação, conta desde a entrada aqui.</li>
+                <li><strong>Conclusão</strong> = o processo da DUE terminou. <strong>Não</strong> quer dizer que foi feito: a invoice ainda não chegou, então a linha continua em aberto até você clicar em "Enviar".</li>
+                <li>A ordem segue o <strong>tempo de espera</strong>: o navio parado há mais tempo fica no topo. Empate volta para a quantidade de DUEs.</li>
                 <li>O status tem lista fixa, para evitar variação de escrita ("TEM  INV" vs "TEM INV").</li>
               </ul>
             </div>
             <div class="tutorial-topic">
               <h3>Atualização automática</h3>
               <ol>
-                <li>Clique em <strong>"Atualizar com novo follow-up"</strong> e cole o follow-up novo (CSV ou colado direto do Excel). As colunas de navio, REF e DUE são identificadas pelo cabeçalho.</li>
+                <li>Clique em <strong>"Atualizar com novo follow-up"</strong>. Se a planilha já estiver publicada, use <strong>"Carregar"</strong> em "Follow-ups prontos"; senão, cole o CSV (ou copie direto do Excel). As colunas são identificadas pelo cabeçalho.</li>
                 <li>Clique em <strong>"Conferir prévia"</strong>: o cruzamento é refeito e você vê exatamente o que vai entrar, sair e mudar.</li>
                 <li>Confirme para aplicar. A marcação "nova" da rodada anterior é limpa a cada atualização, e a lista é reordenada sozinha.</li>
               </ol>
@@ -1112,7 +1125,9 @@
                 <li>DUE nova de navio que já existia herda o status predominante do navio e entra marcada para confirmação.</li>
                 <li>DUE nova de navio inédito entra como <strong>"A VERIFICAR"</strong>.</li>
                 <li>Mesma REF em duas DUEs no follow-up gera divergência para checagem manual.</li>
-                <li>As colunas de embarque, averbação e farol do follow-up não entram aqui de propósito: este controle cuida só da documentação.</li>
+                <li>Embarque, averbação e conclusão são lidos do follow-up quando existem no cabeçalho e atualizam a linha sem mexer no status.</li>
+                <li>A coluna <strong>conclusão nunca envia nada</strong>: ela só marca o fim do processo da DUE, e a invoice continua pendente.</li>
+                <li>Se o follow-up novo vier de uma planilha com escopo diferente, desmarque na prévia a opção de tratar as que sumiram como enviadas.</li>
               </ul>
             </div>
           </div>
@@ -1239,8 +1254,9 @@
   var currentMonthlyReportRows = [];
   var currentMonthlyReportRange = null;
   var mexico = loadMexico();
-  var mxFilters = { status: 'all', busca: '', buscaEnviados: '', onlyNovas: false, onlyAlerts: false };
+  var mxFilters = { status: 'all', busca: '', buscaEnviados: '', onlyNovas: false, onlyAlerts: false, onlyFarol: false };
   var mxPendingUpdate = null;
+  var mxFollowupsDisponiveis = [];
   var lotesDisponiveis = [];
   var mxSeedIndisponivel = false;
 
@@ -1648,9 +1664,12 @@
     mxBuscaEnviados: document.getElementById('mxBuscaEnviados'),
     mxOnlyNovas: document.getElementById('mxOnlyNovas'),
     mxOnlyAlerts: document.getElementById('mxOnlyAlerts'),
+    mxOnlyFarol: document.getElementById('mxOnlyFarol'),
     mxUpdateBtn: document.getElementById('mxUpdateBtn'),
     mxUpdatePanel: document.getElementById('mxUpdatePanel'),
     mxUpdateText: document.getElementById('mxUpdateText'),
+    mxFollowupsBloco: document.getElementById('mxFollowupsBloco'),
+    mxFollowupsLista: document.getElementById('mxFollowupsLista'),
     mxPreviewBtn: document.getElementById('mxPreviewBtn'),
     mxUpdateCancelBtn: document.getElementById('mxUpdateCancelBtn'),
     mxPreview: document.getElementById('mxPreview'),
@@ -1871,11 +1890,12 @@
     mxNavios().forEach(function (r) {
       var g = grupos[r.navio];
       if (!g) {
-        g = grupos[r.navio] = { navio: r.navio, dues: 0, desde: r.desde || '', status: {} };
+        g = grupos[r.navio] = { navio: r.navio, dues: 0, desde: r.averbacao || r.desde || '', status: {} };
         ordem.push(r.navio);
       }
       g.dues++;
-      if (r.desde && (!g.desde || r.desde < g.desde)) g.desde = r.desde;
+      var ref = r.averbacao || r.desde;
+      if (ref && (!g.desde || ref < g.desde)) g.desde = ref;
       g.status[r.status] = (g.status[r.status] || 0) + 1;
     });
     return ordem.map(function (nome) {
@@ -1902,7 +1922,7 @@
   function openDaysChip(dias) {
     var cls = 'open-days';
     if (dias !== null && dias >= 30) cls += ' open-days-2';
-    else if (dias !== null && dias >= 15) cls += ' open-days-1';
+    else if (dias !== null && dias >= MX_FAROL_DIAS) cls += ' open-days-1';
     return '<span class="' + cls + '">' + (dias === null ? '—' : dias + 'd') + '</span>';
   }
 
@@ -1910,7 +1930,7 @@
     var grupos = openMexicoGroups();
     var pendentes = openPendingTasks();
     var dues = grupos.reduce(function (n, g) { return n + g.dues; }, 0);
-    var travadas = grupos.filter(function (g) { return g.dias !== null && g.dias >= 15; }).length;
+    var travadas = grupos.filter(function (g) { return g.dias !== null && g.dias >= MX_FAROL_DIAS; }).length;
     var total = dues + pendentes.length;
 
     el.openCount.textContent = total ? total + ' item(ns) em aberto' : 'nada em aberto';
@@ -1918,7 +1938,7 @@
     var chips = [];
     chips.push('<span class="badge badge-mexico">' + dues + ' DUE(s) do México em ' + grupos.length + ' navio(s)</span>');
     if (pendentes.length) chips.push('<span class="badge badge-warn">' + pendentes.length + ' processo(s) pendente(s)</span>');
-    if (travadas) chips.push('<span class="badge badge-warn">' + travadas + ' navio(s) parado(s) há 15 dias ou mais</span>');
+    if (travadas) chips.push('<span class="badge badge-warn">' + travadas + ' navio(s) no farol vermelho (' + MX_FAROL_DIAS + '+ dias da averbação)</span>');
     if (!total) chips = ['<span class="badge badge-ok">Tudo que entrou já foi enviado</span>'];
     el.openSummary.innerHTML = chips.join('');
 
@@ -2443,11 +2463,23 @@
   }
 
   // Navios com mais DUEs primeiro (4-3-2-1); dentro do navio, ordem por REF.
+  // Navios cujo lote espera há mais tempo primeiro — a mesma leitura do farol
+  // da planilha. Empate volta para a contagem de DUEs, como era antes.
   function mxSortedNavios() {
     var rows = mxNavios();
     var counts = mxCountByNavio(rows);
+    var esperaNavio = {};
+    rows.forEach(function (r) {
+      var d = mxDiasEspera(r);
+      if (d === null) return;
+      if (esperaNavio[r.navio] === undefined || d > esperaNavio[r.navio]) esperaNavio[r.navio] = d;
+    });
+    function espera(navio) {
+      return esperaNavio[navio] === undefined ? -1 : esperaNavio[navio];
+    }
     return rows.slice().sort(function (a, b) {
-      return (counts[b.navio] - counts[a.navio]) ||
+      return (espera(b.navio) - espera(a.navio)) ||
+        (counts[b.navio] - counts[a.navio]) ||
         a.navio.localeCompare(b.navio, 'pt-BR') ||
         a.ref.localeCompare(b.ref, 'pt-BR');
     });
@@ -2465,6 +2497,7 @@
       if (mxFilters.status !== 'all' && r.status !== mxFilters.status) return false;
       if (mxFilters.onlyNovas && !r.nova) return false;
       if (mxFilters.onlyAlerts && !mxRowHasAlert(r, refCounts)) return false;
+      if (mxFilters.onlyFarol && !mxFarolVermelho(r)) return false;
       if (busca) {
         var hay = (r.navio + ' ' + r.ref + ' ' + r.due + ' ' + (r.obs || '')).toLowerCase();
         if (hay.indexOf(busca) === -1) return false;
@@ -2481,7 +2514,7 @@
       { label: 'Navios distintos', value: Object.keys(counts).length },
       { label: 'Novas nesta rodada', value: navios.filter(function (r) { return r.nova; }).length },
       { label: 'Já enviadas', value: mxEnviados().length },
-      { label: 'Paradas +15 dias', value: navios.filter(function (r) { var d = diasDesde(r.desde); return d !== null && d >= 15; }).length },
+      { label: 'Farol vermelho', value: navios.filter(mxFarolVermelho).length },
       { label: 'Divergências abertas', value: mexico.divergencias.filter(function (d) { return d.situacao !== 'RESOLVIDA'; }).length },
     ];
     el.mxPanel.innerHTML = stats.map(function (s) {
@@ -2498,16 +2531,37 @@
     return '<select class="mx-status-sel ' + mxStatusClass(row.status) + '" data-mxstatus="' + escapeHtml(row.id) + '">' + opts + '</select>';
   }
 
-  // "Esperando": há quantos dias a DUE está no follow-up sem ser enviada.
-  // Acima de 15 dias fica em laranja, acima de 30 em vermelho — é o que
-  // responde "o que está travado" sem precisar abrir a planilha.
+  // Quanto tempo esta DUE está esperando. A referência é a averbação, que é
+  // a data a partir da qual o follow-up da Cargill conta os dias e acende o
+  // farol; sem ela, cai para a data em que a linha entrou aqui.
+  function mxDiasEspera(r) {
+    return diasDesde(r.averbacao || r.desde);
+  }
+
+  // Farol igual ao da planilha: vermelho a partir de 7 dias da averbação.
+  var MX_FAROL_DIAS = 7;
+
+  function mxFarolVermelho(r) {
+    var dias = mxDiasEspera(r);
+    return dias !== null && dias >= MX_FAROL_DIAS;
+  }
+
   function mxEsperandoCell(r) {
-    var dias = diasDesde(r.desde);
+    var dias = mxDiasEspera(r);
     var cls = 'mx-esp';
     if (dias !== null && dias >= 30) cls += ' mx-esp-2';
-    else if (dias !== null && dias >= 15) cls += ' mx-esp-1';
-    var titulo = r.desde ? 'No follow-up desde ' + formatBR(r.desde) : 'Sem data de entrada registrada';
-    return '<td class="' + cls + '" title="' + escapeHtml(titulo) + '">' + (dias === null ? '—' : dias + 'd') + '</td>';
+    else if (dias !== null && dias >= MX_FAROL_DIAS) cls += ' mx-esp-1';
+    var base = r.averbacao ? 'Averbada em ' + formatBR(r.averbacao) : (r.desde ? 'No follow-up desde ' + formatBR(r.desde) + ' (sem data de averbação)' : 'Sem data de referência');
+    var farol = mxFarolVermelho(r) ? ' 🔴' : ' 🟢';
+    return '<td class="' + cls + '" title="' + escapeHtml(base) + '">' + (dias === null ? '—' : dias + 'd' + farol) + '</td>';
+  }
+
+  // A conclusão encerra o processo da DUE, não o trabalho: a invoice ainda
+  // não chegou, então a linha continua em aberto até ser enviada à mão.
+  function mxConclusaoCell(r) {
+    if (!r.conclusao) return '<td class="mx-concl">—</td>';
+    return '<td class="mx-concl mx-concl-ok" title="DUE concluída em ' + escapeHtml(formatBR(r.conclusao)) +
+      ' — ainda falta a invoice, por isso continua em aberto.">' + escapeHtml(formatBR(r.conclusao)) + '</td>';
   }
 
   function renderMxNavios() {
@@ -2518,7 +2572,7 @@
       var vazio = mxSeedIndisponivel && !mexico.rows.length
         ? 'Base inicial não carregada — abra o dashboard pelo endereço publicado, não como arquivo local.'
         : 'Nenhuma DUE encontrada.';
-      el.mxNaviosBody.innerHTML = '<tr><td colspan="8" class="empty-row">' + escapeHtml(vazio) + '</td></tr>';
+      el.mxNaviosBody.innerHTML = '<tr><td colspan="9" class="empty-row">' + escapeHtml(vazio) + '</td></tr>';
       return;
     }
     var lastNavio = null;
@@ -2534,6 +2588,7 @@
         '<td class="mx-due' + (mxDueValida(r.due) ? '' : ' mx-invalid') + '" title="' + (mxDueValida(r.due) ? '' : 'DUE fora do padrão AABR + 10 dígitos') + '">' + escapeHtml(r.due) + '</td>' +
         '<td>' + mxStatusSelectHtml(r) + '</td>' +
         mxEsperandoCell(r) +
+        mxConclusaoCell(r) +
         '<td class="truncate" title="' + escapeHtml(r.obs || '') + '" style="color:var(--muted);">' + (escapeHtml(r.obs || '') || '—') + '</td>' +
         '<td class="num mx-qtd">' + (first ? counts[r.navio] : '') + '</td>' +
         '<td><div class="row-actions">' +
@@ -2603,6 +2658,22 @@
   // Aceita CSV (;, , ou tab) colado direto do Excel. As colunas de navio, REF
   // e DUE são localizadas pelo cabeçalho; o resto do follow-up é ignorado de
   // propósito (embarque, averbação e farol não fazem parte deste controle).
+  // O follow-up traz datas em dd/mm/aa ou dd/mm/aaaa, algumas com hora junto
+  // ("20/04/26 16:30"). Guardamos sempre em ISO para poder comparar e contar
+  // dias; o que não casar com o padrão é descartado em vez de virar lixo.
+  function mxParseData(valor) {
+    var txt = String(valor || '').trim();
+    if (!txt) return '';
+    var m = txt.split(/\s+/)[0].match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
+    if (!m) return '';
+    var dia = parseInt(m[1], 10);
+    var mes = parseInt(m[2], 10);
+    var ano = parseInt(m[3], 10);
+    if (m[3].length === 2) ano += 2000;
+    if (dia < 1 || dia > 31 || mes < 1 || mes > 12) return '';
+    return ano + '-' + (mes < 10 ? '0' : '') + mes + '-' + (dia < 10 ? '0' : '') + dia;
+  }
+
   function mxParseFollowup(text) {
     var lines = String(text || '').split(/\r?\n/).filter(function (l) { return l.trim(); });
     if (!lines.length) return { error: 'Nada foi colado.' };
@@ -2629,6 +2700,11 @@
     var iNavio = findCol(['NAVIO', 'REF. CLIENTE', 'REF CLIENTE']);
     var iRef = findCol(['REF. PIBERNAT', 'REF PIBERNAT', 'PROCESSO', 'REF.']);
     var iDue = findCol(['DUE', 'DU-E']);
+    // Colunas do follow-up de farol/averbação. Opcionais: o formato antigo,
+    // só com navio/REF/DUE, continua valendo.
+    var iEmbarque = findCol(['EMBARQUE']);
+    var iAverb = findCol(['AVERBA']);
+    var iConcl = findCol(['CONCLUS']);
     if (iRef === -1 || iDue === -1) {
       return { error: 'Não encontrei as colunas de REF. Pibernat e DUE no cabeçalho. Confira se a primeira linha colada é o cabeçalho.' };
     }
@@ -2642,7 +2718,14 @@
       var ref = (c[iRef] || '').toUpperCase();
       var due = (c[iDue] || '').toUpperCase().replace(/\s/g, '');
       if (!ref) continue;
-      rows.push({ navio: navioAtual, ref: ref, due: due });
+      rows.push({
+        navio: navioAtual,
+        ref: ref,
+        due: due,
+        embarque: iEmbarque !== -1 ? mxParseData(c[iEmbarque]) : '',
+        averbacao: iAverb !== -1 ? mxParseData(c[iAverb]) : '',
+        conclusao: iConcl !== -1 ? mxParseData(c[iConcl]) : '',
+      });
     }
     if (!rows.length) return { error: 'Nenhuma linha de dados encontrada abaixo do cabeçalho.' };
     return { rows: rows };
@@ -2677,15 +2760,26 @@
     var byRefAtual = {};
     atuais.forEach(function (r) { byRefAtual[r.ref] = r; });
 
-    var plan = { novasNavioExistente: [], novasNavioInedito: [], enviadas: [], dueCorrigida: [], refRepetida: [], hoje: hoje };
+    var plan = { novasNavioExistente: [], novasNavioInedito: [], enviadas: [], dueCorrigida: [], refRepetida: [], datas: [], hoje: hoje, moverEnviadas: true };
 
     // Saiu do follow-up, ou já está OK / COMPLETO → documentação enviada.
     atuais.forEach(function (r) {
       if (!byRefFollowup[r.ref]) {
-        plan.enviadas.push({ ref: r.ref, navio: r.navio, due: r.due, status: r.status, motivo: 'saiu do follow-up' });
+        plan.enviadas.push({ ref: r.ref, navio: r.navio, due: r.due, status: r.status, motivo: 'saiu do follow-up', sumiu: true });
       } else if (r.status === MX_STATUS_ENVIADO) {
         plan.enviadas.push({ ref: r.ref, navio: r.navio, due: r.due, status: r.status, motivo: 'status OK / COMPLETO' });
       }
+    });
+
+    // Datas de embarque, averbação e conclusão das linhas que permanecem.
+    // CONCLUSÃO é só o fim do processo da DUE: a invoice ainda não chegou,
+    // então nada aqui move a linha para Enviados.
+    followup.forEach(function (f) {
+      var atual = byRefAtual[f.ref];
+      if (!atual) return;
+      if (!f.embarque && !f.averbacao && !f.conclusao) return;
+      if (f.embarque === (atual.embarque || '') && f.averbacao === (atual.averbacao || '') && f.conclusao === (atual.conclusao || '')) return;
+      plan.datas.push({ ref: f.ref, navio: atual.navio, embarque: f.embarque, averbacao: f.averbacao, conclusao: f.conclusao });
     });
 
     // Mesma REF com DUE diferente = correção de número, não envio.
@@ -2708,9 +2802,9 @@
       if (byRefAtual[f.ref]) return;
       if (naviosConhecidos[f.navio]) {
         var herdado = mxPredominantStatus(f.navio) || 'A VERIFICAR';
-        plan.novasNavioExistente.push({ ref: f.ref, navio: f.navio, due: f.due, status: herdado });
+        plan.novasNavioExistente.push({ ref: f.ref, navio: f.navio, due: f.due, status: herdado, embarque: f.embarque, averbacao: f.averbacao, conclusao: f.conclusao });
       } else {
-        plan.novasNavioInedito.push({ ref: f.ref, navio: f.navio, due: f.due, status: 'A VERIFICAR' });
+        plan.novasNavioInedito.push({ ref: f.ref, navio: f.navio, due: f.due, status: 'A VERIFICAR', embarque: f.embarque, averbacao: f.averbacao, conclusao: f.conclusao });
       }
     });
 
@@ -2724,13 +2818,28 @@
     mexico.rows.forEach(function (r) { if (r.nova) { r.nova = 0; r.updatedAt = stamp; } });
 
     var enviadasRefs = {};
-    plan.enviadas.forEach(function (e) { enviadasRefs[e.ref] = e; });
+    plan.enviadas.forEach(function (e) {
+      // "Sumiu da lista" só vira envio se o usuário mantiver a opção marcada:
+      // uma planilha de origem diferente pode simplesmente ter outro escopo.
+      if (e.sumiu && !plan.moverEnviadas) return;
+      enviadasRefs[e.ref] = e;
+    });
     mexico.rows.forEach(function (r) {
       if (r.lista === 'enviados' || !enviadasRefs[r.ref]) return;
       r.lista = 'enviados';
       r.saiuEm = plan.hoje;
       r.obs = 'Saiu do follow-up = documentacao enviada/encerrada';
       r.updatedAt = stamp;
+    });
+
+    plan.datas.forEach(function (d) {
+      mexico.rows.forEach(function (r) {
+        if (r.ref !== d.ref || r.lista === 'enviados') return;
+        if (d.embarque) r.embarque = d.embarque;
+        if (d.averbacao) r.averbacao = d.averbacao;
+        r.conclusao = d.conclusao || '';
+        r.updatedAt = stamp;
+      });
     });
 
     plan.dueCorrigida.forEach(function (c) {
@@ -2759,10 +2868,10 @@
     });
 
     plan.novasNavioExistente.forEach(function (n) {
-      mexico.rows.push({ id: mxRowId(n.ref, n.due), lista: 'navios', navio: n.navio, ref: n.ref, due: n.due, status: n.status, obs: 'NOVA - herdou status predominante do navio, confirmar', nova: 1, desde: todayISO(), updatedAt: stamp });
+      mexico.rows.push({ id: mxRowId(n.ref, n.due), lista: 'navios', navio: n.navio, ref: n.ref, due: n.due, status: n.status, obs: 'NOVA - herdou status predominante do navio, confirmar', nova: 1, desde: todayISO(), embarque: n.embarque || '', averbacao: n.averbacao || '', conclusao: n.conclusao || '', updatedAt: stamp });
     });
     plan.novasNavioInedito.forEach(function (n) {
-      mexico.rows.push({ id: mxRowId(n.ref, n.due), lista: 'navios', navio: n.navio, ref: n.ref, due: n.due, status: n.status, obs: 'NOVA - navio inedito, confirmar status', nova: 1, desde: todayISO(), updatedAt: stamp });
+      mexico.rows.push({ id: mxRowId(n.ref, n.due), lista: 'navios', navio: n.navio, ref: n.ref, due: n.due, status: n.status, obs: 'NOVA - navio inedito, confirmar status', nova: 1, desde: todayISO(), embarque: n.embarque || '', averbacao: n.averbacao || '', conclusao: n.conclusao || '', updatedAt: stamp });
     });
 
     saveAndRenderMexico();
@@ -2781,15 +2890,27 @@
   }
 
   function mxRenderPreview(plan) {
+    // Uma rodada grande traz dezenas de linhas por bloco. Mostrar todas
+    // empurrava o botão de aplicar para fora da tela, então cada bloco exibe
+    // as primeiras e conta o resto.
+    var PREVIEW_MAX = 10;
     function block(titulo, itens, fmt) {
       if (!itens.length) return '';
+      var visiveis = itens.slice(0, PREVIEW_MAX);
+      var resto = itens.length - visiveis.length;
       return '<h4>' + escapeHtml(titulo) + ' (' + itens.length + ')</h4><ul>' +
-        itens.map(function (i) { return '<li>' + fmt(i) + '</li>'; }).join('') + '</ul>';
+        visiveis.map(function (i) { return '<li>' + fmt(i) + '</li>'; }).join('') +
+        (resto ? '<li class="mx-preview-resto">… e mais ' + resto + '</li>' : '') +
+        '</ul>';
     }
-    var total = plan.novasNavioExistente.length + plan.novasNavioInedito.length + plan.enviadas.length + plan.dueCorrigida.length + plan.refRepetida.length;
+    var sumiram = plan.enviadas.filter(function (e) { return e.sumiu; });
+    var enviadasEfetivas = plan.moverEnviadas ? plan.enviadas.length : plan.enviadas.length - sumiram.length;
+    var total = plan.novasNavioExistente.length + plan.novasNavioInedito.length + enviadasEfetivas +
+      plan.dueCorrigida.length + plan.refRepetida.length + plan.datas.length;
     var html = '<div class="mx-summary">' +
       '<span class="badge badge-granel">' + (plan.novasNavioExistente.length + plan.novasNavioInedito.length) + ' nova(s)</span>' +
-      '<span class="badge badge-ok">' + plan.enviadas.length + ' enviada(s)</span>' +
+      '<span class="badge badge-ok">' + enviadasEfetivas + ' enviada(s)</span>' +
+      (plan.datas.length ? '<span class="badge badge-mexico">' + plan.datas.length + ' com datas novas</span>' : '') +
       '<span class="badge badge-warn">' + (plan.dueCorrigida.length + plan.refRepetida.length) + ' divergência(s)</span>' +
       '</div>';
 
@@ -2802,8 +2923,19 @@
       html += block('Novas — navio inédito (entram como A VERIFICAR)', plan.novasNavioInedito, function (i) {
         return escapeHtml(i.navio) + ' · ' + escapeHtml(i.ref) + ' · ' + escapeHtml(i.due);
       });
-      html += block('Vão para Enviados', plan.enviadas, function (i) {
+      if (sumiram.length) {
+        html += '<label class="mx-check mx-sumiram"><input type="checkbox" id="mxMoverEnviadas"' + (plan.moverEnviadas ? ' checked' : '') + ' /> ' +
+          'Tratar as ' + sumiram.length + ' que sumiram da lista como documentação enviada</label>' +
+          '<p class="sync-help" style="margin:4px 0 12px;">Desmarque se este follow-up tem um escopo diferente do anterior — aí elas continuam em aberto.</p>';
+      }
+      html += block('Vão para Enviados', plan.moverEnviadas ? plan.enviadas : plan.enviadas.filter(function (e) { return !e.sumiu; }), function (i) {
         return escapeHtml(i.navio) + ' · ' + escapeHtml(i.ref) + ' <span style="color:var(--muted);">(' + escapeHtml(i.motivo) + ')</span>';
+      });
+      html += block('Datas atualizadas (embarque / averbação / conclusão)', plan.datas, function (i) {
+        var partes = [];
+        if (i.averbacao) partes.push('averbação ' + formatBR(i.averbacao));
+        if (i.conclusao) partes.push('conclusão ' + formatBR(i.conclusao));
+        return escapeHtml(i.navio) + ' · ' + escapeHtml(i.ref) + ' <span style="color:var(--muted);">' + escapeHtml(partes.join(' · ')) + '</span>';
       });
       html += block('DUE corrigida (mesma REF, número diferente)', plan.dueCorrigida, function (i) {
         return escapeHtml(i.ref) + ': ' + escapeHtml(i.de) + ' → ' + escapeHtml(i.para);
@@ -2823,14 +2955,17 @@
   function mxExportCsv() {
     var rows = mxSortedNavios();
     var counts = mxCountByNavio(mxNavios());
-    var lines = [['NAVIO', 'REF. PIBERNAT', 'DUE', 'STATUS', 'ESPERANDO DESDE', 'DIAS ESPERANDO', 'OBS', 'QTD DUES'].map(csvEscape).join(';')];
+    var lines = [['NAVIO', 'REF. PIBERNAT', 'DUE', 'STATUS', 'EMBARQUE', 'AVERBACAO', 'DIAS DA AVERBACAO', 'FAROL', 'CONCLUSAO', 'OBS', 'QTD DUES'].map(csvEscape).join(';')];
     var lastNavio = null;
     rows.forEach(function (r) {
       var first = r.navio !== lastNavio;
       lastNavio = r.navio;
-      var dias = diasDesde(r.desde);
-      lines.push([first ? r.navio : '', r.ref, r.due, r.status, r.desde ? formatBR(r.desde) : '',
-        dias === null ? '' : dias, r.obs || '', first ? counts[r.navio] : ''].map(csvEscape).join(';'));
+      var dias = mxDiasEspera(r);
+      lines.push([first ? r.navio : '', r.ref, r.due, r.status,
+        r.embarque ? formatBR(r.embarque) : '', r.averbacao ? formatBR(r.averbacao) : '',
+        dias === null ? '' : dias, mxFarolVermelho(r) ? 'VERMELHO' : 'VERDE',
+        r.conclusao ? formatBR(r.conclusao) : '',
+        r.obs || '', first ? counts[r.navio] : ''].map(csvEscape).join(';'));
     });
     downloadCsv(lines, 'mexico-followup_' + todayISO() + '.csv');
   }
@@ -3644,6 +3779,35 @@
     }
   }
 
+  // Mesma ideia dos lotes, para o follow-up do México: a planilha vai
+  // publicada junto com o dashboard e um clique a joga no campo de colar,
+  // sem tirar a conferência da prévia do caminho.
+  function initFollowups() {
+    if (location.protocol.indexOf('http') !== 0) return;
+    fetch('mexico-followup/index.json?t=' + Date.now())
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (lista) {
+        mxFollowupsDisponiveis = Array.isArray(lista) ? lista : [];
+        renderFollowups();
+      })
+      .catch(function () { /* nenhum follow-up publicado */ });
+  }
+
+  function renderFollowups() {
+    if (!mxFollowupsDisponiveis.length) {
+      el.mxFollowupsBloco.classList.add('hidden');
+      return;
+    }
+    el.mxFollowupsBloco.classList.remove('hidden');
+    el.mxFollowupsLista.innerHTML = mxFollowupsDisponiveis.map(function (f) {
+      return '<div class="lote-item">' +
+        '<div><div class="lote-titulo">' + escapeHtml(f.titulo) + '</div>' +
+        '<div class="lote-desc">' + escapeHtml(f.descricao || '') + '</div></div>' +
+        '<button data-followup="' + escapeHtml(f.id) + '" type="button" class="btn btn-primary">Carregar</button>' +
+      '</div>';
+    }).join('');
+  }
+
   function initLotes() {
     // Só faz sentido servido pelo site: aberto direto do arquivo, o fetch
     // é barrado por CORS e não há lote nenhum para buscar.
@@ -3658,6 +3822,37 @@
       })
       .catch(function () { /* sem lotes publicados, ou aberto fora do site */ });
   }
+
+  el.mxFollowupsLista.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-followup]');
+    if (!btn) return;
+    var id = btn.getAttribute('data-followup');
+    var fu = mxFollowupsDisponiveis.filter(function (f) { return f.id === id; })[0];
+    if (!fu) return;
+    btn.disabled = true;
+    btn.textContent = 'Carregando...';
+    fetch('mexico-followup/' + fu.arquivo + '?t=' + Date.now())
+      .then(function (r) {
+        if (!r.ok) throw new Error('não foi possível baixar o follow-up');
+        return r.json();
+      })
+      .then(function (data) {
+        if (!data || !data.texto) throw new Error('formato inesperado');
+        el.mxUpdateText.value = data.texto;
+        var parsed = mxParseFollowup(data.texto);
+        if (parsed.error) throw new Error(parsed.error);
+        mxPendingUpdate = mxBuildUpdate(parsed.rows);
+        mxRenderPreview(mxPendingUpdate);
+        el.mxPreview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      })
+      .catch(function (err) {
+        toast('Erro ao carregar o follow-up: ' + err.message, true);
+      })
+      .then(function () {
+        btn.disabled = false;
+        btn.textContent = 'Carregar';
+      });
+  });
 
   el.lotesLista.addEventListener('click', function (e) {
     var btn = e.target.closest('[data-lote]');
@@ -3770,6 +3965,7 @@
   el.mxBuscaEnviados.addEventListener('input', function () { mxFilters.buscaEnviados = this.value.trim(); renderMxEnviados(); });
   el.mxOnlyNovas.addEventListener('change', function () { mxFilters.onlyNovas = this.checked; renderMxNavios(); });
   el.mxOnlyAlerts.addEventListener('change', function () { mxFilters.onlyAlerts = this.checked; renderMxNavios(); });
+  el.mxOnlyFarol.addEventListener('change', function () { mxFilters.onlyFarol = this.checked; renderMxNavios(); });
   el.mxExportBtn.addEventListener('click', mxExportCsv);
   el.mxXlsxBtn.addEventListener('click', mxExportXlsx);
 
@@ -3790,6 +3986,12 @@
     var parsed = mxParseFollowup(el.mxUpdateText.value);
     if (parsed.error) { toast(parsed.error, true); return; }
     mxPendingUpdate = mxBuildUpdate(parsed.rows);
+    mxRenderPreview(mxPendingUpdate);
+  });
+
+  el.mxPreview.addEventListener('change', function (e) {
+    if (e.target.id !== 'mxMoverEnviadas' || !mxPendingUpdate) return;
+    mxPendingUpdate.moverEnviadas = e.target.checked;
     mxRenderPreview(mxPendingUpdate);
   });
 
@@ -4001,6 +4203,7 @@
   initMexico();
   initViews();
   initLotes();
+  initFollowups();
   if (sincronizarFeitosMexico()) saveData();
   el.fData.value = todayISO();
   updateClock();
