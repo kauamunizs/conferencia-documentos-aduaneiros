@@ -1,0 +1,155 @@
+{
+  "id": "2026-10-15-faturamento",
+  "titulo": "Faturamento FComex — 21 processos concluídos",
+  "descricao": "Rio Grande (7), Itaqui (4), Barcarena (3), Tubarão (4), Santarém (3).",
+  "criadoEm": "2026-10-15",
+  "registros": [
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619025",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV ATHOS M · Rio Grande"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619026",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV ATHOS M · Rio Grande"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619027",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV ATHOS M · Rio Grande"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619063",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV STAR MONA · Rio Grande"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619152",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV VENUS SKY · Rio Grande"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619153",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV VENUS SKY · Rio Grande"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619154",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV VENUS SKY · Rio Grande"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619029",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV HONG DAI · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619030",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV HONG DAI · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619031",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV HONG DAI · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619067",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV DARYA JAYA · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617128",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV KOSMAN · Barcarena"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617129",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV KOSMAN · Barcarena"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2617130",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV KOSMAN · Barcarena"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618790",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV TOP WEATHER · Tubarão"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618791",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV TOP WEATHER · Tubarão"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618792",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV TOP WEATHER · Tubarão"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618794",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV TOP WEATHER · Tubarão"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618677",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV KARO T · Santarém"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618678",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV KARO T · Santarém"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618679",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MV KARO T · Santarém"
+    }
+  ]
+}

@@ -41,6 +41,8 @@
     --cat-fito-bg: rgba(95, 138, 20, .1);
     --cat-co: #0b7490;
     --cat-co-bg: rgba(11, 116, 144, .1);
+    --cat-ce: #b0356b;
+    --cat-ce-bg: rgba(176, 53, 107, .1);
     --mx-nova-bg: rgba(255, 214, 102, .22);
     --mx-dup: #7030a0;
 
@@ -94,6 +96,8 @@
       --cat-fito-bg: rgba(182, 217, 106, .16);
       --cat-co: #6ccbe3;
       --cat-co-bg: rgba(108, 203, 227, .16);
+      --cat-ce: #f093b9;
+      --cat-ce-bg: rgba(240, 147, 185, .16);
       --mx-nova-bg: rgba(255, 214, 102, .13);
       --mx-dup: #c9a3e8;
 
@@ -121,6 +125,7 @@
     --cat-retificacao: #63d9b7; --cat-retificacao-bg: rgba(99, 217, 183, .16);
     --cat-fito: #b6d96a; --cat-fito-bg: rgba(182, 217, 106, .16);
     --cat-co: #6ccbe3; --cat-co-bg: rgba(108, 203, 227, .16);
+    --cat-ce: #f093b9; --cat-ce-bg: rgba(240, 147, 185, .16);
     --mx-nova-bg: rgba(255, 214, 102, .13); --mx-dup: #c9a3e8;
     --ok: #30d158; --ok-bg: rgba(48, 209, 88, .16);
     --warn: #ff9f0a; --warn-bg: rgba(255, 159, 10, .16);
@@ -141,6 +146,7 @@
     --cat-retificacao: #1a7a5e; --cat-retificacao-bg: rgba(26, 122, 94, .1);
     --cat-fito: #5f8a14; --cat-fito-bg: rgba(95, 138, 20, .1);
     --cat-co: #0b7490; --cat-co-bg: rgba(11, 116, 144, .1);
+    --cat-ce: #b0356b; --cat-ce-bg: rgba(176, 53, 107, .1);
     --mx-nova-bg: rgba(255, 214, 102, .22); --mx-dup: #7030a0;
     --ok: #248a3d; --ok-bg: rgba(52, 199, 89, .12);
     --warn: #c1690a; --warn-bg: rgba(255, 149, 0, .12);
@@ -244,7 +250,7 @@
   .cards-row { display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
   @media (min-width: 560px) { .cards-row { grid-template-columns: 1fr 1fr; } }
   @media (min-width: 1024px) { .cards-row { grid-template-columns: repeat(4, 1fr); } }
-  @media (min-width: 1360px) { .cards-row { grid-template-columns: repeat(7, 1fr); } }
+  @media (min-width: 1500px) { .cards-row { grid-template-columns: repeat(8, 1fr); } }
 
   .stat-card { background: var(--panel); padding: 18px; animation: fade-up .35s var(--ease) both; }
   .stat-card .cat-name { font-size: 13px; font-weight: 500; color: var(--muted); display: flex; align-items: center; gap: 7px; margin-bottom: 14px; }
@@ -327,6 +333,7 @@
   .badge-retificacao { background: var(--cat-retificacao-bg); color: var(--cat-retificacao); }
   .badge-fito { background: var(--cat-fito-bg); color: var(--cat-fito); }
   .badge-co { background: var(--cat-co-bg); color: var(--cat-co); }
+  .badge-ce { background: var(--cat-ce-bg); color: var(--cat-ce); }
   .chip-emissor {
     display: inline-block; margin-left: 7px; padding: 1px 7px; border-radius: var(--radius-pill);
     font-size: 11px; font-weight: 700; letter-spacing: .03em;
@@ -989,7 +996,23 @@
           </div>
 
           <div class="tutorial-topic">
-            <h3>9. Resolução de dúvidas comuns</h3>
+            <h3>9. Lançamento de CE <span class="badge badge-ce">CE</span></h3>
+            <p class="tutorial-source">Cadastro do conhecimento de embarque (BL) no OSGT</p>
+            <ol>
+              <li>É a etapa seguinte aos <em>Docs averbados</em>: a averbação confirma o embarque e libera os documentos; com eles em mãos, o conhecimento é lançado no OSGT.</li>
+              <li>O passo a passo ilustrado, do e-mail de docs averbados até a finalização, está no tutorial abaixo.</li>
+              <li>Um registro por conhecimento lançado. Quando o navio tiver vários, use as observações para o navio e as referências.</li>
+            </ol>
+            <p class="tutorial-tip"><strong>No dashboard:</strong> categoria <em>Lançamento de CE</em>. Deixe como Pendente enquanto o lançamento não estiver finalizado e marque Concluído ao terminar.</p>
+
+            <p class="tutorial-link">
+              <a href="tutorial-ce/" target="_blank" rel="noopener">Tutorial: cadastro de conhecimento (BL) no OSGT &rarr;</a>
+              <span>Passo a passo ilustrado, do e-mail de docs averbados até a finalização — 25 telas.</span>
+            </p>
+          </div>
+
+          <div class="tutorial-topic">
+            <h3>10. Resolução de dúvidas comuns</h3>
             <div class="table-wrap">
               <table class="ledger">
                 <thead>
@@ -1315,6 +1338,7 @@
     { id: 'retificacao', label: 'Retificação de processos',          short: 'Retificação' },
     { id: 'fito',      label: 'Documental Fito',                    short: 'Fito' },
     { id: 'co',        label: 'Documental CO',                      short: 'CO' },
+    { id: 'ce',        label: 'Lançamento de CE',                   short: 'CE' },
   ];
 
   // Entidade que emitiu o certificado de origem. Só o CO pergunta isso.
