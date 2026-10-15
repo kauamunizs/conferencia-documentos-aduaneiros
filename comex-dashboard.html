@@ -1153,6 +1153,7 @@
                 <li><strong>Esperando</strong> = dias desde a averbação, com o mesmo farol da planilha: 🔴 a partir de 7 dias, 🟢 abaixo disso. Sem data de averbação, conta desde a entrada aqui.</li>
                 <li><strong>Conclusão</strong> = o processo da DUE terminou. <strong>Não</strong> quer dizer que foi feito: a invoice ainda não chegou, então a linha continua em aberto até você clicar em "Enviar".</li>
                 <li>A ordem segue o <strong>tempo de espera</strong>: o navio parado há mais tempo fica no topo. Empate volta para a quantidade de DUEs.</li>
+                <li><strong>"AGUARDANDO INV"</strong> = só falta a invoice. <strong>"AGUARDANDO INV + DOCS"</strong> = falta a invoice e pelo menos mais um documento (CO, LPCO, CS, NF) — passe o mouse no status para ver a explicação.</li>
                 <li>O status tem lista fixa, para evitar variação de escrita ("TEM  INV" vs "TEM INV").</li>
               </ul>
             </div>
@@ -1258,10 +1259,38 @@
   var LOTES_STORAGE_KEY = 'comex_dashboard_lotes_v1';
 
   var MX_STATUS_OPTIONS = [
-    'FALTA SO INV', 'FALTA SO INV/CO', 'FALTA SO INV/LPCO/CS', 'FALTA SO INV/LPCO/CS/NF',
-    'FALTA ESSA INV', 'TEM INV', 'A VERIFICAR', 'OK / COMPLETO',
+    'AGUARDANDO INV', 'AGUARDANDO INV + DOCS', 'TEM INV', 'A VERIFICAR', 'OK / COMPLETO',
   ];
   var MX_STATUS_ENVIADO = 'OK / COMPLETO';
+  var MX_STATUS_SEM_INV = 'AGUARDANDO INV';
+  var MX_STATUS_SEM_INV_DOCS = 'AGUARDANDO INV + DOCS';
+  var MX_STATUS_HINTS = {};
+  MX_STATUS_HINTS[MX_STATUS_SEM_INV] = 'A DU-E so espera a invoice do cliente.';
+  MX_STATUS_HINTS[MX_STATUS_SEM_INV_DOCS] = 'Falta a invoice e pelo menos mais um documento (CO, LPCO, CS, NF).';
+
+  // O follow-up da Cargill detalhava quais documentos faltavam ("FALTA SO
+  // INV/LPCO/CS"). A acao e a mesma nos quatro casos - cobrar o cliente -, entao
+  // o status agora so diz se falta a invoice sozinha ou a invoice mais algum
+  // outro documento. Os valores antigos seguem chegando de bases salvas e da
+  // sincronizacao de outro PC, por isso a conversao roda em toda leitura.
+  var MX_STATUS_LEGADO = {
+    'FALTA SO INV': MX_STATUS_SEM_INV,
+    'FALTA ESSA INV': MX_STATUS_SEM_INV,
+    'FALTA SO INV/CO': MX_STATUS_SEM_INV_DOCS,
+    'FALTA SO INV/LPCO/CS': MX_STATUS_SEM_INV_DOCS,
+    'FALTA SO INV/LPCO/CS/NF': MX_STATUS_SEM_INV_DOCS,
+  };
+
+  function mxStatusAtual(status) {
+    var txt = String(status || '').trim();
+    if (MX_STATUS_LEGADO[txt]) return MX_STATUS_LEGADO[txt];
+    // Qualquer outra variacao de "FALTA ..." escrita a mao: o que define se
+    // tem outro documento junto e a barra separando as siglas.
+    if (txt.indexOf('FALTA') === 0) {
+      return txt.indexOf('/') !== -1 ? MX_STATUS_SEM_INV_DOCS : MX_STATUS_SEM_INV;
+    }
+    return txt;
+  }
 
   // Base inicial do follow-up (planilha Mexico_Atualizado_0309.xlsx, 03/09/2026).
   // Mora em mexico-seed.json e só é buscada no primeiro acesso, quando ainda
@@ -1307,6 +1336,10 @@
   var currentMonthlyReportEntries = [];
   var currentMonthlyReportRows = [];
   var currentMonthlyReportRange = null;
+  // Ligado quando a leitura encontrou status no formato antigo: a base salva
+  // precisa ser regravada para o valor convertido nao se perder. Declarado
+  // antes de loadMexico() rodar, senao a atribuicao apagaria o aviso.
+  var mxPrecisaRegravar = false;
   var mexico = loadMexico();
   var mxFilters = { status: 'all', busca: '', buscaEnviados: '', onlyNovas: false, onlyAlerts: false, onlyFarol: false };
   var mxPendingUpdate = null;
@@ -1352,10 +1385,15 @@
   }
 
   function normalizeMexicoRows(rows) {
+    var mudou = false;
     rows.forEach(function (r) {
       if (!r.id) r.id = mxRowId(r.ref, r.due);
       if (r.lista !== 'enviados' && !r.desde) r.desde = MEXICO_SEED_DATE;
+      var atual = mxStatusAtual(r.status);
+      if (atual !== r.status) { r.status = atual; mudou = true; }
     });
+    if (mudou) mxPrecisaRegravar = true;
+    return mudou;
   }
 
   // Primeiro acesso: busca a base inicial num arquivo separado. Só aplica se,
@@ -2543,7 +2581,8 @@
   }
 
   function mxStatusClass(status) {
-    if (String(status).indexOf('FALTA') !== -1) return 'mx-status-falta';
+    var txt = String(status);
+    if (txt.indexOf('AGUARDANDO') === 0 || txt.indexOf('FALTA') !== -1) return 'mx-status-falta';
     if (status === 'TEM INV' || status === MX_STATUS_ENVIADO) return 'mx-status-ok';
     return '';
   }
@@ -2622,11 +2661,17 @@
     el.mxHeadCount.textContent = navios.length + ' DUE(s) em aberto · ' + Object.keys(counts).length + ' navio(s)';
   }
 
+  function mxStatusTitleAttr(status) {
+    var hint = MX_STATUS_HINTS[status];
+    return hint ? ' title="' + escapeHtml(hint) + '"' : '';
+  }
+
   function mxStatusSelectHtml(row) {
     var opts = MX_STATUS_OPTIONS.map(function (s) {
       return '<option value="' + escapeHtml(s) + '"' + (s === row.status ? ' selected' : '') + '>' + escapeHtml(s) + '</option>';
     }).join('');
-    return '<select class="mx-status-sel ' + mxStatusClass(row.status) + '" data-mxstatus="' + escapeHtml(row.id) + '">' + opts + '</select>';
+    return '<select class="mx-status-sel ' + mxStatusClass(row.status) + '" data-mxstatus="' + escapeHtml(row.id) + '"' +
+      mxStatusTitleAttr(row.status) + '>' + opts + '</select>';
   }
 
   // Quanto tempo esta DUE está esperando. A referência é a averbação, que é
@@ -2713,7 +2758,7 @@
         '<td class="mx-navio">' + escapeHtml(r.navio) + '</td>' +
         '<td class="mx-ref">' + escapeHtml(r.ref) + '</td>' +
         '<td class="mx-due">' + escapeHtml(r.due) + '</td>' +
-        '<td class="' + mxStatusClass(r.status) + '">' + escapeHtml(r.status) + '</td>' +
+        '<td class="' + mxStatusClass(r.status) + '"' + mxStatusTitleAttr(r.status) + '>' + escapeHtml(r.status) + '</td>' +
         '<td style="white-space:nowrap;color:var(--muted);font-variant-numeric:tabular-nums;">' + (r.saiuEm ? formatBR(r.saiuEm) : '—') + '</td>' +
         '<td><div class="row-actions">' +
           '<button data-mxaction="voltar" data-ref="' + escapeHtml(r.id) + '" class="btn btn-text" style="padding:4px 8px;font-size:12px;">Voltar</button>' +
@@ -3219,7 +3264,7 @@
 
     var cond =
       '<conditionalFormatting sqref="D2:D' + lastRow + '">' +
-        '<cfRule type="expression" dxfId="0" priority="1"><formula>ISNUMBER(SEARCH("FALTA",$D2))</formula></cfRule>' +
+        '<cfRule type="expression" dxfId="0" priority="1"><formula>ISNUMBER(SEARCH("AGUARDANDO",$D2))</formula></cfRule>' +
         '<cfRule type="cellIs" dxfId="1" priority="2" operator="equal"><formula>"TEM INV"</formula></cfRule>' +
         '<cfRule type="cellIs" dxfId="1" priority="3" operator="equal"><formula>"OK / COMPLETO"</formula></cfRule>' +
       '</conditionalFormatting>' +
@@ -3547,6 +3592,7 @@
         tasks = merged;
         mexico = mergedMexico;
         normalizeMexicoRows(mexico.rows);
+        if (mxPrecisaRegravar) { mxPrecisaRegravar = false; changedLocally = true; }
         if (sincronizarFeitosMexico()) changedLocally = true;
         if (changedLocally) {
           saveData();
@@ -4314,6 +4360,7 @@
   initLotes();
   initFollowups();
   if (sincronizarFeitosMexico()) saveData();
+  if (mxPrecisaRegravar) { mxPrecisaRegravar = false; saveMexico(); }
   el.fData.value = todayISO();
   updateClock();
   setInterval(updateClock, 60000);
