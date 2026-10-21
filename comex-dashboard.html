@@ -516,6 +516,9 @@
   .lotes-toggle { padding-left: 0; margin-top: 6px; font-size: 12.5px; }
 
   .mx-porto { color: var(--muted); white-space: nowrap; }
+  .mx-porto-btn { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; border-bottom: 1px dashed var(--border); }
+  .mx-porto-btn:hover { color: var(--text); border-bottom-color: var(--accent); }
+  .mx-porto-vazio { color: var(--muted); opacity: .75; }
 
   .tutorial-link { margin: 14px 0 0; display: flex; flex-direction: column; gap: 3px; }
   .tutorial-link a { font-size: 13.5px; font-weight: 600; color: var(--accent); text-decoration: none; }
@@ -1169,7 +1172,7 @@
                 <li><strong>Conclusão</strong> = o processo da DUE terminou. <strong>Não</strong> quer dizer que foi feito: a invoice ainda não chegou, então a linha continua em aberto até você clicar em "Enviar".</li>
                 <li><strong>"Enviar"</strong> aparece uma vez por navio e move <strong>todas</strong> as DUEs dele de uma vez — é assim que a documentação sai. Para desfazer, use "Voltar" na aba Enviados (aí sim, DUE a DUE).</li>
                 <li><strong>Lixeira</strong> = a DUE sai do controle de vez, nas duas abas. Use quando a linha nem deveria estar aqui (veio repetida ou de outro escopo). Diferente de "Enviar", isso não volta pelo "Voltar".</li>
-                <li><strong>Porto</strong> é do navio: preenchido quando o follow-up traz a coluna PORTO (ou TERMINAL), vale para todas as DUEs daquele navio.</li>
+                <li><strong>Porto</strong> é do navio: vale para todas as DUEs dele. Vem preenchido quando o follow-up traz a coluna PORTO (ou TERMINAL); enquanto a planilha não tiver essa coluna, <strong>clique no porto</strong> (ou no "+ porto") e digite — dá para corrigir do mesmo jeito.</li>
                 <li>A ordem segue o <strong>tempo de espera</strong>: o navio parado há mais tempo fica no topo. Empate volta para a quantidade de DUEs.</li>
                 <li><strong>"AGUARDANDO INV"</strong> = só falta a invoice. <strong>"AGUARDANDO INV + DOCS"</strong> = falta a invoice e pelo menos mais um documento (CO, LPCO, CS, NF) — passe o mouse no status para ver a explicação.</li>
                 <li>O status tem lista fixa, para evitar variação de escrita ("TEM  INV" vs "TEM INV").</li>
@@ -1193,7 +1196,7 @@
                 <li>DUE nova de navio inédito entra como <strong>"A VERIFICAR"</strong>.</li>
                 <li>Mesma REF em duas DUEs no follow-up gera divergência para checagem manual.</li>
                 <li>Embarque, averbação e conclusão são lidos do follow-up quando existem no cabeçalho e atualizam a linha sem mexer no status.</li>
-                <li>Se a planilha trouxer uma coluna <strong>PORTO</strong> (ou TERMINAL), ela é lida junto e aparece embaixo do nome do navio. Sem essa coluna nada muda, e célula vazia nunca apaga o porto já guardado.</li>
+                <li>Se a planilha trouxer uma coluna <strong>PORTO</strong> (ou TERMINAL), ela é lida junto e preenche a coluna Porto. Sem essa coluna a prévia avisa, nada muda, e célula vazia nunca apaga o porto já guardado.</li>
                 <li>A coluna <strong>conclusão nunca envia nada</strong>: ela só marca o fim do processo da DUE, e a invoice continua pendente.</li>
                 <li>Se o follow-up novo vier de uma planilha com escopo diferente, desmarque na prévia a opção de tratar as que sumiram como enviadas.</li>
               </ul>
@@ -2715,6 +2718,35 @@
     return mudou;
   }
 
+  // Enquanto a coluna PORTO não vier na planilha (ou para corrigir o que
+  // veio), o porto pode ser digitado aqui. É do navio: um clique resolve
+  // todas as DUEs dele, nas duas abas.
+  function mxPortoBtnHtml(r) {
+    var tem = !!(r.porto || '');
+    return '<button type="button" data-mxporto="' + escapeHtml(r.navio) + '" class="mx-porto-btn' + (tem ? '' : ' mx-porto-vazio') +
+      '" title="Clique para ' + (tem ? 'trocar' : 'digitar') + ' o porto de ' + escapeHtml(r.navio) + ' (vale para todas as DUEs do navio)">' +
+      (tem ? escapeHtml(r.porto) : '+ porto') + '</button>';
+  }
+
+  function mxDefinirPorto(navio) {
+    var atual = '';
+    mexico.rows.forEach(function (r) { if (r.navio === navio && r.porto && !atual) atual = r.porto; });
+    var resp = prompt('Porto de ' + navio + ' (vale para todas as DUEs do navio):', atual);
+    if (resp === null) return;
+    var porto = resp.trim();
+    var stamp = Date.now();
+    var n = 0;
+    mexico.rows.forEach(function (r) {
+      if (r.navio !== navio || (r.porto || '') === porto) return;
+      r.porto = porto;
+      r.updatedAt = stamp;
+      n++;
+    });
+    if (!n) return;
+    saveAndRenderMexico();
+    toast(porto ? 'Porto de ' + navio + ': ' + porto + ' (' + n + ' DUE(s)).' : 'Porto de ' + navio + ' apagado.');
+  }
+
   function renderMxNavios() {
     var rows = mxFilteredNavios();
     var counts = mxCountByNavio(mxNavios());
@@ -2735,7 +2767,7 @@
       if (first) cls.push('mx-group-start');
       return '<tr class="' + cls.join(' ') + '">' +
         '<td class="mx-navio">' + (first ? escapeHtml(r.navio) : '') + '</td>' +
-        '<td class="mx-porto">' + (first ? (escapeHtml(r.porto || '') || '—') : '') + '</td>' +
+        '<td class="mx-porto">' + (first ? mxPortoBtnHtml(r) : '') + '</td>' +
         '<td class="mx-ref' + (refCounts[r.ref] > 1 ? ' mx-dup' : '') + '" title="' + (refCounts[r.ref] > 1 ? 'REF repetida em mais de uma DUE' : '') + '">' + escapeHtml(r.ref) + '</td>' +
         '<td class="mx-due' + (mxDueValida(r.due) ? '' : ' mx-invalid') + '" title="' + (mxDueValida(r.due) ? '' : 'DUE fora do padrão AABR + 10 dígitos') + '">' + escapeHtml(r.due) + '</td>' +
         '<td>' + mxStatusSelectHtml(r) + '</td>' +
@@ -2770,7 +2802,7 @@
     el.mxEnviadosBody.innerHTML = rows.map(function (r) {
       return '<tr>' +
         '<td class="mx-navio">' + escapeHtml(r.navio) + '</td>' +
-        '<td class="mx-porto">' + (escapeHtml(r.porto || '') || '—') + '</td>' +
+        '<td class="mx-porto">' + mxPortoBtnHtml(r) + '</td>' +
         '<td class="mx-ref">' + escapeHtml(r.ref) + '</td>' +
         '<td class="mx-due">' + escapeHtml(r.due) + '</td>' +
         '<td class="' + mxStatusClass(r.status) + '"' + mxStatusTitleAttr(r.status) + '>' + escapeHtml(r.status) + '</td>' +
@@ -2863,7 +2895,7 @@
     var iDue = findCol(['DUE', 'DU-E']);
     // Colunas do follow-up de farol/averbação. Opcionais: o formato antigo,
     // só com navio/REF/DUE, continua valendo.
-    var iPorto = findCol(['PORTO', 'TERMINAL']);
+    var iPorto = findCol(['PORTO', 'TERMINAL', 'PORT']);
     var iEmbarque = findCol(['EMBARQUE']);
     var iAverb = findCol(['AVERBA']);
     var iConcl = findCol(['CONCLUS']);
@@ -2897,7 +2929,9 @@
       });
     }
     if (!rows.length) return { error: 'Nenhuma linha de dados encontrada abaixo do cabeçalho.' };
-    return { rows: rows };
+    // Avisar na prévia quando a planilha não trouxe a coluna de porto é o que
+    // explica a coluna continuar vazia: sem esse aviso o porto parecia bug.
+    return { rows: rows, temPorto: iPorto !== -1, cabecalho: header };
   }
 
   function mxPredominantStatus(navio) {
@@ -2915,7 +2949,7 @@
 
   // Refaz o cruzamento sem alterar nada ainda: devolve o que entraria, sairia
   // e mudaria, para conferência antes de aplicar.
-  function mxBuildUpdate(followup) {
+  function mxBuildUpdate(followup, temPorto) {
     var hoje = todayISO();
     var byRefFollowup = {};
     var refDues = {};
@@ -2929,7 +2963,7 @@
     var byRefAtual = {};
     atuais.forEach(function (r) { byRefAtual[r.ref] = r; });
 
-    var plan = { novasNavioExistente: [], novasNavioInedito: [], enviadas: [], dueCorrigida: [], refRepetida: [], datas: [], portos: [], hoje: hoje, moverEnviadas: true };
+    var plan = { novasNavioExistente: [], novasNavioInedito: [], enviadas: [], dueCorrigida: [], refRepetida: [], datas: [], portos: [], semColunaPorto: temPorto === false, hoje: hoje, moverEnviadas: true };
 
     // Saiu do follow-up, ou já está OK / COMPLETO → documentação enviada.
     atuais.forEach(function (r) {
@@ -3107,6 +3141,11 @@
       (plan.portos.length ? '<span class="badge badge-fcomex">' + plan.portos.length + ' com porto</span>' : '') +
       '<span class="badge badge-warn">' + (plan.dueCorrigida.length + plan.refRepetida.length) + ' divergência(s)</span>' +
       '</div>';
+
+    if (plan.semColunaPorto) {
+      html += '<p class="sync-help" style="margin:4px 0 12px;">A planilha colada <strong>não tem coluna PORTO</strong> (nem TERMINAL): por isso a coluna Porto continua vazia. ' +
+        'O porto já guardado não é apagado, e dá para digitar à mão clicando no porto na aba Navios.</p>';
+    }
 
     if (!total) {
       html += '<p class="mx-preview-empty">Nada muda: o follow-up colado bate exatamente com o que já está aqui.</p>';
@@ -3464,7 +3503,7 @@
       ['4. DUE em vermelho negrito = numero fora do padrao AABR + 10 digitos.'],
       ['5. REF em roxo negrito = a mesma REF aparece em mais de uma DUE.'],
       ['6. Coluna QTD DUES define a ordem: navios com mais DUEs ficam no topo.'],
-      ['6a. Coluna PORTO e preenchida quando o follow-up traz a coluna PORTO (ou TERMINAL).'],
+      ['6a. Coluna PORTO vem do follow-up (coluna PORTO ou TERMINAL) ou digitada no painel, clicando no porto.'],
       ["7. Aba 'Enviados' = navios que sairam do follow-up, ou seja, ja foram enviados."],
       ["7a. No dashboard, o botao Enviar vale para o navio inteiro - move todas as DUEs dele."],
       ["8. Aba 'Divergencias' = itens que precisam de confirmacao manual."],
@@ -4170,7 +4209,7 @@
         el.mxUpdateText.value = data.texto;
         var parsed = mxParseFollowup(data.texto);
         if (parsed.error) throw new Error(parsed.error);
-        mxPendingUpdate = mxBuildUpdate(parsed.rows);
+        mxPendingUpdate = mxBuildUpdate(parsed.rows, parsed.temPorto);
         mxRenderPreview(mxPendingUpdate);
         el.mxPreview.scrollIntoView({ behavior: 'smooth', block: 'start' });
       })
@@ -4319,7 +4358,7 @@
   el.mxPreviewBtn.addEventListener('click', function () {
     var parsed = mxParseFollowup(el.mxUpdateText.value);
     if (parsed.error) { toast(parsed.error, true); return; }
-    mxPendingUpdate = mxBuildUpdate(parsed.rows);
+    mxPendingUpdate = mxBuildUpdate(parsed.rows, parsed.temPorto);
     mxRenderPreview(mxPendingUpdate);
   });
 
@@ -4374,6 +4413,16 @@
   el.mxEnviadosBody.addEventListener('click', function (e) {
     var btn = e.target.closest('[data-mxaction="excluir"]');
     if (btn) mxExcluirLinha(btn.getAttribute('data-ref'));
+  });
+
+  el.mxNaviosBody.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-mxporto]');
+    if (btn) mxDefinirPorto(btn.getAttribute('data-mxporto'));
+  });
+
+  el.mxEnviadosBody.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-mxporto]');
+    if (btn) mxDefinirPorto(btn.getAttribute('data-mxporto'));
   });
 
   // O envio é por navio, não por DUE: a documentação do México vai do navio
