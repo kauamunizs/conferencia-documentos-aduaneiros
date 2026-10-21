@@ -511,6 +511,9 @@
   .lote-nome { font-size: 13px; font-weight: 600; color: var(--ink); }
   .lote-meta { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
   .lote-item.lote-feito { opacity: .62; }
+  .lotes-vazio { font-size: 12.5px; color: var(--muted); margin: 0; }
+  .lotes-feitos { margin-top: 8px; }
+  .lotes-toggle { padding-left: 0; margin-top: 6px; font-size: 12.5px; }
 
   .tutorial-link { margin: 14px 0 0; display: flex; flex-direction: column; gap: 3px; }
   .tutorial-link a { font-size: 13.5px; font-weight: 600; color: var(--accent); text-decoration: none; }
@@ -3877,6 +3880,25 @@
     try { localStorage.setItem(LOTES_STORAGE_KEY, JSON.stringify(feitos)); } catch (e) {}
   }
 
+  // Lote importado sai da lista: à vista fica só o que ainda falta fazer. Ele
+  // continua alcançável pelo link do rodapé, para o caso de precisar
+  // reimportar (dados limpos, outro navegador).
+  var mostrarLotesFeitos = false;
+
+  function loteItemHtml(l, feito) {
+    return '<div class="lote-item' + (feito ? ' lote-feito' : '') + '">' +
+      '<div class="lote-info">' +
+        '<div class="lote-nome">' + escapeHtml(l.titulo) + '</div>' +
+        '<div class="lote-meta">' + escapeHtml(l.descricao || '') +
+          (l.descricao ? ' · ' : '') + l.qtd + ' registro(s) · ' + formatBR(l.criadoEm) +
+          (feito ? ' · <strong>importado em ' + formatBR(feito) + '</strong>' : '') +
+        '</div>' +
+      '</div>' +
+      '<button data-lote="' + escapeHtml(l.id) + '" type="button" class="btn ' + (feito ? 'btn-text' : 'btn-primary') + '">' +
+        (feito ? 'Importar de novo' : 'Importar') + '</button>' +
+    '</div>';
+  }
+
   function renderLotes() {
     var feitos = loadLotesFeitos();
     if (!lotesDisponiveis.length) {
@@ -3886,24 +3908,33 @@
     }
     el.lotesBloco.classList.remove('hidden');
 
-    el.lotesLista.innerHTML = lotesDisponiveis.map(function (l) {
-      var feito = feitos[l.id];
-      return '<div class="lote-item' + (feito ? ' lote-feito' : '') + '">' +
-        '<div class="lote-info">' +
-          '<div class="lote-nome">' + escapeHtml(l.titulo) + '</div>' +
-          '<div class="lote-meta">' + escapeHtml(l.descricao || '') +
-            (l.descricao ? ' · ' : '') + l.qtd + ' registro(s) · ' + formatBR(l.criadoEm) +
-            (feito ? ' · <strong>importado em ' + formatBR(feito) + '</strong>' : '') +
-          '</div>' +
-        '</div>' +
-        '<button data-lote="' + escapeHtml(l.id) + '" type="button" class="btn ' + (feito ? 'btn-text' : 'btn-primary') + '">' +
-          (feito ? 'Importar de novo' : 'Importar') + '</button>' +
-      '</div>';
-    }).join('');
+    var pendentes = [];
+    var importados = [];
+    lotesDisponiveis.forEach(function (l) {
+      if (feitos[l.id]) importados.push(l); else pendentes.push(l);
+    });
 
-    var pendentes = lotesDisponiveis.filter(function (l) { return !feitos[l.id]; }).length;
-    if (pendentes) {
-      el.loteAlertCount.textContent = pendentes;
+    var html = pendentes.length
+      ? pendentes.map(function (l) { return loteItemHtml(l, null); }).join('')
+      : '<p class="lotes-vazio">Nenhum lote novo — todos já foram importados.</p>';
+
+    if (importados.length) {
+      if (mostrarLotesFeitos) {
+        html += '<div class="lotes-feitos">' + importados.map(function (l) {
+          return loteItemHtml(l, feitos[l.id]);
+        }).join('') + '</div>';
+      }
+      html += '<button type="button" data-lotes-toggle="1" class="btn btn-text lotes-toggle">' +
+        (mostrarLotesFeitos
+          ? 'Ocultar os já importados'
+          : 'Ver ' + importados.length + ' lote(s) já importado(s)') +
+        '</button>';
+    }
+
+    el.lotesLista.innerHTML = html;
+
+    if (pendentes.length) {
+      el.loteAlertCount.textContent = pendentes.length;
       el.loteAlert.classList.remove('hidden');
     } else {
       el.loteAlert.classList.add('hidden');
@@ -3986,6 +4017,11 @@
   });
 
   el.lotesLista.addEventListener('click', function (e) {
+    if (e.target.closest('[data-lotes-toggle]')) {
+      mostrarLotesFeitos = !mostrarLotesFeitos;
+      renderLotes();
+      return;
+    }
     var btn = e.target.closest('[data-lote]');
     if (!btn) return;
     var id = btn.getAttribute('data-lote');
