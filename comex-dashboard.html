@@ -1407,6 +1407,7 @@
       var atual = mxStatusAtual(r.status);
       if (atual !== r.status) { r.status = atual; mudou = true; }
     });
+    if (mxPropagarPortos(rows, Date.now())) mudou = true;
     if (mudou) mxPrecisaRegravar = true;
     return mudou;
   }
@@ -2694,6 +2695,24 @@
   // O porto é coluna opcional do follow-up. Em vez de abrir mais uma coluna
   // na tabela (já larga), ele aparece como segunda linha da célula do navio —
   // e some de vez quando a planilha não traz a informação.
+  // O porto é do navio, não da DUE. Quando uma linha recebe o porto, as demais
+  // do mesmo navio passam a mostrar o mesmo — inclusive as que já estão em
+  // Enviados. Só preenche o que está vazio: nada aqui sobrescreve um porto.
+  function mxPropagarPortos(rows, stamp) {
+    var porNavio = {};
+    rows.forEach(function (r) {
+      if (r.porto && !porNavio[r.navio]) porNavio[r.navio] = r.porto;
+    });
+    var mudou = false;
+    rows.forEach(function (r) {
+      if (r.porto || !porNavio[r.navio]) return;
+      r.porto = porNavio[r.navio];
+      r.updatedAt = stamp || Date.now();
+      mudou = true;
+    });
+    return mudou;
+  }
+
   function mxPortoHtml(r) {
     return r.porto ? '<span class="mx-porto">' + escapeHtml(r.porto) + '</span>' : '';
   }
@@ -2727,6 +2746,9 @@
         '<td class="num mx-qtd">' + (first ? counts[r.navio] : '') + '</td>' +
         '<td><div class="row-actions">' +
           '<button data-mxaction="enviar" data-ref="' + escapeHtml(r.id) + '" class="btn btn-text" style="padding:4px 8px;font-size:12px;">Enviar</button>' +
+          (first && counts[r.navio] > 1
+            ? '<button data-mxaction="enviar-navio" data-navio="' + escapeHtml(r.navio) + '" class="btn btn-text" style="padding:4px 8px;font-size:12px;" title="Move as ' + counts[r.navio] + ' DUEs deste navio de uma vez">Enviar navio</button>'
+            : '') +
         '</div></td>' +
       '</tr>';
     }).join('');
@@ -2927,8 +2949,12 @@
     // Porto: coluna opcional do follow-up. Só entra quando vem preenchida —
     // planilha sem a coluna (ou com a célula vazia) nunca apaga o que já
     // está guardado aqui.
+    // Aqui vale qualquer lista: uma REF que já foi para Enviados também ganha
+    // o porto quando o follow-up passa a trazer a coluna.
+    var byRefQualquer = {};
+    mexico.rows.forEach(function (r) { byRefQualquer[r.ref] = r; });
     followup.forEach(function (f) {
-      var atual = byRefAtual[f.ref];
+      var atual = byRefQualquer[f.ref];
       if (!atual || !f.porto) return;
       if (f.porto === (atual.porto || '')) return;
       plan.portos.push({ ref: f.ref, navio: atual.navio, de: atual.porto || '', para: f.porto });
@@ -3033,6 +3059,8 @@
     plan.novasNavioInedito.forEach(function (n) {
       mexico.rows.push({ id: mxRowId(n.ref, n.due), lista: 'navios', navio: n.navio, porto: n.porto || '', ref: n.ref, due: n.due, status: n.status, obs: 'NOVA - navio inedito, confirmar status', nova: 1, desde: todayISO(), embarque: n.embarque || '', averbacao: n.averbacao || '', conclusao: n.conclusao || '', updatedAt: stamp });
     });
+
+    mxPropagarPortos(mexico.rows, stamp);
 
     saveAndRenderMexico();
   }
@@ -4309,6 +4337,29 @@
     row.status = sel.value;
     row.updatedAt = Date.now();
     saveAndRenderMexico();
+  });
+
+  // Um navio que já foi resolvido sai inteiro: quando o follow-up traz as DUEs
+  // dele como novas mas a documentação já tinha ido, marcar uma por uma é só
+  // repetição. Reversível pelo "Voltar" da aba Enviados.
+  el.mxNaviosBody.addEventListener('click', function (e) {
+    var btnNavio = e.target.closest('[data-mxaction="enviar-navio"]');
+    if (!btnNavio) return;
+    var navio = btnNavio.getAttribute('data-navio');
+    var stamp = Date.now();
+    var n = 0;
+    mexico.rows.forEach(function (r) {
+      if (r.navio !== navio || r.lista === 'enviados') return;
+      r.lista = 'enviados';
+      r.saiuEm = todayISO();
+      r.nova = 0;
+      r.obs = 'Marcado como enviado manualmente';
+      r.updatedAt = stamp;
+      n++;
+    });
+    if (!n) return;
+    saveAndRenderMexico();
+    toast(n + ' DUE(s) de ' + navio + ' movidas para Enviados.');
   });
 
   el.mxNaviosBody.addEventListener('click', function (e) {
