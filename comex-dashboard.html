@@ -845,6 +845,8 @@
             <input id="filterDe" type="date" title="De" />
             <input id="filterAte" type="date" title="Até" />
             <input id="filterBusca" type="text" placeholder="Buscar processo ou observação..." />
+            <button id="filterHojeBtn" type="button" class="btn btn-text" title="Põe a data de hoje nos dois campos">Só hoje</button>
+            <button id="exportHistBtn" type="button" class="btn btn-secondary">Exportar planilha</button>
             <button id="clearFiltersBtn" type="button" class="btn btn-text">Limpar filtros</button>
             <button id="deleteFilteredBtn" type="button" class="btn btn-text" style="color:var(--danger);">Excluir filtrados</button>
           </div>
@@ -991,6 +993,7 @@
               <li>Um registro por conhecimento lançado. Quando o navio tiver vários, use as observações para o navio e as referências.</li>
             </ol>
             <p class="tutorial-tip"><strong>No dashboard:</strong> categoria <em>Lançamento de CE</em>. Deixe como Pendente enquanto o lançamento não estiver finalizado e marque Concluído ao terminar.</p>
+            <p class="tutorial-tip"><strong>Planilha só dos CEs de hoje:</strong> aba <em>Histórico</em> → categoria <em>Lançamento de CE</em> → botão <em>Só hoje</em> → <em>Exportar planilha</em>. Vale para qualquer recorte: o arquivo sai exatamente com o que os filtros estão mostrando.</p>
 
             <p class="tutorial-link">
               <a href="tutorial-ce/" target="_blank" rel="noopener">Tutorial: cadastro de conhecimento (BL) no OSGT &rarr;</a>
@@ -1787,6 +1790,8 @@
     historyPager: document.getElementById('historyPager'),
     filterCategoria: document.getElementById('filterCategoria'),
     filterStatus: document.getElementById('filterStatus'),
+    filterHojeBtn: document.getElementById('filterHojeBtn'),
+    exportHistBtn: document.getElementById('exportHistBtn'),
     filterDe: document.getElementById('filterDe'),
     filterAte: document.getElementById('filterAte'),
     filterBusca: document.getElementById('filterBusca'),
@@ -3253,6 +3258,84 @@
       '</worksheet>';
   }
 
+  // Empacota as abas num .xlsx. Os estilos sao os mesmos para toda planilha
+  // gerada aqui: 0 normal | 1 cabecalho azul | 2 negrito | 3 fundo amarelo |
+  // 4 negrito+amarelo | 5 titulo | 6 subtitulo.
+  function workbookBlob(sheets) {
+    var styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+      '<fonts count="5">' +
+        '<font><sz val="11"/><name val="Calibri"/></font>' +
+        '<font><b/><color rgb="FFFFFFFF"/><sz val="11"/><name val="Calibri"/></font>' +
+        '<font><b/><sz val="11"/><name val="Calibri"/></font>' +
+        '<font><b/><sz val="14"/><name val="Calibri"/></font>' +
+        '<font><i/><color rgb="FF595959"/><sz val="11"/><name val="Calibri"/></font>' +
+      '</fonts>' +
+      '<fills count="3">' +
+        '<fill><patternFill patternType="none"/></fill>' +
+        '<fill><patternFill patternType="gray125"/></fill>' +
+        '<fill><patternFill patternType="solid"><fgColor rgb="FFFFF2CC"/><bgColor indexed="64"/></patternFill></fill>' +
+      '</fills>' +
+      '<fills2/>' +
+      '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
+      '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+      '<cellXfs count="7">' +
+        '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+        '<xf numFmtId="0" fontId="1" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1"/>' +
+        '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+        '<xf numFmtId="0" fontId="0" fillId="2" borderId="0" xfId="0" applyFill="1"/>' +
+        '<xf numFmtId="0" fontId="2" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>' +
+        '<xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+        '<xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+      '</cellXfs>' +
+      '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
+      '<dxfs count="4">' +
+        '<dxf><font><color rgb="FF9C0006"/></font></dxf>' +
+        '<dxf><font><color rgb="FF006100"/></font></dxf>' +
+        '<dxf><font><b/><color rgb="FFC00000"/></font></dxf>' +
+        '<dxf><font><b/><color rgb="FF7030A0"/></font></dxf>' +
+      '</dxfs>' +
+      '</styleSheet>';
+
+    // O cabeçalho azul da planilha original vira o fill de índice 3.
+    styles = styles.replace('<fills2/>', '').replace('<fills count="3">',
+      '<fills count="4">').replace('</fills>',
+      '<fill><patternFill patternType="solid"><fgColor rgb="FF1F3864"/><bgColor indexed="64"/></patternFill></fill></fills>');
+
+    var files = [
+      { name: '[Content_Types].xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+        '<Default Extension="xml" ContentType="application/xml"/>' +
+        '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+        sheets.map(function (s, i) { return '<Override PartName="/xl/worksheets/sheet' + (i + 1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'; }).join('') +
+        '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+        '</Types>' },
+      { name: '_rels/.rels', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+        '</Relationships>' },
+      { name: 'xl/workbook.xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+        '<sheets>' + sheets.map(function (s, i) {
+          return '<sheet name="' + xmlEscape(s.name) + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>';
+        }).join('') + '</sheets></workbook>' },
+      { name: 'xl/_rels/workbook.xml.rels', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        sheets.map(function (s, i) {
+          return '<Relationship Id="rId' + (i + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>';
+        }).join('') +
+        '<Relationship Id="rId' + (sheets.length + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+        '</Relationships>' },
+      { name: 'xl/styles.xml', content: styles },
+    ];
+    sheets.forEach(function (s, i) {
+      files.push({ name: 'xl/worksheets/sheet' + (i + 1) + '.xml', content: s.xml });
+    });
+
+    return zipBuild(files);
+  }
+
   function mxBuildWorkbook() {
     var navios = mxSortedNavios();
     var counts = mxCountByNavio(mxNavios());
@@ -3376,91 +3459,92 @@
       { name: 'Como usar', xml: sheetXml(ajudaRows, { widths: [110] }) },
     ];
 
-    var styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-      '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
-      '<fonts count="5">' +
-        '<font><sz val="11"/><name val="Calibri"/></font>' +
-        '<font><b/><color rgb="FFFFFFFF"/><sz val="11"/><name val="Calibri"/></font>' +
-        '<font><b/><sz val="11"/><name val="Calibri"/></font>' +
-        '<font><b/><sz val="14"/><name val="Calibri"/></font>' +
-        '<font><i/><color rgb="FF595959"/><sz val="11"/><name val="Calibri"/></font>' +
-      '</fonts>' +
-      '<fills count="3">' +
-        '<fill><patternFill patternType="none"/></fill>' +
-        '<fill><patternFill patternType="gray125"/></fill>' +
-        '<fill><patternFill patternType="solid"><fgColor rgb="FFFFF2CC"/><bgColor indexed="64"/></patternFill></fill>' +
-      '</fills>' +
-      '<fills2/>' +
-      '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
-      '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-      '<cellXfs count="7">' +
-        '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
-        '<xf numFmtId="0" fontId="1" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1"/>' +
-        '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
-        '<xf numFmtId="0" fontId="0" fillId="2" borderId="0" xfId="0" applyFill="1"/>' +
-        '<xf numFmtId="0" fontId="2" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>' +
-        '<xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
-        '<xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
-      '</cellXfs>' +
-      '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
-      '<dxfs count="4">' +
-        '<dxf><font><color rgb="FF9C0006"/></font></dxf>' +
-        '<dxf><font><color rgb="FF006100"/></font></dxf>' +
-        '<dxf><font><b/><color rgb="FFC00000"/></font></dxf>' +
-        '<dxf><font><b/><color rgb="FF7030A0"/></font></dxf>' +
-      '</dxfs>' +
-      '</styleSheet>';
-
-    // O cabeçalho azul da planilha original vira o fill de índice 3.
-    styles = styles.replace('<fills2/>', '').replace('<fills count="3">',
-      '<fills count="4">').replace('</fills>',
-      '<fill><patternFill patternType="solid"><fgColor rgb="FF1F3864"/><bgColor indexed="64"/></patternFill></fill></fills>');
-
-    var files = [
-      { name: '[Content_Types].xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
-        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
-        '<Default Extension="xml" ContentType="application/xml"/>' +
-        '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
-        sheets.map(function (s, i) { return '<Override PartName="/xl/worksheets/sheet' + (i + 1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'; }).join('') +
-        '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
-        '</Types>' },
-      { name: '_rels/.rels', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
-        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
-        '</Relationships>' },
-      { name: 'xl/workbook.xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-        '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
-        '<sheets>' + sheets.map(function (s, i) {
-          return '<sheet name="' + xmlEscape(s.name) + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>';
-        }).join('') + '</sheets></workbook>' },
-      { name: 'xl/_rels/workbook.xml.rels', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
-        sheets.map(function (s, i) {
-          return '<Relationship Id="rId' + (i + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>';
-        }).join('') +
-        '<Relationship Id="rId' + (sheets.length + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
-        '</Relationships>' },
-      { name: 'xl/styles.xml', content: styles },
-    ];
-    sheets.forEach(function (s, i) {
-      files.push({ name: 'xl/worksheets/sheet' + (i + 1) + '.xml', content: s.xml });
-    });
-
-    return zipBuild(files);
+    return workbookBlob(sheets);
   }
 
-  function mxExportXlsx() {
-    var blob = mxBuildWorkbook();
+  function baixarPlanilha(blob, nome) {
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    a.download = 'Mexico_Atualizado_' + todayISO().slice(8, 10) + todayISO().slice(5, 7) + '.xlsx';
+    a.download = nome;
     document.body.appendChild(a);
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
     toast('Planilha gerada com sucesso!');
+  }
+
+  // Planilha do que a tela do histórico está mostrando: os mesmos filtros,
+  // nada além. É o caminho para tirar um recorte fechado — "os CEs de hoje",
+  // "o FComex da semana passada" — sem precisar mexer no arquivo depois.
+  function exportHistoricoXlsx() {
+    var rows = getFilteredTasks();
+    if (!rows.length) {
+      toast('Nenhum registro com os filtros atuais.', true);
+      return;
+    }
+
+    var cabecalho = ['CATEGORIA', 'PROCESSO', 'EMISSOR', 'DATA', 'STATUS', 'DIAS EM ABERTO', 'OBSERVACOES'];
+    var linhas = [cabecalho.map(function (h) { return { v: h, s: 1 }; })];
+    rows.slice().sort(function (a, b) {
+      return a.data.localeCompare(b.data) ||
+        extractProcessNumber(a.numeroProcesso) - extractProcessNumber(b.numeroProcesso);
+    }).forEach(function (t) {
+      var cat = categoryById(t.categoria);
+      var dias = daysOpenFor(t);  // string: '' quando nao esta pendente
+      linhas.push([
+        cat ? cat.label : t.categoria,
+        t.numeroProcesso,
+        t.emissor || '',
+        formatBR(t.data),
+        t.status,
+        dias === '' ? '' : parseInt(dias, 10),
+        t.observacoes || '',
+      ]);
+    });
+
+    // Resumo curto antes de contar linha por linha: é o que vai no e-mail.
+    var porCategoria = {};
+    rows.forEach(function (t) {
+      porCategoria[t.categoria] = porCategoria[t.categoria] || { concl: 0, pend: 0 };
+      if (t.status === 'Concluído') porCategoria[t.categoria].concl++;
+      else porCategoria[t.categoria].pend++;
+    });
+    var cat = filters.categoria !== 'all' ? categoryById(filters.categoria) : null;
+    var periodo = filters.de || filters.ate
+      ? (filters.de ? formatBR(filters.de) : 'início') + ' a ' + (filters.ate ? formatBR(filters.ate) : 'hoje')
+      : 'todo o histórico';
+    var resumo = [
+      [{ v: 'RESUMO DO RECORTE', s: 5 }],
+      ['Gerado em', formatBR(todayISO())],
+      ['Categoria', cat ? cat.label : 'todas'],
+      ['Periodo', periodo],
+      ['Status', filters.status !== 'all' ? filters.status : 'todos'],
+      ['Busca', filters.busca || '—'],
+      [],
+      [{ v: 'POR CATEGORIA', s: 2 }],
+      [{ v: 'CATEGORIA', s: 1 }, { v: 'CONCLUIDOS', s: 1 }, { v: 'PENDENTES', s: 1 }],
+    ];
+    CATEGORIES.forEach(function (c) {
+      var n = porCategoria[c.id];
+      if (n) resumo.push([c.label, n.concl, n.pend]);
+    });
+    resumo.push([]);
+    resumo.push([{ v: 'TOTAL', s: 2 }, rows.filter(function (t) { return t.status === 'Concluído'; }).length,
+      rows.filter(function (t) { return t.status !== 'Concluído'; }).length]);
+
+    var sheets = [
+      { name: 'Registros', xml: sheetXml(linhas, { widths: [30, 18, 12, 13, 13, 15, 52], freeze: true, autoFilter: 'A1:G' + Math.max(linhas.length, 2) }) },
+      { name: 'Resumo', xml: sheetXml(resumo, { widths: [34, 14, 14] }) },
+    ];
+
+    var pedaco = cat ? '_' + cat.short.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
+    var quando = filters.de && filters.de === filters.ate ? filters.de : todayISO();
+    baixarPlanilha(workbookBlob(sheets), 'registros' + pedaco + '_' + quando + '.xlsx');
+  }
+
+  function mxExportXlsx() {
+    baixarPlanilha(mxBuildWorkbook(), 'Mexico_Atualizado_' + todayISO().slice(8, 10) + todayISO().slice(5, 7) + '.xlsx');
   }
 
   // ---------------------------------------------------------------------
@@ -4286,6 +4370,18 @@
     renderHistoryTable();
     el.historyPager.scrollIntoView({ behavior: 'smooth', block: 'end' });
   });
+  el.exportHistBtn.addEventListener('click', exportHistoricoXlsx);
+
+  el.filterHojeBtn.addEventListener('click', function () {
+    var hoje = todayISO();
+    filters.de = hoje;
+    filters.ate = hoje;
+    el.filterDe.value = hoje;
+    el.filterAte.value = hoje;
+    resetHistoryPage();
+    renderHistoryTable();
+  });
+
   el.clearFiltersBtn.addEventListener('click', function () {
     filters = { categoria: 'all', status: 'all', busca: '', de: '', ate: '' };
     el.filterCategoria.value = 'all';
