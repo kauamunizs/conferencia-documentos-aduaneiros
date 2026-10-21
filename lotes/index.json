@@ -1,5 +1,13 @@
 [
   {
+    "id": "2026-10-21-faturamento",
+    "titulo": "Faturamento FComex — 23 processos concluídos",
+    "descricao": "Itaqui (12), Rio Grande (8), Santarém (2); 1 sem porto informado (MV RICHLAND SINGAPORE).",
+    "criadoEm": "2026-10-21",
+    "qtd": 23,
+    "arquivo": "2026-10-21-faturamento.json"
+  },
+  {
     "id": "2026-10-15-faturamento",
     "titulo": "Faturamento FComex — 21 processos concluídos",
     "descricao": "Rio Grande (7), Itaqui (4), Barcarena (3), Tubarão (4), Santarém (3).",

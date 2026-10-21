@@ -1,0 +1,169 @@
+{
+  "id": "2026-10-21-faturamento",
+  "titulo": "Faturamento FComex — 23 processos concluídos",
+  "descricao": "Itaqui (12), Rio Grande (8), Santarém (2); 1 sem porto informado (MV RICHLAND SINGAPORE).",
+  "criadoEm": "2026-10-21",
+  "registros": [
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618648",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV RICHLAND SINGAPORE"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2618964",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV PHILIPPAKOS · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619247",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV MEDROSE · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619163",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV KAREN OLDENDORFF · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619168",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV KAREN OLDENDORFF · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619350",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV BUNUN TREASURE · Santarém"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619351",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV BUNUN TREASURE · Santarém"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619145",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV BELLA OLYMPIA · Rio Grande"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619146",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV BELLA OLYMPIA · Rio Grande"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619249",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV LIVORNO · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619250",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV LIVORNO · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619203",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV LH ANTHEA · Rio Grande"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619158",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV ANDREAS JR · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619035",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV SSI DIGNITY · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619036",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV SSI DIGNITY · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619396",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV BBG NANNING · Rio Grande"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619505",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV BBG NANNING · Rio Grande"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619241",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV KATERINA III · Rio Grande"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619242",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV KATERINA III · Rio Grande"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619243",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV KATERINA III · Rio Grande"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619321",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV DESERT RANGER · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619322",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV DESERT RANGER · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619323",
+      "data": "2026-10-21",
+      "status": "Concluído",
+      "observacoes": "MV DESERT RANGER · Itaqui"
+    }
+  ]
+}
