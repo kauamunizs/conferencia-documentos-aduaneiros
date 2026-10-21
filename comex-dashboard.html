@@ -1168,6 +1168,7 @@
                 <li><strong>Esperando</strong> = dias desde a averbação, com o mesmo farol da planilha: 🔴 a partir de 7 dias, 🟢 abaixo disso. Sem data de averbação, conta desde a entrada aqui.</li>
                 <li><strong>Conclusão</strong> = o processo da DUE terminou. <strong>Não</strong> quer dizer que foi feito: a invoice ainda não chegou, então a linha continua em aberto até você clicar em "Enviar".</li>
                 <li><strong>"Enviar"</strong> aparece uma vez por navio e move <strong>todas</strong> as DUEs dele de uma vez — é assim que a documentação sai. Para desfazer, use "Voltar" na aba Enviados (aí sim, DUE a DUE).</li>
+                <li><strong>Lixeira</strong> = a DUE sai do controle de vez, nas duas abas. Use quando a linha nem deveria estar aqui (veio repetida ou de outro escopo). Diferente de "Enviar", isso não volta pelo "Voltar".</li>
                 <li><strong>Porto</strong> é do navio: preenchido quando o follow-up traz a coluna PORTO (ou TERMINAL), vale para todas as DUEs daquele navio.</li>
                 <li>A ordem segue o <strong>tempo de espera</strong>: o navio parado há mais tempo fica no topo. Empate volta para a quantidade de DUEs.</li>
                 <li><strong>"AGUARDANDO INV"</strong> = só falta a invoice. <strong>"AGUARDANDO INV + DOCS"</strong> = falta a invoice e pelo menos mais um documento (CO, LPCO, CS, NF) — passe o mouse no status para ver a explicação.</li>
@@ -2746,6 +2747,9 @@
           (first
             ? '<button data-mxaction="enviar" data-navio="' + escapeHtml(r.navio) + '" class="btn btn-text" style="padding:4px 8px;font-size:12px;" title="Move as ' + counts[r.navio] + ' DUE(s) deste navio">Enviar</button>'
             : '') +
+          '<button data-mxaction="excluir" data-ref="' + escapeHtml(r.id) + '" class="icon-btn danger" title="Excluir esta DUE">' +
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>' +
+          '</button>' +
         '</div></td>' +
       '</tr>';
     }).join('');
@@ -2773,6 +2777,9 @@
         '<td style="white-space:nowrap;color:var(--muted);font-variant-numeric:tabular-nums;">' + (r.saiuEm ? formatBR(r.saiuEm) : '—') + '</td>' +
         '<td><div class="row-actions">' +
           '<button data-mxaction="voltar" data-ref="' + escapeHtml(r.id) + '" class="btn btn-text" style="padding:4px 8px;font-size:12px;">Voltar</button>' +
+          '<button data-mxaction="excluir" data-ref="' + escapeHtml(r.id) + '" class="icon-btn danger" title="Excluir esta DUE">' +
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>' +
+          '</button>' +
         '</div></td>' +
       '</tr>';
     }).join('');
@@ -3644,13 +3651,19 @@
   // chave é a REF. Pibernat (divergências usam tipo+chave) e vence sempre o
   // lado que editou aquele registro por último.
   function mergeByKey(localList, remoteList, keyFn) {
+    // Mesma regra do merge de tarefas: o que foi apagado aqui não pode voltar
+    // pela cópia do outro computador, a não ser que lá a linha tenha mudado
+    // depois da exclusão.
+    var tombstones = getTombstones();
     var byKey = {};
-    (localList || []).forEach(function (item) { byKey[keyFn(item)] = item; });
-    (remoteList || []).forEach(function (item) {
+    function consider(item, remoto) {
       var k = keyFn(item);
+      if (tombstones[k] && tombstones[k] >= (item.updatedAt || 0)) return;
       var mine = byKey[k];
-      if (!mine || (item.updatedAt || 0) > (mine.updatedAt || 0)) byKey[k] = item;
-    });
+      if (!remoto || !mine || (item.updatedAt || 0) > (mine.updatedAt || 0)) byKey[k] = item;
+    }
+    (localList || []).forEach(function (item) { consider(item, false); });
+    (remoteList || []).forEach(function (item) { consider(item, true); });
     return Object.keys(byKey).map(function (k) { return byKey[k]; });
   }
 
@@ -4336,6 +4349,31 @@
     row.status = sel.value;
     row.updatedAt = Date.now();
     saveAndRenderMexico();
+  });
+
+  // Excluir é diferente de enviar: a DUE sai da base porque nunca deveria
+  // estar aqui (veio repetida, ou de um follow-up que não era deste controle).
+  // Some das duas abas e não volta pelo "Voltar" — por isso confirma antes.
+  // O id fica registrado como apagado para o outro computador não trazer a
+  // linha de volta na próxima sincronização.
+  function mxExcluirLinha(id) {
+    var row = mexico.rows.filter(function (r) { return r.id === id; })[0];
+    if (!row) return;
+    if (!confirm('Excluir a DUE ' + row.due + ' (' + row.ref + ' · ' + row.navio + ')? Essa linha some do controle e não volta pelo "Voltar".')) return;
+    mexico.rows = mexico.rows.filter(function (r) { return r.id !== id; });
+    addTombstone(id);
+    saveAndRenderMexico();
+    toast('DUE excluída do controle.');
+  }
+
+  el.mxNaviosBody.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-mxaction="excluir"]');
+    if (btn) mxExcluirLinha(btn.getAttribute('data-ref'));
+  });
+
+  el.mxEnviadosBody.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-mxaction="excluir"]');
+    if (btn) mxExcluirLinha(btn.getAttribute('data-ref'));
   });
 
   // O envio é por navio, não por DUE: a documentação do México vai do navio
