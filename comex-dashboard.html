@@ -515,6 +515,8 @@
   .lotes-feitos { margin-top: 8px; }
   .lotes-toggle { padding-left: 0; margin-top: 6px; font-size: 12.5px; }
 
+  .mx-porto { display: block; font-size: 11.5px; font-weight: 400; color: var(--muted); margin-top: 2px; }
+
   .tutorial-link { margin: 14px 0 0; display: flex; flex-direction: column; gap: 3px; }
   .tutorial-link a { font-size: 13.5px; font-weight: 600; color: var(--accent); text-decoration: none; }
   .tutorial-link a:hover { text-decoration: underline; }
@@ -1062,7 +1064,7 @@
           <div id="mxNaviosPane" class="mx-pane">
             <div class="filters-bar">
               <select id="mxStatusFilter"></select>
-              <input id="mxBusca" type="text" placeholder="Buscar navio, REF ou DUE..." />
+              <input id="mxBusca" type="text" placeholder="Buscar navio, porto, REF ou DUE..." />
               <label class="mx-check"><input id="mxOnlyNovas" type="checkbox" /> Só novas</label>
               <label class="mx-check"><input id="mxOnlyAlerts" type="checkbox" /> Só com alerta</label>
               <label class="mx-check"><input id="mxOnlyFarol" type="checkbox" /> Só farol vermelho</label>
@@ -1112,7 +1114,7 @@
           <!-- Enviados -->
           <div id="mxEnviadosPane" class="mx-pane hidden">
             <div class="filters-bar">
-              <input id="mxBuscaEnviados" type="text" placeholder="Buscar navio, REF ou DUE..." />
+              <input id="mxBuscaEnviados" type="text" placeholder="Buscar navio, porto, REF ou DUE..." />
             </div>
             <div class="table-wrap">
               <table class="ledger mx-table" style="min-width:820px;">
@@ -1183,6 +1185,7 @@
                 <li>DUE nova de navio inédito entra como <strong>"A VERIFICAR"</strong>.</li>
                 <li>Mesma REF em duas DUEs no follow-up gera divergência para checagem manual.</li>
                 <li>Embarque, averbação e conclusão são lidos do follow-up quando existem no cabeçalho e atualizam a linha sem mexer no status.</li>
+                <li>Se a planilha trouxer uma coluna <strong>PORTO</strong> (ou TERMINAL), ela é lida junto e aparece embaixo do nome do navio. Sem essa coluna nada muda, e célula vazia nunca apaga o porto já guardado.</li>
                 <li>A coluna <strong>conclusão nunca envia nada</strong>: ela só marca o fim do processo da DUE, e a invoice continua pendente.</li>
                 <li>Se o follow-up novo vier de uma planilha com escopo diferente, desmarque na prévia a opção de tratar as que sumiram como enviadas.</li>
               </ul>
@@ -2612,7 +2615,7 @@
       if (mxFilters.onlyAlerts && !mxRowHasAlert(r, refCounts)) return false;
       if (mxFilters.onlyFarol && !mxFarolVermelho(r)) return false;
       if (busca) {
-        var hay = (r.navio + ' ' + r.ref + ' ' + r.due + ' ' + (r.obs || '')).toLowerCase();
+        var hay = (r.navio + ' ' + (r.porto || '') + ' ' + r.ref + ' ' + r.due + ' ' + (r.obs || '')).toLowerCase();
         if (hay.indexOf(busca) === -1) return false;
       }
       return true;
@@ -2683,6 +2686,13 @@
       ' — ainda falta a invoice, por isso continua em aberto.">' + escapeHtml(formatBR(r.conclusao)) + '</td>';
   }
 
+  // O porto é coluna opcional do follow-up. Em vez de abrir mais uma coluna
+  // na tabela (já larga), ele aparece como segunda linha da célula do navio —
+  // e some de vez quando a planilha não traz a informação.
+  function mxPortoHtml(r) {
+    return r.porto ? '<span class="mx-porto">' + escapeHtml(r.porto) + '</span>' : '';
+  }
+
   function renderMxNavios() {
     var rows = mxFilteredNavios();
     var counts = mxCountByNavio(mxNavios());
@@ -2702,7 +2712,7 @@
       if (r.nova) cls.push('mx-nova');
       if (first) cls.push('mx-group-start');
       return '<tr class="' + cls.join(' ') + '">' +
-        '<td class="mx-navio">' + (first ? escapeHtml(r.navio) : '') + '</td>' +
+        '<td class="mx-navio">' + (first ? escapeHtml(r.navio) + mxPortoHtml(r) : '') + '</td>' +
         '<td class="mx-ref' + (refCounts[r.ref] > 1 ? ' mx-dup' : '') + '" title="' + (refCounts[r.ref] > 1 ? 'REF repetida em mais de uma DUE' : '') + '">' + escapeHtml(r.ref) + '</td>' +
         '<td class="mx-due' + (mxDueValida(r.due) ? '' : ' mx-invalid') + '" title="' + (mxDueValida(r.due) ? '' : 'DUE fora do padrão AABR + 10 dígitos') + '">' + escapeHtml(r.due) + '</td>' +
         '<td>' + mxStatusSelectHtml(r) + '</td>' +
@@ -2721,7 +2731,7 @@
     var busca = mxFilters.buscaEnviados.toLowerCase();
     var rows = mxEnviados().filter(function (r) {
       if (!busca) return true;
-      return (r.navio + ' ' + r.ref + ' ' + r.due).toLowerCase().indexOf(busca) !== -1;
+      return (r.navio + ' ' + (r.porto || '') + ' ' + r.ref + ' ' + r.due).toLowerCase().indexOf(busca) !== -1;
     }).sort(function (a, b) {
       return String(b.saiuEm || '').localeCompare(String(a.saiuEm || '')) || a.navio.localeCompare(b.navio, 'pt-BR');
     });
@@ -2731,7 +2741,7 @@
     }
     el.mxEnviadosBody.innerHTML = rows.map(function (r) {
       return '<tr>' +
-        '<td class="mx-navio">' + escapeHtml(r.navio) + '</td>' +
+        '<td class="mx-navio">' + escapeHtml(r.navio) + mxPortoHtml(r) + '</td>' +
         '<td class="mx-ref">' + escapeHtml(r.ref) + '</td>' +
         '<td class="mx-due">' + escapeHtml(r.due) + '</td>' +
         '<td class="' + mxStatusClass(r.status) + '"' + mxStatusTitleAttr(r.status) + '>' + escapeHtml(r.status) + '</td>' +
@@ -2821,6 +2831,7 @@
     var iDue = findCol(['DUE', 'DU-E']);
     // Colunas do follow-up de farol/averbação. Opcionais: o formato antigo,
     // só com navio/REF/DUE, continua valendo.
+    var iPorto = findCol(['PORTO', 'TERMINAL']);
     var iEmbarque = findCol(['EMBARQUE']);
     var iAverb = findCol(['AVERBA']);
     var iConcl = findCol(['CONCLUS']);
@@ -2830,15 +2841,22 @@
 
     var rows = [];
     var navioAtual = '';
+    // Porto repete a lógica do navio: na planilha a célula costuma vir
+    // preenchida só na primeira linha do grupo, então o valor é carregado
+    // para as linhas seguintes até trocar de navio.
+    var portoAtual = '';
     for (var k = 1; k < lines.length; k++) {
       var c = cells(lines[k]);
       var navio = iNavio !== -1 ? (c[iNavio] || '') : '';
-      if (navio) navioAtual = navio;
+      if (navio) { navioAtual = navio; portoAtual = ''; }
+      var porto = iPorto !== -1 ? (c[iPorto] || '') : '';
+      if (porto) portoAtual = porto;
       var ref = (c[iRef] || '').toUpperCase();
       var due = (c[iDue] || '').toUpperCase().replace(/\s/g, '');
       if (!ref) continue;
       rows.push({
         navio: navioAtual,
+        porto: portoAtual,
         ref: ref,
         due: due,
         embarque: iEmbarque !== -1 ? mxParseData(c[iEmbarque]) : '',
@@ -2879,7 +2897,7 @@
     var byRefAtual = {};
     atuais.forEach(function (r) { byRefAtual[r.ref] = r; });
 
-    var plan = { novasNavioExistente: [], novasNavioInedito: [], enviadas: [], dueCorrigida: [], refRepetida: [], datas: [], hoje: hoje, moverEnviadas: true };
+    var plan = { novasNavioExistente: [], novasNavioInedito: [], enviadas: [], dueCorrigida: [], refRepetida: [], datas: [], portos: [], hoje: hoje, moverEnviadas: true };
 
     // Saiu do follow-up, ou já está OK / COMPLETO → documentação enviada.
     atuais.forEach(function (r) {
@@ -2899,6 +2917,16 @@
       if (!f.embarque && !f.averbacao && !f.conclusao) return;
       if (f.embarque === (atual.embarque || '') && f.averbacao === (atual.averbacao || '') && f.conclusao === (atual.conclusao || '')) return;
       plan.datas.push({ ref: f.ref, navio: atual.navio, embarque: f.embarque, averbacao: f.averbacao, conclusao: f.conclusao });
+    });
+
+    // Porto: coluna opcional do follow-up. Só entra quando vem preenchida —
+    // planilha sem a coluna (ou com a célula vazia) nunca apaga o que já
+    // está guardado aqui.
+    followup.forEach(function (f) {
+      var atual = byRefAtual[f.ref];
+      if (!atual || !f.porto) return;
+      if (f.porto === (atual.porto || '')) return;
+      plan.portos.push({ ref: f.ref, navio: atual.navio, de: atual.porto || '', para: f.porto });
     });
 
     // Mesma REF com DUE diferente = correção de número, não envio.
@@ -2921,9 +2949,9 @@
       if (byRefAtual[f.ref]) return;
       if (naviosConhecidos[f.navio]) {
         var herdado = mxPredominantStatus(f.navio) || 'A VERIFICAR';
-        plan.novasNavioExistente.push({ ref: f.ref, navio: f.navio, due: f.due, status: herdado, embarque: f.embarque, averbacao: f.averbacao, conclusao: f.conclusao });
+        plan.novasNavioExistente.push({ ref: f.ref, navio: f.navio, porto: f.porto, due: f.due, status: herdado, embarque: f.embarque, averbacao: f.averbacao, conclusao: f.conclusao });
       } else {
-        plan.novasNavioInedito.push({ ref: f.ref, navio: f.navio, due: f.due, status: 'A VERIFICAR', embarque: f.embarque, averbacao: f.averbacao, conclusao: f.conclusao });
+        plan.novasNavioInedito.push({ ref: f.ref, navio: f.navio, porto: f.porto, due: f.due, status: 'A VERIFICAR', embarque: f.embarque, averbacao: f.averbacao, conclusao: f.conclusao });
       }
     });
 
@@ -2961,6 +2989,14 @@
       });
     });
 
+    plan.portos.forEach(function (pt) {
+      mexico.rows.forEach(function (r) {
+        if (r.ref !== pt.ref) return;
+        r.porto = pt.para;
+        r.updatedAt = stamp;
+      });
+    });
+
     plan.dueCorrigida.forEach(function (c) {
       mexico.rows.forEach(function (r) {
         if (r.ref !== c.ref || r.lista === 'enviados') return;
@@ -2987,10 +3023,10 @@
     });
 
     plan.novasNavioExistente.forEach(function (n) {
-      mexico.rows.push({ id: mxRowId(n.ref, n.due), lista: 'navios', navio: n.navio, ref: n.ref, due: n.due, status: n.status, obs: 'NOVA - herdou status predominante do navio, confirmar', nova: 1, desde: todayISO(), embarque: n.embarque || '', averbacao: n.averbacao || '', conclusao: n.conclusao || '', updatedAt: stamp });
+      mexico.rows.push({ id: mxRowId(n.ref, n.due), lista: 'navios', navio: n.navio, porto: n.porto || '', ref: n.ref, due: n.due, status: n.status, obs: 'NOVA - herdou status predominante do navio, confirmar', nova: 1, desde: todayISO(), embarque: n.embarque || '', averbacao: n.averbacao || '', conclusao: n.conclusao || '', updatedAt: stamp });
     });
     plan.novasNavioInedito.forEach(function (n) {
-      mexico.rows.push({ id: mxRowId(n.ref, n.due), lista: 'navios', navio: n.navio, ref: n.ref, due: n.due, status: n.status, obs: 'NOVA - navio inedito, confirmar status', nova: 1, desde: todayISO(), embarque: n.embarque || '', averbacao: n.averbacao || '', conclusao: n.conclusao || '', updatedAt: stamp });
+      mexico.rows.push({ id: mxRowId(n.ref, n.due), lista: 'navios', navio: n.navio, porto: n.porto || '', ref: n.ref, due: n.due, status: n.status, obs: 'NOVA - navio inedito, confirmar status', nova: 1, desde: todayISO(), embarque: n.embarque || '', averbacao: n.averbacao || '', conclusao: n.conclusao || '', updatedAt: stamp });
     });
 
     saveAndRenderMexico();
@@ -3025,11 +3061,12 @@
     var sumiram = plan.enviadas.filter(function (e) { return e.sumiu; });
     var enviadasEfetivas = plan.moverEnviadas ? plan.enviadas.length : plan.enviadas.length - sumiram.length;
     var total = plan.novasNavioExistente.length + plan.novasNavioInedito.length + enviadasEfetivas +
-      plan.dueCorrigida.length + plan.refRepetida.length + plan.datas.length;
+      plan.dueCorrigida.length + plan.refRepetida.length + plan.datas.length + plan.portos.length;
     var html = '<div class="mx-summary">' +
       '<span class="badge badge-granel">' + (plan.novasNavioExistente.length + plan.novasNavioInedito.length) + ' nova(s)</span>' +
       '<span class="badge badge-ok">' + enviadasEfetivas + ' enviada(s)</span>' +
       (plan.datas.length ? '<span class="badge badge-mexico">' + plan.datas.length + ' com datas novas</span>' : '') +
+      (plan.portos.length ? '<span class="badge badge-fcomex">' + plan.portos.length + ' com porto</span>' : '') +
       '<span class="badge badge-warn">' + (plan.dueCorrigida.length + plan.refRepetida.length) + ' divergência(s)</span>' +
       '</div>';
 
@@ -3056,6 +3093,10 @@
         if (i.conclusao) partes.push('conclusão ' + formatBR(i.conclusao));
         return escapeHtml(i.navio) + ' · ' + escapeHtml(i.ref) + ' <span style="color:var(--muted);">' + escapeHtml(partes.join(' · ')) + '</span>';
       });
+      html += block('Porto preenchido pelo follow-up', plan.portos, function (i) {
+        return escapeHtml(i.navio) + ' · ' + escapeHtml(i.ref) + ' → <strong>' + escapeHtml(i.para) + '</strong>' +
+          (i.de ? ' <span style="color:var(--muted);">(antes: ' + escapeHtml(i.de) + ')</span>' : '');
+      });
       html += block('DUE corrigida (mesma REF, número diferente)', plan.dueCorrigida, function (i) {
         return escapeHtml(i.ref) + ': ' + escapeHtml(i.de) + ' → ' + escapeHtml(i.para);
       });
@@ -3074,7 +3115,7 @@
   function mxExportCsv() {
     var rows = mxSortedNavios();
     var counts = mxCountByNavio(mxNavios());
-    var lines = [['NAVIO', 'REF. PIBERNAT', 'DUE', 'STATUS', 'EMBARQUE', 'AVERBACAO', 'DIAS DA AVERBACAO', 'FAROL', 'CONCLUSAO', 'OBS', 'QTD DUES'].map(csvEscape).join(';')];
+    var lines = [['NAVIO', 'REF. PIBERNAT', 'DUE', 'STATUS', 'EMBARQUE', 'AVERBACAO', 'DIAS DA AVERBACAO', 'FAROL', 'CONCLUSAO', 'OBS', 'QTD DUES', 'PORTO'].map(csvEscape).join(';')];
     var lastNavio = null;
     rows.forEach(function (r) {
       var first = r.navio !== lastNavio;
@@ -3084,7 +3125,7 @@
         r.embarque ? formatBR(r.embarque) : '', r.averbacao ? formatBR(r.averbacao) : '',
         dias === null ? '' : dias, mxFarolVermelho(r) ? 'VERMELHO' : 'VERDE',
         r.conclusao ? formatBR(r.conclusao) : '',
-        r.obs || '', first ? counts[r.navio] : ''].map(csvEscape).join(';'));
+        r.obs || '', first ? counts[r.navio] : '', r.porto || ''].map(csvEscape).join(';'));
     });
     downloadCsv(lines, 'mexico-followup_' + todayISO() + '.csv');
   }
@@ -3221,7 +3262,7 @@
     var lastRow = Math.max(navios.length + 1, 2);
 
     // --- Navios ---
-    var naviosRows = [['NAVIO', 'REF. PIBERNAT', 'DUE', 'STATUS', 'OBS', 'QTD DUES'].map(function (h) { return { v: h, s: 1 }; })];
+    var naviosRows = [['NAVIO', 'REF. PIBERNAT', 'DUE', 'STATUS', 'OBS', 'QTD DUES', 'PORTO'].map(function (h) { return { v: h, s: 1 }; })];
     var lastNavio = null;
     navios.forEach(function (r) {
       var first = r.navio !== lastNavio;
@@ -3235,6 +3276,7 @@
         { v: r.status, s: base },
         { v: r.obs || '', s: base },
         first ? { v: counts[r.navio], s: base } : { v: '', s: base },
+        { v: r.porto || '', s: base },
       ]);
     });
 
@@ -3255,9 +3297,9 @@
       '<formula1>"' + MX_STATUS_OPTIONS.join(',') + '"</formula1></dataValidation></dataValidations>';
 
     // --- Enviados ---
-    var enviadosRows = [['NAVIO', 'REF. PIBERNAT', 'DUE', 'ULTIMO STATUS', 'SAIU DO FOLLOW-UP EM', 'OBS'].map(function (h) { return { v: h, s: 1 }; })];
+    var enviadosRows = [['NAVIO', 'REF. PIBERNAT', 'DUE', 'ULTIMO STATUS', 'SAIU DO FOLLOW-UP EM', 'OBS', 'PORTO'].map(function (h) { return { v: h, s: 1 }; })];
     enviados.forEach(function (r) {
-      enviadosRows.push([r.navio, r.ref, r.due, r.status, r.saiuEm ? formatBR(r.saiuEm) : '', r.obs || '']);
+      enviadosRows.push([r.navio, r.ref, r.due, r.status, r.saiuEm ? formatBR(r.saiuEm) : '', r.obs || '', r.porto || '']);
     });
 
     // --- Divergencias ---
@@ -3306,6 +3348,7 @@
       ['4. DUE em vermelho negrito = numero fora do padrao AABR + 10 digitos.'],
       ['5. REF em roxo negrito = a mesma REF aparece em mais de uma DUE.'],
       ['6. Coluna QTD DUES define a ordem: navios com mais DUEs ficam no topo.'],
+      ['6a. Coluna PORTO e preenchida quando o follow-up traz a coluna PORTO (ou TERMINAL).'],
       ["7. Aba 'Enviados' = navios que sairam do follow-up, ou seja, ja foram enviados."],
       ["8. Aba 'Divergencias' = itens que precisam de confirmacao manual."],
       [],
@@ -3326,8 +3369,8 @@
     ];
 
     var sheets = [
-      { name: 'Navios', xml: sheetXml(naviosRows, { widths: [26, 16, 18, 24, 44, 11], freeze: true, autoFilter: 'A1:F' + lastRow, conditional: cond, validation: validation }) },
-      { name: 'Enviados', xml: sheetXml(enviadosRows, { widths: [26, 16, 18, 20, 22, 46], freeze: true }) },
+      { name: 'Navios', xml: sheetXml(naviosRows, { widths: [26, 16, 18, 24, 44, 11, 20], freeze: true, autoFilter: 'A1:G' + lastRow, conditional: cond, validation: validation }) },
+      { name: 'Enviados', xml: sheetXml(enviadosRows, { widths: [26, 16, 18, 20, 22, 46, 20], freeze: true }) },
       { name: 'Divergencias', xml: sheetXml(divRows, { widths: [28, 16, 70, 50, 14], freeze: true }) },
       { name: 'Dashboard', xml: sheetXml(painelRows, { widths: [44, 12] }) },
       { name: 'Como usar', xml: sheetXml(ajudaRows, { widths: [110] }) },
