@@ -515,7 +515,7 @@
   .lotes-feitos { margin-top: 8px; }
   .lotes-toggle { padding-left: 0; margin-top: 6px; font-size: 12.5px; }
 
-  .mx-porto { display: block; font-size: 11.5px; font-weight: 400; color: var(--muted); margin-top: 2px; }
+  .mx-porto { color: var(--muted); white-space: nowrap; }
 
   .tutorial-link { margin: 14px 0 0; display: flex; flex-direction: column; gap: 3px; }
   .tutorial-link a { font-size: 13.5px; font-weight: 600; color: var(--accent); text-decoration: none; }
@@ -1099,6 +1099,7 @@
                 <thead>
                   <tr>
                     <th>Navio</th>
+                    <th>Porto</th>
                     <th>REF. Pibernat</th>
                     <th>DUE</th>
                     <th>Status</th>
@@ -1120,10 +1121,11 @@
               <input id="mxBuscaEnviados" type="text" placeholder="Buscar navio, porto, REF ou DUE..." />
             </div>
             <div class="table-wrap">
-              <table class="ledger mx-table" style="min-width:820px;">
+              <table class="ledger mx-table" style="min-width:940px;">
                 <thead>
                   <tr>
                     <th>Navio</th>
+                    <th>Porto</th>
                     <th>REF. Pibernat</th>
                     <th>DUE</th>
                     <th>Último status</th>
@@ -1165,6 +1167,8 @@
                 <li><strong>REF em roxo negrito</strong> = a mesma REF aparece em mais de uma DUE.</li>
                 <li><strong>Esperando</strong> = dias desde a averbação, com o mesmo farol da planilha: 🔴 a partir de 7 dias, 🟢 abaixo disso. Sem data de averbação, conta desde a entrada aqui.</li>
                 <li><strong>Conclusão</strong> = o processo da DUE terminou. <strong>Não</strong> quer dizer que foi feito: a invoice ainda não chegou, então a linha continua em aberto até você clicar em "Enviar".</li>
+                <li><strong>"Enviar"</strong> aparece uma vez por navio e move <strong>todas</strong> as DUEs dele de uma vez — é assim que a documentação sai. Para desfazer, use "Voltar" na aba Enviados (aí sim, DUE a DUE).</li>
+                <li><strong>Porto</strong> é do navio: preenchido quando o follow-up traz a coluna PORTO (ou TERMINAL), vale para todas as DUEs daquele navio.</li>
                 <li>A ordem segue o <strong>tempo de espera</strong>: o navio parado há mais tempo fica no topo. Empate volta para a quantidade de DUEs.</li>
                 <li><strong>"AGUARDANDO INV"</strong> = só falta a invoice. <strong>"AGUARDANDO INV + DOCS"</strong> = falta a invoice e pelo menos mais um documento (CO, LPCO, CS, NF) — passe o mouse no status para ver a explicação.</li>
                 <li>O status tem lista fixa, para evitar variação de escrita ("TEM  INV" vs "TEM INV").</li>
@@ -2692,9 +2696,6 @@
       ' — ainda falta a invoice, por isso continua em aberto.">' + escapeHtml(formatBR(r.conclusao)) + '</td>';
   }
 
-  // O porto é coluna opcional do follow-up. Em vez de abrir mais uma coluna
-  // na tabela (já larga), ele aparece como segunda linha da célula do navio —
-  // e some de vez quando a planilha não traz a informação.
   // O porto é do navio, não da DUE. Quando uma linha recebe o porto, as demais
   // do mesmo navio passam a mostrar o mesmo — inclusive as que já estão em
   // Enviados. Só preenche o que está vazio: nada aqui sobrescreve um porto.
@@ -2713,10 +2714,6 @@
     return mudou;
   }
 
-  function mxPortoHtml(r) {
-    return r.porto ? '<span class="mx-porto">' + escapeHtml(r.porto) + '</span>' : '';
-  }
-
   function renderMxNavios() {
     var rows = mxFilteredNavios();
     var counts = mxCountByNavio(mxNavios());
@@ -2725,7 +2722,7 @@
       var vazio = mxSeedIndisponivel && !mexico.rows.length
         ? 'Base inicial não carregada — abra o dashboard pelo endereço publicado, não como arquivo local.'
         : 'Nenhuma DUE encontrada.';
-      el.mxNaviosBody.innerHTML = '<tr><td colspan="9" class="empty-row">' + escapeHtml(vazio) + '</td></tr>';
+      el.mxNaviosBody.innerHTML = '<tr><td colspan="10" class="empty-row">' + escapeHtml(vazio) + '</td></tr>';
       return;
     }
     var lastNavio = null;
@@ -2736,7 +2733,8 @@
       if (r.nova) cls.push('mx-nova');
       if (first) cls.push('mx-group-start');
       return '<tr class="' + cls.join(' ') + '">' +
-        '<td class="mx-navio">' + (first ? escapeHtml(r.navio) + mxPortoHtml(r) : '') + '</td>' +
+        '<td class="mx-navio">' + (first ? escapeHtml(r.navio) : '') + '</td>' +
+        '<td class="mx-porto">' + (first ? (escapeHtml(r.porto || '') || '—') : '') + '</td>' +
         '<td class="mx-ref' + (refCounts[r.ref] > 1 ? ' mx-dup' : '') + '" title="' + (refCounts[r.ref] > 1 ? 'REF repetida em mais de uma DUE' : '') + '">' + escapeHtml(r.ref) + '</td>' +
         '<td class="mx-due' + (mxDueValida(r.due) ? '' : ' mx-invalid') + '" title="' + (mxDueValida(r.due) ? '' : 'DUE fora do padrão AABR + 10 dígitos') + '">' + escapeHtml(r.due) + '</td>' +
         '<td>' + mxStatusSelectHtml(r) + '</td>' +
@@ -2745,9 +2743,8 @@
         '<td class="truncate" title="' + escapeHtml(r.obs || '') + '" style="color:var(--muted);">' + (escapeHtml(r.obs || '') || '—') + '</td>' +
         '<td class="num mx-qtd">' + (first ? counts[r.navio] : '') + '</td>' +
         '<td><div class="row-actions">' +
-          '<button data-mxaction="enviar" data-ref="' + escapeHtml(r.id) + '" class="btn btn-text" style="padding:4px 8px;font-size:12px;">Enviar</button>' +
-          (first && counts[r.navio] > 1
-            ? '<button data-mxaction="enviar-navio" data-navio="' + escapeHtml(r.navio) + '" class="btn btn-text" style="padding:4px 8px;font-size:12px;" title="Move as ' + counts[r.navio] + ' DUEs deste navio de uma vez">Enviar navio</button>'
+          (first
+            ? '<button data-mxaction="enviar" data-navio="' + escapeHtml(r.navio) + '" class="btn btn-text" style="padding:4px 8px;font-size:12px;" title="Move as ' + counts[r.navio] + ' DUE(s) deste navio">Enviar</button>'
             : '') +
         '</div></td>' +
       '</tr>';
@@ -2763,12 +2760,13 @@
       return String(b.saiuEm || '').localeCompare(String(a.saiuEm || '')) || a.navio.localeCompare(b.navio, 'pt-BR');
     });
     if (!rows.length) {
-      el.mxEnviadosBody.innerHTML = '<tr><td colspan="6" class="empty-row">Nenhum registro enviado.</td></tr>';
+      el.mxEnviadosBody.innerHTML = '<tr><td colspan="7" class="empty-row">Nenhum registro enviado.</td></tr>';
       return;
     }
     el.mxEnviadosBody.innerHTML = rows.map(function (r) {
       return '<tr>' +
-        '<td class="mx-navio">' + escapeHtml(r.navio) + mxPortoHtml(r) + '</td>' +
+        '<td class="mx-navio">' + escapeHtml(r.navio) + '</td>' +
+        '<td class="mx-porto">' + (escapeHtml(r.porto || '') || '—') + '</td>' +
         '<td class="mx-ref">' + escapeHtml(r.ref) + '</td>' +
         '<td class="mx-due">' + escapeHtml(r.due) + '</td>' +
         '<td class="' + mxStatusClass(r.status) + '"' + mxStatusTitleAttr(r.status) + '>' + escapeHtml(r.status) + '</td>' +
@@ -3461,6 +3459,7 @@
       ['6. Coluna QTD DUES define a ordem: navios com mais DUEs ficam no topo.'],
       ['6a. Coluna PORTO e preenchida quando o follow-up traz a coluna PORTO (ou TERMINAL).'],
       ["7. Aba 'Enviados' = navios que sairam do follow-up, ou seja, ja foram enviados."],
+      ["7a. No dashboard, o botao Enviar vale para o navio inteiro - move todas as DUEs dele."],
       ["8. Aba 'Divergencias' = itens que precisam de confirmacao manual."],
       [],
       [{ v: 'ATUALIZACAO AUTOMATICA', s: 2 }],
@@ -4339,11 +4338,11 @@
     saveAndRenderMexico();
   });
 
-  // Um navio que já foi resolvido sai inteiro: quando o follow-up traz as DUEs
-  // dele como novas mas a documentação já tinha ido, marcar uma por uma é só
-  // repetição. Reversível pelo "Voltar" da aba Enviados.
+  // O envio é por navio, não por DUE: a documentação do México vai do navio
+  // inteiro de uma vez, então um clique resolve o grupo. Reversível DUE a DUE
+  // pelo "Voltar" da aba Enviados.
   el.mxNaviosBody.addEventListener('click', function (e) {
-    var btnNavio = e.target.closest('[data-mxaction="enviar-navio"]');
+    var btnNavio = e.target.closest('[data-mxaction="enviar"]');
     if (!btnNavio) return;
     var navio = btnNavio.getAttribute('data-navio');
     var stamp = Date.now();
@@ -4360,21 +4359,6 @@
     if (!n) return;
     saveAndRenderMexico();
     toast(n + ' DUE(s) de ' + navio + ' movidas para Enviados.');
-  });
-
-  el.mxNaviosBody.addEventListener('click', function (e) {
-    var btn = e.target.closest('[data-mxaction="enviar"]');
-    if (!btn) return;
-    var id = btn.getAttribute('data-ref');
-    var row = mexico.rows.filter(function (r) { return r.id === id; })[0];
-    if (!row) return;
-    row.lista = 'enviados';
-    row.saiuEm = todayISO();
-    row.nova = 0;
-    row.obs = 'Marcado como enviado manualmente';
-    row.updatedAt = Date.now();
-    saveAndRenderMexico();
-    toast('DUE movida para Enviados.');
   });
 
   el.mxEnviadosBody.addEventListener('click', function (e) {
