@@ -1172,7 +1172,7 @@
                 <li><strong>Conclusão</strong> = o processo da DUE terminou. <strong>Não</strong> quer dizer que foi feito: a invoice ainda não chegou, então a linha continua em aberto até você clicar em "Enviar".</li>
                 <li><strong>"Enviar"</strong> aparece uma vez por navio e move <strong>todas</strong> as DUEs dele de uma vez — é assim que a documentação sai. Para desfazer, use "Voltar" na aba Enviados (aí sim, DUE a DUE).</li>
                 <li><strong>Lixeira</strong> = a DUE sai do controle de vez, nas duas abas. Use quando a linha nem deveria estar aqui (veio repetida ou de outro escopo). Diferente de "Enviar", isso não volta pelo "Voltar".</li>
-                <li><strong>Porto</strong> é do navio: vale para todas as DUEs dele. Vem preenchido quando o follow-up traz a coluna PORTO (ou TERMINAL); enquanto a planilha não tiver essa coluna, <strong>clique no porto</strong> (ou no "+ porto") e digite — dá para corrigir do mesmo jeito.</li>
+                <li><strong>Porto</strong> é do navio: vale para todas as DUEs dele. Vem preenchido quando o follow-up traz a coluna PORTO (ou TERMINAL); enquanto a planilha não tiver essa coluna, <strong>clique no porto</strong> (ou no "+ porto") e digite — dá para corrigir do mesmo jeito. Fica guardado só o nome: digitar "Porto de Rio Grande" aparece como <strong>Rio Grande</strong>.</li>
                 <li>A ordem segue o <strong>tempo de espera</strong>: o navio parado há mais tempo fica no topo. Empate volta para a quantidade de DUEs.</li>
                 <li><strong>"AGUARDANDO INV"</strong> = só falta a invoice. <strong>"AGUARDANDO INV + DOCS"</strong> = falta a invoice e pelo menos mais um documento (CO, LPCO, CS, NF) — passe o mouse no status para ver a explicação.</li>
                 <li>O status tem lista fixa, para evitar variação de escrita ("TEM  INV" vs "TEM INV").</li>
@@ -1414,6 +1414,8 @@
       if (r.lista !== 'enviados' && !r.desde) r.desde = MEXICO_SEED_DATE;
       var atual = mxStatusAtual(r.status);
       if (atual !== r.status) { r.status = atual; mudou = true; }
+      var porto = mxPortoLimpo(r.porto);
+      if (porto !== (r.porto || '')) { r.porto = porto; mudou = true; }
     });
     if (mxPropagarPortos(rows, Date.now())) mudou = true;
     if (mudou) mxPrecisaRegravar = true;
@@ -2703,6 +2705,17 @@
   // O porto é do navio, não da DUE. Quando uma linha recebe o porto, as demais
   // do mesmo navio passam a mostrar o mesmo — inclusive as que já estão em
   // Enviados. Só preenche o que está vazio: nada aqui sobrescreve um porto.
+  // "Porto de Rio Grande" e "Terminal de Itaqui" viram "Rio Grande" e
+  // "Itaqui": o cabeçalho da coluna já diz que é porto, repetir a palavra só
+  // alarga a coluna. O prefixo só cai quando vem com a preposição, senão
+  // "Porto Alegre" perderia o nome.
+  function mxPortoLimpo(valor) {
+    return String(valor || '')
+      .replace(/^\s*(portos?|terminais|terminal)\s+(de|do|da|dos|das)\s+/i, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
   function mxPropagarPortos(rows, stamp) {
     var porNavio = {};
     rows.forEach(function (r) {
@@ -2733,7 +2746,7 @@
     mexico.rows.forEach(function (r) { if (r.navio === navio && r.porto && !atual) atual = r.porto; });
     var resp = prompt('Porto de ' + navio + ' (vale para todas as DUEs do navio):', atual);
     if (resp === null) return;
-    var porto = resp.trim();
+    var porto = mxPortoLimpo(resp);
     var stamp = Date.now();
     var n = 0;
     mexico.rows.forEach(function (r) {
@@ -2766,15 +2779,15 @@
       if (r.nova) cls.push('mx-nova');
       if (first) cls.push('mx-group-start');
       return '<tr class="' + cls.join(' ') + '">' +
-        '<td class="mx-navio">' + (first ? escapeHtml(r.navio) : '') + '</td>' +
-        '<td class="mx-porto">' + (first ? mxPortoBtnHtml(r) : '') + '</td>' +
+        '<td class="mx-navio">' + escapeHtml(r.navio) + '</td>' +
+        '<td class="mx-porto">' + mxPortoBtnHtml(r) + '</td>' +
         '<td class="mx-ref' + (refCounts[r.ref] > 1 ? ' mx-dup' : '') + '" title="' + (refCounts[r.ref] > 1 ? 'REF repetida em mais de uma DUE' : '') + '">' + escapeHtml(r.ref) + '</td>' +
         '<td class="mx-due' + (mxDueValida(r.due) ? '' : ' mx-invalid') + '" title="' + (mxDueValida(r.due) ? '' : 'DUE fora do padrão AABR + 10 dígitos') + '">' + escapeHtml(r.due) + '</td>' +
         '<td>' + mxStatusSelectHtml(r) + '</td>' +
         mxEsperandoCell(r) +
         mxConclusaoCell(r) +
         '<td class="truncate" title="' + escapeHtml(r.obs || '') + '" style="color:var(--muted);">' + (escapeHtml(r.obs || '') || '—') + '</td>' +
-        '<td class="num mx-qtd">' + (first ? counts[r.navio] : '') + '</td>' +
+        '<td class="num mx-qtd">' + counts[r.navio] + '</td>' +
         '<td><div class="row-actions">' +
           (first
             ? '<button data-mxaction="enviar" data-navio="' + escapeHtml(r.navio) + '" class="btn btn-text" style="padding:4px 8px;font-size:12px;" title="Move as ' + counts[r.navio] + ' DUE(s) deste navio">Enviar</button>'
@@ -2913,7 +2926,7 @@
       var c = cells(lines[k]);
       var navio = iNavio !== -1 ? (c[iNavio] || '') : '';
       if (navio) { navioAtual = navio; portoAtual = ''; }
-      var porto = iPorto !== -1 ? (c[iPorto] || '') : '';
+      var porto = iPorto !== -1 ? mxPortoLimpo(c[iPorto]) : '';
       if (porto) portoAtual = porto;
       var ref = (c[iRef] || '').toUpperCase();
       var due = (c[iDue] || '').toUpperCase().replace(/\s/g, '');
