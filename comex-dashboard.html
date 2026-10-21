@@ -247,22 +247,6 @@
     color: var(--ink); margin: 0 0 14px;
   }
 
-  .cards-row { display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  @media (min-width: 560px) { .cards-row { grid-template-columns: 1fr 1fr; } }
-  @media (min-width: 1024px) { .cards-row { grid-template-columns: repeat(4, 1fr); } }
-  @media (min-width: 1500px) { .cards-row { grid-template-columns: repeat(8, 1fr); } }
-
-  .stat-card { background: var(--panel); padding: 18px; animation: fade-up .35s var(--ease) both; }
-  .stat-card .cat-name { font-size: 13px; font-weight: 500; color: var(--muted); display: flex; align-items: center; gap: 7px; margin-bottom: 14px; }
-  .stat-card .cat-name::before { content: ""; width: 8px; height: 8px; border-radius: 999px; background: var(--cat); flex-shrink: 0; }
-  .stat-card .big-num { font-size: 32px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1; }
-  .stat-card .sub { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
-  .stat-card:nth-child(1) { animation-delay: 0ms; }
-  .stat-card:nth-child(2) { animation-delay: 30ms; }
-  .stat-card:nth-child(3) { animation-delay: 60ms; }
-  .stat-card:nth-child(4) { animation-delay: 90ms; }
-  .stat-card:nth-child(5) { animation-delay: 120ms; }
-
   @keyframes fade-up { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
   .layout-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
@@ -605,7 +589,7 @@
   <main class="page container">
     <div id="viewDashboard" class="view">
 
-    <!-- 1. Indicadores diários -->
+    <!-- Alertas do dia -->
     <section>
       <div id="loteAlert" class="alert-banner alert-banner-info hidden">
         <span><strong id="loteAlertCount"></strong> lote(s) de registros prontos para importar.</span>
@@ -615,8 +599,6 @@
         <span><strong id="pendingAlertCount"></strong> processo(s) pendente(s) há mais de um dia.</span>
         <button id="pendingAlertBtn" type="button" class="btn btn-text">Ver pendências</button>
       </div>
-      <h2 class="section-title">Indicadores de hoje</h2>
-      <div id="dailyCards" class="cards-row"></div>
     </section>
 
     <div class="layout-grid">
@@ -1726,7 +1708,6 @@
   // ---------------------------------------------------------------------
   var el = {
     clockDate: document.getElementById('clockDate'),
-    dailyCards: document.getElementById('dailyCards'),
     openCount: document.getElementById('openCount'),
     openSummary: document.getElementById('openSummary'),
     openBody: document.getElementById('openBody'),
@@ -2118,38 +2099,6 @@
     el.openBody.innerHTML =
       '<div><p class="open-col-title">México · aguardando documentação</p>' + colMx + '</div>' +
       '<div><p class="open-col-title">Histórico · processos pendentes</p>' + colPend + '</div>';
-  }
-
-  // ---------------------------------------------------------------------
-  // 5. Indicadores diários
-  // ---------------------------------------------------------------------
-  var prevDailyCounts = {};
-
-  function renderDailyCards() {
-    var today = todayISO();
-    var data = CATEGORIES.map(function (cat) {
-      var entriesToday = tasks.filter(function (t) { return t.categoria === cat.id && t.data === today; });
-      return {
-        cat: cat,
-        concl: entriesToday.filter(function (t) { return t.status === 'Concluído'; }).length,
-        pend: entriesToday.filter(function (t) { return t.status === 'Pendente'; }).length,
-      };
-    });
-    el.dailyCards.innerHTML = data.map(function (d) {
-      var from = prevDailyCounts.hasOwnProperty(d.cat.id) ? prevDailyCounts[d.cat.id] : d.concl;
-      return (
-        '<div class="stat-card" style="--cat: var(--cat-' + d.cat.id + ')">' +
-          '<span class="cat-name">' + escapeHtml(d.cat.label) + '</span>' +
-          '<div class="big-num" data-cat="' + d.cat.id + '">' + from + '</div>' +
-          '<div class="sub">concluído(s) hoje' + (d.pend > 0 ? ' · ' + d.pend + ' pendente(s)' : '') + '</div>' +
-        '</div>'
-      );
-    }).join('');
-    data.forEach(function (d) {
-      var node = el.dailyCards.querySelector('.big-num[data-cat="' + d.cat.id + '"]');
-      if (node) animateNumber(node, d.concl);
-      prevDailyCounts[d.cat.id] = d.concl;
-    });
   }
 
   // ---------------------------------------------------------------------
@@ -3777,7 +3726,6 @@
   function renderAll() {
     renderOpenPanel();
     renderPendingAlert();
-    renderDailyCards();
     renderYieldModule();
     renderWeeklyReport();
     renderMonthlyReport();
@@ -3850,7 +3798,12 @@
     items.forEach(function (item) {
       if (!item || !item.numeroProcesso || !categoryById(item.categoria)) return;
       var numeroProcesso = String(item.numeroProcesso);
-      var existing = tasks.filter(function (t) { return t.numeroProcesso === numeroProcesso; })[0];
+      // Registro nascido do painel México é dono do próprio nome (o navio): um
+      // lote importado nunca pode capturá-lo, senão o envio mudaria de categoria
+      // e o botão "Voltar" do painel não conseguiria mais desfazê-lo.
+      var existing = tasks.filter(function (t) {
+        return t.numeroProcesso === numeroProcesso && t.origem !== 'mexico';
+      })[0];
       if (existing) {
         existing.categoria = item.categoria;
         existing.emissor = item.categoria === CATEGORIA_COM_EMISSOR ? (item.emissor || '') : '';

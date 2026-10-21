@@ -1,5 +1,13 @@
 [
   {
+    "id": "2026-10-21-abertura-granel",
+    "titulo": "Abertura de processos — 82 aberturas conferidas",
+    "descricao": "Aberturas de 11/09 a 20/10, uma por planilha dos prints. Quem já estiver lançado só é atualizado.",
+    "criadoEm": "2026-10-21",
+    "qtd": 82,
+    "arquivo": "2026-10-21-abertura-granel.json"
+  },
+  {
     "id": "2026-10-21-faturamento",
     "titulo": "Faturamento FComex — 23 processos concluídos",
     "descricao": "Itaqui (12), Rio Grande (8), Santarém (2); 1 sem porto informado (MV RICHLAND SINGAPORE).",
