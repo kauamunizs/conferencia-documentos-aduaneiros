@@ -16,6 +16,14 @@
     "arquivo": "2026-10-21-faturamento.json"
   },
   {
+    "id": "2026-10-15-lancamento-ce",
+    "titulo": "Lançamento de CE — 19 navios (42 DUEs)",
+    "descricao": "42 DUEs em 19 navios. Chave 'CE <navio>' para não colidir com a abertura de processos, que usa o nome puro.",
+    "criadoEm": "2026-10-15",
+    "qtd": 19,
+    "arquivo": "2026-10-15-lancamento-ce.json"
+  },
+  {
     "id": "2026-10-15-faturamento",
     "titulo": "Faturamento FComex — 21 processos concluídos",
     "descricao": "Rio Grande (7), Itaqui (4), Barcarena (3), Tubarão (4), Santarém (3).",

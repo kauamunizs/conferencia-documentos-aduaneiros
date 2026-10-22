@@ -1,0 +1,141 @@
+{
+  "id": "2026-10-15-lancamento-ce",
+  "titulo": "Lançamento de CE — 19 navios (42 DUEs)",
+  "descricao": "Os CEs já lançados que não estavam marcados no dashboard, conferidos com a lista do Leo. Um registro por navio, com a quantidade de DUEs nas observações.",
+  "criadoEm": "2026-10-15",
+  "registros": [
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE CHRISEA",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "CHRISEA · 4 DUEs · processos 4015 e 4016 · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE YASA FALCON",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "YASA FALCON · 3 DUEs · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE CARAVOS GLORY",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "CARAVOS GLORY · 3 DUEs · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE LOWLANDS SKY",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "LOWLANDS SKY · 3 DUEs · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE TOP WEATHER",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "TOP WEATHER · 4 DUEs · processos 4017 e 4018 · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE YU LONG LING",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "YU LONG LING · 2 DUEs · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE STAR MONA",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "STAR MONA · 1 DUE · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE KARO T",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "KARO T · 3 DUEs · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE HONG DAI",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "HONG DAI · 3 DUEs · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE DARYA JAYA",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "DARYA JAYA · 1 DUE · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE TRUSTN TRADER",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "TRUSTN TRADER · 1 DUE · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE ATHOS M",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "ATHOS M · 3 DUEs · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE VENUS SKY",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "VENUS SKY · 3 DUEs · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE BELLA OLYMPIA",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "BELLA OLYMPIA · 2 DUEs · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE PHILIPPAKOS",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "PHILIPPAKOS · 1 DUE · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE MEDROSE",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "MEDROSE · 1 DUE · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE LH ANTHEA",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "LH ANTHEA · 1 DUE · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE ANDREAS JR",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "ANDREAS JR · 1 DUE · conferido com a lista do Leo"
+    },
+    {
+      "categoria": "ce",
+      "numeroProcesso": "CE NEFELEI",
+      "data": "2026-10-15",
+      "status": "Concluído",
+      "observacoes": "NEFELEI · 2 DUEs · conferido com a lista do Leo"
+    }
+  ]
+}
