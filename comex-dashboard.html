@@ -653,6 +653,10 @@
                 <label for="fObs">Observações</label>
                 <textarea id="fObs" rows="3" placeholder="Detalhes adicionais (opcional)"></textarea>
               </div>
+              <div class="field hidden" id="cadeiaField">
+                <label class="mx-check"><input id="fCadeia" type="checkbox" /> <span id="cadeiaLabel">Criar a próxima etapa</span></label>
+                <p class="sync-help" id="cadeiaHelp" style="margin:4px 0 0;"></p>
+              </div>
               <div class="form-actions">
                 <button id="submitBtn" type="submit" class="btn btn-primary">Adicionar registro</button>
                 <button id="cancelEditBtn" type="button" class="btn btn-text hidden">Cancelar</button>
@@ -1005,7 +1009,19 @@
           </div>
 
           <div class="tutorial-topic">
-            <h3>10. Resolução de dúvidas comuns</h3>
+            <h3>10. Cadeia de etapas</h3>
+            <p class="tutorial-source">Retificação &rarr; Docs averbados &rarr; Lançamento de CE</p>
+            <ol>
+              <li>São três etapas do <strong>mesmo processo</strong>, na ordem em que acontecem: retificar a DU-E, receber os docs averbados e lançar o CE.</li>
+              <li>Ao marcar uma etapa como <strong>Concluído</strong>, a seguinte é aberta sozinha como <strong>Pendente</strong>, com o mesmo número de processo e a data de hoje. Ela aparece em "Processos pendentes", marcada como <em>etapa da cadeia</em>.</li>
+              <li>Se a etapa seguinte não for acontecer (retificou e os docs averbados não vieram), apague pela <strong>lixeira</strong> ali mesmo. Ela não volta: cada registro abre a etapa seguinte uma única vez.</li>
+              <li>Para desligar, desmarque <em>"Abrir ... quando este ficar Concluído"</em> no formulário. A opção fica guardada neste navegador e aparece só nas categorias que têm etapa seguinte.</li>
+            </ol>
+            <p class="tutorial-tip"><strong>Importação de lote:</strong> vale também para os lotes — um lote de docs averbados concluídos abre os lançamentos de CE correspondentes, e o aviso diz quantas etapas foram abertas.</p>
+          </div>
+
+          <div class="tutorial-topic">
+            <h3>11. Resolução de dúvidas comuns</h3>
             <div class="table-wrap">
               <table class="ledger">
                 <thead>
@@ -1279,6 +1295,16 @@
   var VIEW_STORAGE_KEY = 'comex_dashboard_view_v1';
   var VIEWS = ['dashboard', 'historico', 'mexico', 'tutorial'];
   var LOTES_STORAGE_KEY = 'comex_dashboard_lotes_v1';
+  var CADEIA_STORAGE_KEY = 'comex_dashboard_cadeia_v1';
+
+  // Cadeia de etapas do mesmo processo: retificar leva a docs averbados, e
+  // docs averbados levam ao lançamento de CE. Concluir uma etapa cria a
+  // seguinte como Pendente, uma única vez — se a etapa não for acontecer
+  // (retificou e não mandou os docs), a lixeira resolve e ela não volta.
+  var CADEIA_ETAPAS = {
+    retificacao: 'averbados',
+    averbados: 'ce',
+  };
 
   var MX_STATUS_OPTIONS = [
     'AGUARDANDO INV', 'AGUARDANDO INV + DOCS', 'TEM INV', 'A VERIFICAR', 'OK / COMPLETO',
@@ -1748,6 +1774,10 @@
     fData: document.getElementById('fData'),
     fStatus: document.getElementById('fStatus'),
     fObs: document.getElementById('fObs'),
+    cadeiaField: document.getElementById('cadeiaField'),
+    fCadeia: document.getElementById('fCadeia'),
+    cadeiaLabel: document.getElementById('cadeiaLabel'),
+    cadeiaHelp: document.getElementById('cadeiaHelp'),
     submitBtn: document.getElementById('submitBtn'),
     cancelEditBtn: document.getElementById('cancelEditBtn'),
     importToggleBtn: document.getElementById('importToggleBtn'),
@@ -1862,6 +1892,73 @@
     var isCO = el.fCategoria.value === CATEGORIA_COM_EMISSOR;
     el.fEmissorField.classList.toggle('hidden', !isCO);
     if (!isCO) el.fEmissor.value = '';
+  }
+
+  function iconeLixeira() {
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>';
+  }
+
+  // A cadeia é ligada por padrão: o lançamento de CE é sempre do mesmo
+  // responsável, então vale mais criar e apagar o que não serve do que
+  // lembrar de abrir a etapa seguinte na mão.
+  var cadeiaLigada = true;
+  try {
+    var cadeiaSalva = localStorage.getItem(CADEIA_STORAGE_KEY);
+    if (cadeiaSalva !== null) cadeiaLigada = cadeiaSalva === '1';
+  } catch (e) {}
+
+  function salvarCadeiaPref() {
+    try { localStorage.setItem(CADEIA_STORAGE_KEY, cadeiaLigada ? '1' : '0'); } catch (e) {}
+  }
+
+  function updateCadeiaFieldVisibility() {
+    var proxima = CADEIA_ETAPAS[el.fCategoria.value];
+    el.cadeiaField.classList.toggle('hidden', !proxima);
+    if (!proxima) return;
+    var cat = categoryById(proxima);
+    var atual = categoryById(el.fCategoria.value);
+    el.fCadeia.checked = cadeiaLigada;
+    el.cadeiaLabel.textContent = 'Abrir ' + (cat ? cat.label : proxima) + ' quando este ficar Concluído';
+    el.cadeiaHelp.textContent = 'A etapa nasce Pendente, com o mesmo número de processo. ' +
+      'Se a ' + (cat ? cat.label.toLowerCase() : proxima) + ' não for acontecer, apague pela lixeira — ' +
+      'o ' + (atual ? atual.label.toLowerCase() : 'registro') + ' não cria outra.';
+  }
+
+  // Cria a etapa seguinte de um registro concluído. Só uma vez por registro:
+  // a marca fica no próprio registro de origem, então apagar a etapa criada
+  // não faz ela voltar na próxima renderização ou sincronização.
+  function criarEtapaSeguinte(t) {
+    if (!cadeiaLigada || !t || t.status !== 'Concluído' || t.cadeiaFeita) return 0;
+    var proxima = CADEIA_ETAPAS[t.categoria];
+    if (!proxima) return 0;
+    t.cadeiaFeita = 1;
+    t.updatedAt = Date.now();
+    var jaExiste = tasks.filter(function (x) {
+      return x.numeroProcesso === t.numeroProcesso && x.categoria === proxima;
+    })[0];
+    if (jaExiste) return 0;
+    var anterior = categoryById(t.categoria);
+    tasks.push({
+      id: generateId(),
+      categoria: proxima,
+      emissor: '',
+      numeroProcesso: t.numeroProcesso,
+      data: todayISO(),
+      status: 'Pendente',
+      observacoes: 'Etapa seguinte de ' + (anterior ? anterior.label : t.categoria),
+      origem: 'cadeia',
+      etapaDe: t.categoria,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+    return 1;
+  }
+
+  function avisoCadeia(n) {
+    if (!n) return '';
+    return n === 1
+      ? ' Próxima etapa aberta como pendente.'
+      : ' ' + n + ' próximas etapas abertas como pendentes.';
   }
 
   function updateClock() {
@@ -2106,10 +2203,12 @@
         return '<div class="open-item" style="--cat: var(--cat-' + (cat ? cat.id : 'granel') + ')">' +
           '<div class="open-item-main">' +
             '<div class="open-item-name">' + escapeHtml(t.numeroProcesso) + '</div>' +
-            '<div class="open-item-sub">' + escapeHtml(cat ? cat.short : t.categoria) + ' · ' + formatBR(t.data) + '</div>' +
+            '<div class="open-item-sub">' + escapeHtml(cat ? cat.short : t.categoria) + ' · ' + formatBR(t.data) +
+              (t.origem === 'cadeia' ? ' · etapa da cadeia' : '') + '</div>' +
           '</div>' +
           openDaysChip(diasDesde(t.data)) +
           '<button type="button" class="btn btn-text" style="padding:4px 8px;font-size:12px;" data-openconcluir="' + escapeHtml(t.id) + '">Concluir</button>' +
+          '<button type="button" class="icon-btn danger" data-opendelete="' + escapeHtml(t.id) + '" title="Excluir este registro">' + iconeLixeira() + '</button>' +
         '</div>';
       }).join('') + '</div>';
       if (pendentes.length > OPEN_LIST_LIMIT) {
@@ -2793,7 +2892,7 @@
             ? '<button data-mxaction="enviar" data-navio="' + escapeHtml(r.navio) + '" class="btn btn-text" style="padding:4px 8px;font-size:12px;" title="Move as ' + counts[r.navio] + ' DUE(s) deste navio">Enviar</button>'
             : '') +
           '<button data-mxaction="excluir" data-ref="' + escapeHtml(r.id) + '" class="icon-btn danger" title="Excluir esta DUE">' +
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>' +
+            iconeLixeira() +
           '</button>' +
         '</div></td>' +
       '</tr>';
@@ -2823,7 +2922,7 @@
         '<td><div class="row-actions">' +
           '<button data-mxaction="voltar" data-ref="' + escapeHtml(r.id) + '" class="btn btn-text" style="padding:4px 8px;font-size:12px;">Voltar</button>' +
           '<button data-mxaction="excluir" data-ref="' + escapeHtml(r.id) + '" class="icon-btn danger" title="Excluir esta DUE">' +
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>' +
+            iconeLixeira() +
           '</button>' +
         '</div></td>' +
       '</tr>';
@@ -3898,8 +3997,9 @@
     t.status = t.status === 'Concluído' ? 'Pendente' : 'Concluído';
     if (t.status === 'Concluído') t.observacoes = stripMissingInvoiceNote(t.observacoes);
     t.updatedAt = Date.now();
+    var criadas = criarEtapaSeguinte(t);
     saveAndRenderAll();
-    toast('Status atualizado.');
+    toast('Status atualizado.' + (criadas ? ' Próxima etapa aberta como pendente.' : ''));
   }
 
   function deleteTask(id) {
@@ -3921,6 +4021,7 @@
     el.fData.value = t.data;
     el.fStatus.value = t.status;
     el.fObs.value = t.observacoes || '';
+    updateCadeiaFieldVisibility();
     el.submitBtn.textContent = 'Atualizar registro';
     el.cancelEditBtn.classList.remove('hidden');
     setView('dashboard');
@@ -3938,6 +4039,7 @@
     el.fData.value = todayISO();
     el.fStatus.value = 'Pendente';
     updateEmissorFieldVisibility();
+    updateCadeiaFieldVisibility();
     el.submitBtn.textContent = 'Adicionar registro';
     el.cancelEditBtn.classList.add('hidden');
   }
@@ -3970,6 +4072,7 @@
     var numeroProcesso = el.fProcesso.value.trim();
     if (!numeroProcesso) { toast('Informe o número do processo.', true); return; }
     if (!el.fData.value) { toast('Informe a data.', true); return; }
+    var criadasCadeia = 0;
     if (editingId) {
       var t = tasks.filter(function (x) { return x.id === editingId; })[0];
       if (t) {
@@ -3981,10 +4084,11 @@
         t.observacoes = el.fObs.value.trim();
         if (t.status === 'Concluído') t.observacoes = stripMissingInvoiceNote(t.observacoes);
         t.updatedAt = Date.now();
+        criadasCadeia = criarEtapaSeguinte(t);
       }
-      toast('Registro atualizado com sucesso!');
+      toast('Registro atualizado com sucesso!' + avisoCadeia(criadasCadeia));
     } else {
-      tasks.push({
+      var novo = {
         id: generateId(),
         categoria: el.fCategoria.value,
         emissor: el.fCategoria.value === CATEGORIA_COM_EMISSOR ? el.fEmissor.value : '',
@@ -3994,14 +4098,25 @@
         observacoes: el.fObs.value.trim(),
         createdAt: Date.now(),
         updatedAt: Date.now(),
-      });
-      toast('Registro adicionado com sucesso!');
+      };
+      tasks.push(novo);
+      criadasCadeia = criarEtapaSeguinte(novo);
+      toast('Registro adicionado com sucesso!' + avisoCadeia(criadasCadeia));
     }
     cancelEdit();
     saveAndRenderAll();
   });
 
-  el.fCategoria.addEventListener('change', updateEmissorFieldVisibility);
+  el.fCategoria.addEventListener('change', function () {
+    updateEmissorFieldVisibility();
+    updateCadeiaFieldVisibility();
+  });
+
+  el.fCadeia.addEventListener('change', function () {
+    cadeiaLigada = el.fCadeia.checked;
+    salvarCadeiaPref();
+    toast(cadeiaLigada ? 'Cadeia de etapas ligada.' : 'Cadeia de etapas desligada.');
+  });
 
   el.cancelEditBtn.addEventListener('click', cancelEdit);
 
@@ -4017,15 +4132,23 @@
   function importarRegistros(items) {
     var added = 0;
     var updated = 0;
+    var tocados = [];
     items.forEach(function (item) {
       if (!item || !item.numeroProcesso || !categoryById(item.categoria)) return;
       var numeroProcesso = String(item.numeroProcesso);
       // Registro nascido do painel México é dono do próprio nome (o navio): um
       // lote importado nunca pode capturá-lo, senão o envio mudaria de categoria
       // e o botão "Voltar" do painel não conseguiria mais desfazê-lo.
-      var existing = tasks.filter(function (t) {
+      // Com a cadeia de etapas o mesmo número de processo passa a existir em
+      // mais de uma categoria. A importação casa primeiro na mesma categoria
+      // do lote; só cai no casamento antigo (por número, qualquer categoria)
+      // quando existe um único candidato, senão um lote de CE recategorizaria
+      // a retificação do mesmo processo.
+      var candidatos = tasks.filter(function (t) {
         return t.numeroProcesso === numeroProcesso && t.origem !== 'mexico';
-      })[0];
+      });
+      var existing = candidatos.filter(function (t) { return t.categoria === item.categoria; })[0] ||
+        (candidatos.length === 1 ? candidatos[0] : null);
       if (existing) {
         existing.categoria = item.categoria;
         existing.emissor = item.categoria === CATEGORIA_COM_EMISSOR ? (item.emissor || '') : '';
@@ -4033,9 +4156,10 @@
         existing.status = item.status === 'Concluído' ? 'Concluído' : 'Pendente';
         existing.observacoes = item.observacoes || '';
         existing.updatedAt = Date.now();
+        tocados.push(existing);
         updated++;
       } else {
-        tasks.push({
+        var novoImportado = {
           id: generateId(),
           categoria: item.categoria,
           emissor: item.categoria === CATEGORIA_COM_EMISSOR ? (item.emissor || '') : '',
@@ -4045,16 +4169,22 @@
           observacoes: item.observacoes || '',
           createdAt: Date.now(),
           updatedAt: Date.now(),
-        });
+        };
+        tasks.push(novoImportado);
+        tocados.push(novoImportado);
         added++;
       }
     });
+
+    var emCadeia = 0;
+    tocados.forEach(function (t) { emCadeia += criarEtapaSeguinte(t); });
 
     if (added || updated) {
       saveAndRenderAll();
       var parts = [];
       if (added) parts.push(added + ' novo(s)');
       if (updated) parts.push(updated + ' atualizado(s)');
+      if (emCadeia) parts.push(emCadeia + ' etapa(s) seguinte(s)');
       toast('Importação concluída: ' + parts.join(', ') + '.');
     } else {
       toast('Nenhum registro válido encontrado.', true);
@@ -4546,6 +4676,8 @@
       setView('mexico');
       return;
     }
+    var excluir = e.target.closest('[data-opendelete]');
+    if (excluir) { deleteTask(excluir.getAttribute('data-opendelete')); return; }
     var concluir = e.target.closest('[data-openconcluir]');
     if (concluir) toggleStatus(concluir.getAttribute('data-openconcluir'));
   });
@@ -4639,6 +4771,7 @@
   // ---------------------------------------------------------------------
   initSelects();
   updateEmissorFieldVisibility();
+  updateCadeiaFieldVisibility();
   initCollapsibleSections();
   initReportPeriodTabs();
   initReportViewTabs();
