@@ -1,0 +1,148 @@
+{
+  "id": "2026-10-27-faturamento",
+  "titulo": "Faturamento FComex — 20 processos concluídos",
+  "descricao": "Santarém (7), Itaqui (4), Vitória (3); 6 sem porto informado (MV EVA, MV MATER, MV NEFELI) — o cabeçalho de porto desses ficou fora do texto colado.",
+  "criadoEm": "2026-10-27",
+  "registros": [
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619506",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV EVA"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619507",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV EVA"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619465",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV MATER"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619464",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV MATER"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619235",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV NEFELI"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619236",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV NEFELI"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619248",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV KOUROS LEADER · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619311",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV KOUROS LEADER · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619319",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV SUMMER QUEEN · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619156",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV TRUSTN TRADER · Itaqui"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619196",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV GREEN K-MAX 2 · Vitória"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619197",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV GREEN K-MAX 2 · Vitória"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619198",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV GREEN K-MAX 2 · Vitória"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619635",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV HAPPINESS BULKER · Santarém"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619636",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV HAPPINESS BULKER · Santarém"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619400",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV KOCIEWIE · Santarém"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619401",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV KOCIEWIE · Santarém"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619352",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV NOZOMI QUEEN · Santarém"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619353",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV NOZOMI QUEEN · Santarém"
+    },
+    {
+      "categoria": "fcomex",
+      "numeroProcesso": "RGDE2619354",
+      "data": "2026-10-27",
+      "status": "Concluído",
+      "observacoes": "MV NOZOMI QUEEN · Santarém"
+    }
+  ]
+}

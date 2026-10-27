@@ -1,5 +1,13 @@
 [
   {
+    "id": "2026-10-27-faturamento",
+    "titulo": "Faturamento FComex — 20 processos concluídos",
+    "descricao": "Santarém (7), Itaqui (4), Vitória (3); 6 sem porto informado (MV EVA, MV MATER, MV NEFELI) — o cabeçalho de porto desses ficou fora do texto colado.",
+    "criadoEm": "2026-10-27",
+    "qtd": 20,
+    "arquivo": "2026-10-27-faturamento.json"
+  },
+  {
     "id": "2026-10-21-abertura-granel",
     "titulo": "Abertura de processos — 82 aberturas conferidas",
     "descricao": "Aberturas de 11/09 a 20/10, uma por planilha dos prints. Quem já estiver lançado só é atualizado.",
