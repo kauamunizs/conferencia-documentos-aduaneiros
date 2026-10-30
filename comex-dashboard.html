@@ -668,6 +668,36 @@
               <div id="lotesLista"></div>
             </div>
             <button id="importToggleBtn" type="button" class="btn btn-text" style="margin-top:12px;padding-left:0;">Importar em lote (JSON)</button>
+            <button id="colarToggleBtn" type="button" class="btn btn-text" style="margin-top:12px;padding-left:0;">Colar lista de faturamento (texto)</button>
+            <div id="colarPanel" class="import-panel hidden">
+              <p class="sync-help">Cole a lista do jeito que ela vem no e-mail: cabeçalho <strong>"Porto de ..."</strong>, "Quantificar e pagar boy", "Processo Pibernat / Ref. Cliente" e as linhas de RGDE + navio. O porto do cabeçalho vale para as linhas <strong>abaixo</strong> dele, intervalos como <em>RGDE2619321-23</em> são abertos em um registro cada, e o que não for linha de processo é ignorado.</p>
+              <div class="field">
+                <label for="colarText">Lista (texto)</label>
+                <textarea id="colarText" rows="8" placeholder="Porto de Rio Grande&#10;&#10;Quantificar e pagar boy&#10;&#10;Processo Pibernat            Ref. Cliente&#10;RGDE2619245            MV PATRICIA V&#10;RGDE2619307            MV PATRICIA V"></textarea>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="colarCategoria">Categoria</label>
+                  <select id="colarCategoria"></select>
+                </div>
+                <div class="field">
+                  <label for="colarData">Data</label>
+                  <input id="colarData" type="date" />
+                </div>
+                <div class="field">
+                  <label for="colarStatus">Status</label>
+                  <select id="colarStatus">
+                    <option value="Concluído">Concluído</option>
+                    <option value="Pendente">Pendente</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button id="colarPreviewBtn" type="button" class="btn btn-primary">Conferir prévia</button>
+                <button id="colarCancelBtn" type="button" class="btn btn-text">Cancelar</button>
+              </div>
+              <div id="colarPreview" class="mx-preview hidden"></div>
+            </div>
             <div id="importPanel" class="import-panel hidden">
               <p class="sync-help">Cole abaixo uma lista de registros em formato JSON (cada item com categoria, número do processo, data, status e observações — no CO, também o emissor ACS ou FIEP) para adicionar vários de uma vez.</p>
               <div class="field">
@@ -935,6 +965,7 @@
               <li>Fature o processo no FComex.</li>
               <li>Marque o registro como Concluído no dashboard.</li>
             </ol>
+            <p class="tutorial-tip"><strong>Lista inteira de uma vez:</strong> no cadastro, <em>"Colar lista de faturamento (texto)"</em>. Cole o texto do e-mail como ele vem — o porto do cabeçalho vale para as linhas abaixo, intervalos (<em>RGDE2619321-23</em>) viram um registro cada, e a prévia mostra quantos entram por porto, quais já estavam lançados e quais linhas foram ignoradas antes de confirmar.</p>
             <p class="tutorial-tip"><strong>No dashboard:</strong> categoria <em>Faturamento de processos no FComex</em>. Use o RGDE como número do processo e as observações para o navio ou o cliente e as referências.</p>
           </div>
 
@@ -1780,6 +1811,15 @@
     cadeiaHelp: document.getElementById('cadeiaHelp'),
     submitBtn: document.getElementById('submitBtn'),
     cancelEditBtn: document.getElementById('cancelEditBtn'),
+    colarToggleBtn: document.getElementById('colarToggleBtn'),
+    colarPanel: document.getElementById('colarPanel'),
+    colarText: document.getElementById('colarText'),
+    colarCategoria: document.getElementById('colarCategoria'),
+    colarData: document.getElementById('colarData'),
+    colarStatus: document.getElementById('colarStatus'),
+    colarPreviewBtn: document.getElementById('colarPreviewBtn'),
+    colarCancelBtn: document.getElementById('colarCancelBtn'),
+    colarPreview: document.getElementById('colarPreview'),
     importToggleBtn: document.getElementById('importToggleBtn'),
     importPanel: document.getElementById('importPanel'),
     importText: document.getElementById('importText'),
@@ -1863,6 +1903,8 @@
       return '<option value="' + c.id + '">' + escapeHtml(c.label) + '</option>';
     }).join('');
     el.fCategoria.innerHTML = categoryOptions;
+    el.colarCategoria.innerHTML = categoryOptions;
+    el.colarCategoria.value = 'fcomex';
     el.filterCategoria.innerHTML = '<option value="all">Todas as categorias</option>' + categoryOptions;
     el.reportCategoriaFilter.innerHTML = '<option value="all">Todas as categorias</option>' + categoryOptions;
     el.monthlyReportCategoriaFilter.innerHTML = '<option value="all">Todas as categorias</option>' + categoryOptions;
@@ -4192,6 +4234,224 @@
     return added || updated;
   }
 
+  // ---------------------------------------------------------------------
+  // Colar lista de faturamento
+  //
+  // A lista chega como texto solto do e-mail: um cabeçalho de porto, duas
+  // linhas de enfeite ("Quantificar e pagar boy", "Processo Pibernat / Ref.
+  // Cliente") e as linhas de RGDE + navio. Em vez de virar um lote publicado
+  // por fora, o texto é lido aqui e vira registro na hora.
+  // ---------------------------------------------------------------------
+  var RE_PORTO_CABECALHO = /^(?:portos?|terminais|terminal)\s+(?:de|do|da|dos|das)\s+(.+)$/i;
+  var RE_LINHA_PROCESSO = /^([A-Za-z]{2,8}\d{4,})(?:\s*[-\u2013\u2014]\s*(\d{1,}))?(?:[\s\t]+(.*))?$/;
+  // Enfeite conhecido da lista: não é processo nem porto e não vale avisar.
+  var RE_RUIDO = /^(?:quantificar|processo\s+pibernat|ref\.?\s*cliente|processo\b.*ref)/i;
+
+  function colarLimpaNavio(txt) {
+    return String(txt || '')
+      .replace(/\s+/g, ' ')
+      .replace(/[\s·|,;-]+$/, '')
+      .replace(/\s+(ok|okay|okey)\.?$/i, '')
+      .trim();
+  }
+
+  // "RGDE2619321-23" abre 2619321, 2619322 e 2619323: o segundo número
+  // substitui só o final do primeiro.
+  function colarExpandeIntervalo(ref, fim) {
+    if (!fim) return [ref];
+    var letras = ref.match(/^[A-Za-z]+/)[0];
+    var numero = ref.slice(letras.length);
+    if (fim.length > numero.length) return [ref];
+    var prefixo = numero.slice(0, numero.length - fim.length);
+    var de = parseInt(numero.slice(numero.length - fim.length), 10);
+    var ate = parseInt(fim, 10);
+    if (isNaN(de) || isNaN(ate) || ate <= de || ate - de > 50) return [ref];
+    var refs = [];
+    for (var i = de; i <= ate; i++) {
+      var cauda = String(i);
+      while (cauda.length < fim.length) cauda = '0' + cauda;
+      refs.push(letras + prefixo + cauda);
+    }
+    return refs;
+  }
+
+  function parseFaturamentoTexto(texto) {
+    var linhas = String(texto || '').split(/\r?\n/);
+    var rows = [];
+    var ignoradas = [];
+    var portoAtual = '';
+    linhas.forEach(function (linha) {
+      var txt = linha.replace(/\s+$/, '').trim();
+      if (!txt) return;
+      var cab = txt.match(RE_PORTO_CABECALHO);
+      if (cab) { portoAtual = mxPortoLimpo(cab[1]); return; }
+      var m = txt.match(RE_LINHA_PROCESSO);
+      if (m) {
+        var navio = colarLimpaNavio(m[3]);
+        colarExpandeIntervalo(m[1].toUpperCase(), m[2]).forEach(function (ref) {
+          rows.push({ ref: ref, navio: navio, porto: portoAtual });
+        });
+        return;
+      }
+      if (!RE_RUIDO.test(txt)) ignoradas.push(txt);
+    });
+    return { rows: rows, ignoradas: ignoradas };
+  }
+
+  function colarObservacoes(r) {
+    if (r.navio && r.porto) return r.navio + ' · ' + r.porto;
+    return r.navio || r.porto || '';
+  }
+
+  var colarPendente = null;
+
+  function colarBuildPlan(parsed) {
+    var categoria = el.colarCategoria.value;
+    var data = el.colarData.value || todayISO();
+    var status = el.colarStatus.value;
+    var plan = {
+      categoria: categoria, data: data, status: status,
+      novos: [], atualiza: [], repetidos: [], semPorto: [],
+      portos: {}, ignoradas: parsed.ignoradas,
+    };
+    var vistos = {};
+    parsed.rows.forEach(function (r) {
+      if (vistos[r.ref]) { plan.repetidos.push(r); return; }
+      vistos[r.ref] = 1;
+      plan.portos[r.porto || '—'] = (plan.portos[r.porto || '—'] || 0) + 1;
+      if (!r.porto) plan.semPorto.push(r);
+      var existente = tasks.filter(function (t) {
+        return t.numeroProcesso === r.ref && t.origem !== 'mexico';
+      })[0];
+      if (existente) plan.atualiza.push({ row: r, atual: existente });
+      else plan.novos.push(r);
+    });
+    return plan;
+  }
+
+  function colarItens(plan) {
+    var itens = [];
+    plan.novos.concat(plan.atualiza.map(function (a) { return a.row; })).forEach(function (r) {
+      itens.push({
+        categoria: plan.categoria,
+        numeroProcesso: r.ref,
+        data: plan.data,
+        status: plan.status,
+        observacoes: colarObservacoes(r),
+      });
+    });
+    return itens;
+  }
+
+  function colarRenderPreview(plan) {
+    var PREVIEW_MAX = 12;
+    function block(titulo, itens, fmt) {
+      if (!itens.length) return '';
+      var visiveis = itens.slice(0, PREVIEW_MAX);
+      var resto = itens.length - visiveis.length;
+      return '<h4>' + escapeHtml(titulo) + ' (' + itens.length + ')</h4><ul>' +
+        visiveis.map(function (i) { return '<li>' + fmt(i) + '</li>'; }).join('') +
+        (resto ? '<li class="mx-preview-resto">… e mais ' + resto + '</li>' : '') +
+        '</ul>';
+    }
+    var cat = categoryById(plan.categoria);
+    var total = plan.novos.length + plan.atualiza.length;
+    var chips = '<div class="mx-summary">' +
+      '<span class="badge badge-' + plan.categoria + '">' + escapeHtml(cat ? cat.short : plan.categoria) + ' · ' + plan.status + ' · ' + formatBR(plan.data) + '</span>' +
+      '<span class="badge badge-ok">' + plan.novos.length + ' novo(s)</span>' +
+      (plan.atualiza.length ? '<span class="badge badge-warn">' + plan.atualiza.length + ' já existia(m)</span>' : '') +
+      (plan.repetidos.length ? '<span class="badge badge-warn">' + plan.repetidos.length + ' repetido(s) no texto</span>' : '') +
+      (plan.semPorto.length ? '<span class="badge badge-warn">' + plan.semPorto.length + ' sem porto</span>' : '') +
+      '</div>';
+
+    var portos = Object.keys(plan.portos).sort(function (a, b) { return plan.portos[b] - plan.portos[a]; });
+    var html = chips;
+    if (portos.length) {
+      html += '<h4>Por porto</h4><ul>' + portos.map(function (nome) {
+        return '<li>' + escapeHtml(nome) + ': ' + plan.portos[nome] + ' processo(s)</li>';
+      }).join('') + '</ul>';
+    }
+
+    if (!total) {
+      html += '<p class="mx-preview-empty">Nenhuma linha de processo reconhecida no texto colado.</p>';
+    } else {
+      html += block('Entram como novos', plan.novos, function (r) {
+        return '<strong>' + escapeHtml(r.ref) + '</strong> · ' + escapeHtml(r.navio || '—') +
+          (r.porto ? ' <span style="color:var(--muted);">(' + escapeHtml(r.porto) + ')</span>' : ' <span style="color:var(--muted);">(sem porto)</span>');
+      });
+      html += block('Já estavam lançados — vão ser atualizados', plan.atualiza, function (a) {
+        var catAtual = categoryById(a.atual.categoria);
+        return '<strong>' + escapeHtml(a.row.ref) + '</strong> · ' + escapeHtml(a.row.navio || '—') +
+          ' <span style="color:var(--muted);">(hoje: ' + escapeHtml(catAtual ? catAtual.short : a.atual.categoria) +
+          ' · ' + escapeHtml(a.atual.status) + ' · ' + formatBR(a.atual.data) + ')</span>';
+      });
+      html += block('Repetidos no próprio texto (contam uma vez)', plan.repetidos, function (r) {
+        return escapeHtml(r.ref) + ' · ' + escapeHtml(r.navio || '—');
+      });
+      html += block('Linhas que eu não entendi (vão ser ignoradas)', plan.ignoradas, function (l) {
+        return '<span style="color:var(--muted);">' + escapeHtml(l) + '</span>';
+      });
+    }
+
+    html += '<div class="form-actions">' +
+      '<button id="colarApplyBtn" type="button" class="btn btn-primary"' + (total ? '' : ' disabled') + '>Lançar ' + total + ' registro(s)</button>' +
+      '</div>';
+    el.colarPreview.innerHTML = html;
+    el.colarPreview.classList.remove('hidden');
+  }
+
+  function colarReset() {
+    el.colarText.value = '';
+    el.colarPreview.classList.add('hidden');
+    el.colarPreview.innerHTML = '';
+    colarPendente = null;
+    el.colarData.value = todayISO();
+    el.colarCategoria.value = 'fcomex';
+    el.colarStatus.value = 'Concluído';
+  }
+
+  el.colarToggleBtn.addEventListener('click', function () {
+    var abrindo = el.colarPanel.classList.contains('hidden');
+    el.colarPanel.classList.toggle('hidden');
+    if (abrindo && !el.colarData.value) el.colarData.value = todayISO();
+  });
+
+  el.colarCancelBtn.addEventListener('click', function () {
+    el.colarPanel.classList.add('hidden');
+    colarReset();
+  });
+
+  el.colarPreviewBtn.addEventListener('click', function () {
+    var parsed = parseFaturamentoTexto(el.colarText.value);
+    if (!parsed.rows.length) {
+      toast('Nenhuma linha de processo reconhecida. Confira o texto colado.', true);
+      return;
+    }
+    colarPendente = colarBuildPlan(parsed);
+    colarRenderPreview(colarPendente);
+  });
+
+  ['change'].forEach(function (ev) {
+    [el.colarCategoria, el.colarData, el.colarStatus].forEach(function (campo) {
+      campo.addEventListener(ev, function () {
+        if (!colarPendente) return;
+        var parsed = parseFaturamentoTexto(el.colarText.value);
+        colarPendente = colarBuildPlan(parsed);
+        colarRenderPreview(colarPendente);
+      });
+    });
+  });
+
+  el.colarPreview.addEventListener('click', function (e) {
+    if (!e.target.closest('#colarApplyBtn') || !colarPendente) return;
+    var itens = colarItens(colarPendente);
+    if (!itens.length) return;
+    if (importarRegistros(itens)) {
+      el.colarPanel.classList.add('hidden');
+      colarReset();
+    }
+  });
+
   el.importBtn.addEventListener('click', function () {
     var raw = el.importText.value.trim();
     if (!raw) { toast('Cole o JSON antes de importar.', true); return; }
@@ -4770,6 +5030,7 @@
   // Init
   // ---------------------------------------------------------------------
   initSelects();
+  el.colarData.value = todayISO();
   updateEmissorFieldVisibility();
   updateCadeiaFieldVisibility();
   initCollapsibleSections();
