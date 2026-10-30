@@ -1294,6 +1294,30 @@
       <button id="syncDisconnectBtn" type="button" class="btn btn-text" style="margin-top:8px;color:var(--danger);">Desconectar sincronização</button>
 
       <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border);">
+        <p class="toggle-row-title" style="margin:0 0 2px;">Abrir em outro computador</p>
+        <p class="sync-help">
+          No PC que já está sincronizado, clique em <strong>"Copiar código deste PC"</strong>. No outro computador, abra o
+          dashboard, cole o código aqui embaixo e clique em <strong>"Usar este código"</strong>: ele preenche token e ID do
+          Gist e sincroniza na hora, sem digitar nada. O código <strong>vale como senha</strong> — dá acesso ao Gist com os
+          seus dados, então guarde só para você (não mande em grupo nem em e-mail compartilhado).
+        </p>
+        <div class="form-actions">
+          <button id="acessoCopiarBtn" type="button" class="btn btn-secondary">Copiar código deste PC</button>
+        </div>
+        <div id="acessoCodigoBox" class="gist-id-display hidden">
+          <span>Código:</span> <strong id="acessoCodigoValor"></strong>
+          <button id="acessoCodigoCopyBtn" type="button" class="icon-btn" title="Copiar código"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></button>
+        </div>
+        <div class="field" style="margin-top:14px;">
+          <label for="acessoColar">Código de outro PC</label>
+          <input id="acessoColar" type="text" placeholder="COMEX1-..." autocomplete="off" />
+        </div>
+        <div class="form-actions">
+          <button id="acessoUsarBtn" type="button" class="btn btn-primary">Usar este código</button>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border);">
         <div class="toggle-row">
           <div>
             <p class="toggle-row-title">Notificar pendências antigas</p>
@@ -1890,6 +1914,12 @@
     gistIdDisplay: document.getElementById('gistIdDisplay'),
     gistIdValue: document.getElementById('gistIdValue'),
     copyGistIdBtn: document.getElementById('copyGistIdBtn'),
+    acessoCopiarBtn: document.getElementById('acessoCopiarBtn'),
+    acessoCodigoBox: document.getElementById('acessoCodigoBox'),
+    acessoCodigoValor: document.getElementById('acessoCodigoValor'),
+    acessoCodigoCopyBtn: document.getElementById('acessoCodigoCopyBtn'),
+    acessoColar: document.getElementById('acessoColar'),
+    acessoUsarBtn: document.getElementById('acessoUsarBtn'),
     syncSaveBtn: document.getElementById('syncSaveBtn'),
     syncDisconnectBtn: document.getElementById('syncDisconnectBtn'),
     notifyToggle: document.getElementById('notifyToggle'),
@@ -5014,6 +5044,91 @@
         toast('Permissão de notificação negada pelo navegador.', true);
       }
     });
+  });
+
+  // ---------------------------------------------------------------------
+  // Código de acesso: token + ID do Gist em um texto só
+  //
+  // Configurar a sincronização em outro PC pedia digitar o token inteiro e o
+  // ID do Gist à mão. O código empacota os dois, então o segundo PC é um
+  // "colar e pronto". Não é criptografia — é base64 — e o token está dentro
+  // dele, por isso o aviso na tela de tratar o código como senha.
+  // ---------------------------------------------------------------------
+  var ACESSO_PREFIXO = 'COMEX1-';
+
+  function acessoGerarCodigo() {
+    var cfg = loadSyncConfig();
+    if (!cfg.token) return '';
+    try {
+      var b64 = btoa(unescape(encodeURIComponent(JSON.stringify({ t: cfg.token, g: cfg.gistId || '' }))));
+      return ACESSO_PREFIXO + b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function acessoLerCodigo(texto) {
+    var bruto = String(texto || '').replace(/\s+/g, '');
+    if (!bruto) return null;
+    if (bruto.toUpperCase().indexOf(ACESSO_PREFIXO) === 0) bruto = bruto.slice(ACESSO_PREFIXO.length);
+    var b64 = bruto.replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4) b64 += '=';
+    try {
+      var obj = JSON.parse(decodeURIComponent(escape(atob(b64))));
+      if (!obj || !obj.t) return null;
+      return { token: String(obj.t), gistId: String(obj.g || '') };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function acessoMostrarCodigo(codigo) {
+    el.acessoCodigoValor.textContent = codigo;
+    el.acessoCodigoBox.classList.toggle('hidden', !codigo);
+  }
+
+  el.acessoCopiarBtn.addEventListener('click', function () {
+    var codigo = acessoGerarCodigo();
+    if (!codigo) {
+      toast('Configure o token neste PC antes de gerar o código.', true);
+      return;
+    }
+    acessoMostrarCodigo(codigo);
+    if (!navigator.clipboard) {
+      toast('Código gerado abaixo — copie à mão.');
+      return;
+    }
+    navigator.clipboard.writeText(codigo).then(function () {
+      toast('Código copiado! Cole no outro computador.');
+    }).catch(function () {
+      toast('Código gerado abaixo — copie à mão.');
+    });
+  });
+
+  el.acessoCodigoCopyBtn.addEventListener('click', function () {
+    var codigo = el.acessoCodigoValor.textContent;
+    if (!codigo || !navigator.clipboard) return;
+    navigator.clipboard.writeText(codigo).then(function () {
+      toast('Código copiado!');
+    }).catch(function () {
+      toast('Não foi possível copiar automaticamente.', true);
+    });
+  });
+
+  el.acessoUsarBtn.addEventListener('click', function () {
+    var cfg = acessoLerCodigo(el.acessoColar.value);
+    if (!cfg) {
+      toast('Código inválido. Copie de novo no outro PC, inteiro.', true);
+      return;
+    }
+    saveSyncConfig(cfg);
+    el.syncToken.value = cfg.token;
+    el.syncGistId.value = cfg.gistId;
+    renderGistIdDisplay(cfg.gistId);
+    el.acessoColar.value = '';
+    acessoMostrarCodigo('');
+    toast('Código aplicado. Sincronizando...');
+    syncNow(true);
   });
 
   el.copyGistIdBtn.addEventListener('click', function () {
